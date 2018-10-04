@@ -17,21 +17,21 @@ namespace mpcSolver{
         void solve(Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d, Aff3d, bool, double, double, double, double);
 
         // Get stuff
-        Eigen::VectorXd getOptimalCoMPosition();
+        /*Eigen::VectorXd getOptimalCoMPosition();
         Eigen::VectorXd getOptimalCoMVelocity();
         Eigen::VectorXd getOptimalZMPPosition();
         Eigen::VectorXd getOptimalFootsteps();
         Eigen::MatrixXd getPredictedZmp();
         bool supportFootHasChanged();
-	    double getOmega();
+	    double getOmega(); */
 
 	    // Set stuff
-	    void setComTargetHeight(double);
+	    /*void setComTargetHeight(double);
 	    void setReferenceVelocityX(double);
 	    void setReferenceVelocityY(double);
 	    void setReferenceVelocityOmega(double);
 	    void setVelGain(double);
-	    void setZmpGain(double);
+	    void setZmpGain(double);*/
 
         // Generate matrices
         void genCostFunction();
@@ -55,25 +55,28 @@ namespace mpcSolver{
 	private:
 
         // Constant parameters
-        int N,S,D,M, footstepCounter;
-        double singleSupportDuration, doubleSupportDuration, thetaMax;
-        double footConstraintSquareWidth;
-        double deltaXMax;
-        double deltaYIn;
-        double deltaYOut;
+
+
+        int n,m,p,N;
+
+        //double singleSupportDuration, doubleSupportDuration, thetaMax; // outside
+        //double footConstraintSquareWidth;
+        //double deltaXMax;
+        //double deltaYIn;
+        //double deltaYOut;
         double mpcTimeStep;
         double controlTimeStep;
-        double comTargetHeight;
-        double omega;
-        double measuredComWeight = 0;
-        double measuredZmpWeight = 0;
+        // double comTargetHeight;
+        //double omega;
+        //double measuredComWeight = 0;
+        //double measuredZmpWeight = 0;
 
         // Parameters for the current iteration
-        bool supportFoot;
+        //bool supportFoot;
         double simulationTime;
-        double vRefX=0;
-        double vRefY=0;
-        double omegaRef=0;
+        //double vRefX=0;
+        //double vRefY=0;
+        //double omegaRef=0;
         int mpcIter,controlIter;
 
         // Matrices for prediction
@@ -82,35 +85,17 @@ namespace mpcSolver{
         Eigen::MatrixXd Vu;
         Eigen::MatrixXd Vs;
 
+        Eigen::MatrixXd S;
+        Eigen::MatrixXd T;
+
         // Matrices for cost function
-        Eigen::MatrixXd costFunctionH;
-        Eigen::VectorXd costFunctionF;
+        Eigen::MatrixXd H;
+        Eigen::VectorXd F;
 
-        // Matrices for stability constraint
-        Eigen::MatrixXd Aeq;
-        Eigen::VectorXd beq;
-
-        //Matrices for balance constraint
-        Eigen::MatrixXd AZmp;
-        Eigen::VectorXd bZmpMax;
-        Eigen::VectorXd bZmpMin;
-
-        // Matrices for feasibility constraints
-        Eigen::MatrixXd AFootsteps;
-        Eigen::VectorXd bFootstepsMax;
-        Eigen::VectorXd bFootstepsMin;
-
-        // Matrices for swing foot constraints
-        Eigen::MatrixXd ASwingFoot;
-        Eigen::VectorXd bSwingFoot;
-
-        // Matrices for the stacked constraints
-        Eigen::MatrixXd AConstraint;
-        Eigen::VectorXd bConstraintMax;
-        Eigen::VectorXd bConstraintMin;
-
-        // Solution of the QP for determining orientations
-        Eigen::VectorXd predictedOrientations;
+        // Matrices for  constraint
+        Eigen::MatrixXd G;
+        Eigen::VectorXd W;
+        Eigen::VectorXd S;
 
         // Cost function weights
         double qZd = 1;
@@ -119,10 +104,10 @@ namespace mpcSolver{
         double qZ = 1000;
 
         // State
-        Eigen::Vector3d comPos;
-        Eigen::Vector3d comVel;
-        Eigen::Vector3d zmpPos;
-        Eigen::Vector4d predictedFootstep;
+        //Eigen::Vector3d comPos;
+        //Eigen::Vector3d comVel;
+        //Eigen::Vector3d zmpPos;
+        //Eigen::Vector4d predictedFootstep;
 
 	    // Quadratic problem
 	    qpOASES::QProblem qp;
