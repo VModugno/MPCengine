@@ -16,38 +16,21 @@ namespace mpcSolver{
         // Main method
         void solve(Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d, Aff3d, bool, double, double, double, double);
 
-        // Get stuff
-        /*Eigen::VectorXd getOptimalCoMPosition();
-        Eigen::VectorXd getOptimalCoMVelocity();
-        Eigen::VectorXd getOptimalZMPPosition();
-        Eigen::VectorXd getOptimalFootsteps();
-        Eigen::MatrixXd getPredictedZmp();
-        bool supportFootHasChanged();
-	    double getOmega(); */
 
-	    // Set stuff
-	    /*void setComTargetHeight(double);
-	    void setReferenceVelocityX(double);
-	    void setReferenceVelocityY(double);
-	    void setReferenceVelocityOmega(double);
-	    void setVelGain(double);
-	    void setZmpGain(double);*/
+        // Generate Cost Matrix
+        void genCost();
+        // Generate Constraint Matrix
+        void genConstraint();
+        // Update Matrices
 
-        // Generate matrices
-        void genCostFunction();
-        void genStabilityConstraint();
-        void genBalanceConstraint();
-        void genFeasibilityConstraint();
-        void genSwingFootConstraint(Aff3d);
 
         // Solve
-        void computeOrientations();
         Eigen::VectorXd solveQP();
-        //Eigen::VectorXd solveQPdart();
+
 
         // Update the state
         Eigen::Vector3d updateState(double,int,double);
-        void changeReferenceFrame(Aff3d);
+
 
         // Log
         void logToFile();
@@ -57,7 +40,10 @@ namespace mpcSolver{
         // Constant parameters
 
 
-        int n,m,p,N;
+        int n; // state   space dim
+		int m; // control space dim
+		int p; // output  space dim
+		int N; // prediction window
 
         //double singleSupportDuration, doubleSupportDuration, thetaMax; // outside
         //double footConstraintSquareWidth;
