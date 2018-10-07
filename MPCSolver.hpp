@@ -17,19 +17,10 @@ namespace mpcSolver{
         void solve(Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d, Aff3d, bool, double, double, double, double);
 
 
-        // Generate Cost Matrix
-        void genCost();
-        // Generate Constraint Matrix
-        void genConstraint();
-        // Update Matrices
-
 
         // Solve
         Eigen::VectorXd solveQP();
 
-
-        // Update the state
-        Eigen::Vector3d updateState(double,int,double);
 
 
         // Log
