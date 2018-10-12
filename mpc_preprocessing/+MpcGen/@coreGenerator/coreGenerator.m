@@ -48,14 +48,25 @@ classdef coreGenerator <  handle
        
        function GenFunction(obj) 
            if(strcmp(obj.type,"fixed") && strcmp(obj.solver,"QPoases"))
+               
+               %% optmization problem formulation for QPoases
+               % J(z) = z'*H*z + g*z
+               % s.t
+               %    l_b <= z <= u_b
+               %    l_b <= A*z <= u_b
+               
+               %% hessian cost function
                H_  = obj.sym_H(:);
+               obj.cCode(H_,'compute_H',{},'H');
+               %% linear term cost function
                g_  = (obj.x_0'*obj.sym_F_tra)'; 
-               % check how to pass the constraints alredy digested for
-               % qpoases in the bemprad form
-               % ub_ = inv(obj.sym_G)*(obj.sym_W + obj.sym_S*obj.x_0);
-               fun_name = 'computeH';
-               output   = 'H';
-               obj.cCode(H_,fun_name,{},output);
+               obj.cCode(g_,'compute_g',{obj.x_0},'g');
+               %% linear term constraints
+               A_  = obj.sym_G(:);
+               obj.cCode(A_,'compute_A',{},'A');
+               %% constant term constraints
+               ub_ = obj.sym_W + obj.sym_S*obj.x_0;
+               obj.cCode(ub_,'compute_ub',{obj.x_0},'ub');
            end
              
        end

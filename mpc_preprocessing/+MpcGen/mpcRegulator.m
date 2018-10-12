@@ -40,7 +40,7 @@ classdef mpcRegulator < MpcGen.coreGenerator
             obj.q     = size(C_cont,1);
             obj.N     = N;
             obj.delta = delta; 
-            obj.x_0   = sym('x_0',obj.n);
+            obj.x_0   = sym('x_0',[obj.n,1],'real');
             if(length(maxInput)~= obj.m)
                 error('the maxInput has to be a vector with q elements wehre q is the number of output')
             else
