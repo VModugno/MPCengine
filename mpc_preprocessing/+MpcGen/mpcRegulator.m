@@ -34,7 +34,6 @@ classdef mpcRegulator < MpcGen.coreGenerator
             
             % call super class constructor
             obj = obj@MpcGen.coreGenerator(type,solver);
-            
             obj.n     = size(A_cont,1);
             obj.m     = size(B_cont,2);
             obj.q     = size(C_cont,1);
@@ -42,12 +41,12 @@ classdef mpcRegulator < MpcGen.coreGenerator
             obj.delta = delta; 
             obj.x_0   = sym('x_0',[obj.n,1],'real');
             if(length(maxInput)~= obj.m)
-                error('the maxInput has to be a vector with q elements wehre q is the number of output')
+                error('the maxInput has to be a vector with m elements wehre m is the number of input')
             else
                 obj.maxInput = maxInput;
             end
             if(length(maxOutput)~= obj.q)
-                error('the maxOutput has to be a vector with m elements wehre m is the number of input')
+                error('the maxOutput has to be a vector with q elements wehre q is the number of output')
             else
                 obj.maxOutput = maxOutput;    
             end

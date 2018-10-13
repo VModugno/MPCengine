@@ -11,9 +11,9 @@ namespace mpcSolver{
 	public:
         MPCSolver(int n,int m,int p,int N, Int N_constr,H_dim,g_dim,A_dim, ub_dim);
         //
-        void initSolver();
+        Eigen::VectorXd initSolver(double * x0);
         // Solve
-        Eigen::VectorXd solveQP();
+        Eigen::VectorXd solveQP(double * xi);
         // Log
         void logToFile();
 
@@ -27,12 +27,15 @@ namespace mpcSolver{
 
 	private:
 
-        // Constant parameters
+        // problem parameters
         int n;        // state   space dim
 		int m;        // control space dim
 		int p;        // output  space dim
 		int N;        // prediction window
 		Int N_constr; // number of constraints
+
+		// solver parameters
+		qpOASES::int_t nWSR = 300;
         
         double mpcTimeStep;
         double controlTimeStep;
