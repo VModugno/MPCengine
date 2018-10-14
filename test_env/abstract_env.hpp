@@ -5,7 +5,7 @@ class abstractEnv {
 public:
 
 	int num_state;
-	Eigen::VectorXd state_bounds;
+	Eigen::MatrixXd state_bounds;
 	std::vector<std::string> state_name;
 	Eigen::VectorXd init_state;
 	Eigen::VectorXd state;
@@ -44,10 +44,10 @@ public:
 	}
 
     // virtual function
-	virtual Eigen::VectorXd Dynamics(Eigen::VectorXd action, Eigen::VectorXd & mes_acc, Eigen::VectorXd & new_state) = 0;
-    virtual void            Render() = 0;
-	virtual void            UpdateRender(Eigen::VectorXd state) = 0;
+	virtual Eigen::VectorXd Dynamics(Eigen::VectorXd action, Eigen::VectorXd & mes_acc) = 0;
 	virtual Eigen::VectorXd Wrapping(Eigen::VectorXd state) = 0;
 	virtual void            Load_parameters(Eigen::VectorXd params) = 0;
+	virtual void            Render() = 0;
+    virtual void            UpdateRender(Eigen::VectorXd state) = 0;
 
 };
