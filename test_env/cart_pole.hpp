@@ -1,5 +1,6 @@
 #include <math.h>
 #include <vector>
+#include <iostream>
 #include "abstract_env.hpp"
 
 struct prm {
@@ -18,9 +19,13 @@ public:
 
 	    cartPole(Eigen::VectorXd init_state,double dt,bool act_vis){
 	    	this->num_state            = 4;
+	    	//std::cout << "before crash"<<std::endl;
+	    	this->state_bounds         = Eigen::MatrixXd(3,2);
 			this->state_bounds         << -100,100,
 				                          -100,100,
-										 -M_PI,M_PI;
+										  -M_PI,M_PI;
+			//std::cout << "after crash"<<std::endl;
+			//std::cout << this->state_bounds << std::endl;
 			const char *vinit[]        = {"x_c", "x_c_dot", "theta","theta_dot"};
 			this->state_name           = std::vector<std::string>(vinit,vinit+4);
 			this->init_state           = init_state;
@@ -30,14 +35,15 @@ public:
 			this->pp.mCart             = 0.1;
 			this->pp.mPend             = 0.1;
 			this->pp.L                 = 0.5;
-
-
 	    };
 
 	    Eigen::VectorXd Dynamics(Eigen::VectorXd action, Eigen::VectorXd & mes_acc){
 	    	double g   = 9.8;
-	    	Eigen::VectorXd new_state;
+	    	Eigen::VectorXd new_state(4);
+	    	std::cout << action << std::endl;
+	    	std::cout << state << std::endl;
 			mes_acc(0) = (action(0) + pp.mPend*sin(state(2))*(pp.L*pow(state(3),2)-g*cos(state(2))))/(pp.mCart+pp.mPend*pow(sin(state(2)),2));
+			//std::cout << mes_acc << std::endl;
          	mes_acc(1) = (-action(0)*cos(state(2)) - pp.mPend*pp.L*pow(state(3),2)*sin(state(2))*cos(state(2)) + (pp.mPend+pp.mCart)*g*sin(state(2)))/(pp.L*(pp.mCart+pp.mPend*pow(sin(state(2)),2)));
 
 			new_state(0)= state(1);

@@ -37,13 +37,12 @@ class MPCSolver{
 		int N_constr; // number of constraints
 
 		// solver parameters
-		qpOASES::int_t nWSR = 300;
-
-		double mpcTimeStep     = 100;
-		double controlTimeStep = 100;
+		qpOASES::int_t nWSR         = 300;
+		double mpcTimeStep          = 100;
+		double controlTimeStep      = 100;
 
 		// Parameters for the current iteration
-		double simulationTime   = 100;
+		double simulationTime       = 100;
 		int mpcIter=100,controlIter = 100;
 
 

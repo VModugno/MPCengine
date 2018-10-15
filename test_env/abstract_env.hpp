@@ -17,8 +17,7 @@ public:
 	double Step(Eigen::VectorXd action, Eigen::VectorXd & mes_acc, Eigen::VectorXd & new_state)
 	{
 		double reward = 0;
-		int    done;
-		Eigen::VectorXd k1,k2,k3,k4;
+		Eigen::VectorXd k1(num_state),k2(num_state),k3(num_state),k4(num_state);
 
 		// to fix
 		int substeps = 1;
@@ -37,7 +36,7 @@ public:
 
 		this->state = new_state; // Old state = new state
 		//reward    = this->reward(new_state,action);
-		done      = 1;
+		//done      = 1;
 
 		if(this->active_visualization)
 			this->UpdateRender(new_state);
