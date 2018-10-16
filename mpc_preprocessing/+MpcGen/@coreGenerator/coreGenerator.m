@@ -4,12 +4,19 @@ classdef coreGenerator <  handle
         basepath    %
         type
         solver
-        sym_H       %              
+        %  for code generation
+        sym_H       %             
         sym_F_tra   %
         sym_G       %
         sym_W       %
         sym_S       %
         x_0         %
+        % for control
+        H
+        F_tra
+        G
+        W
+        S
         
     end
     
