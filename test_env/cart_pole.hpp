@@ -34,7 +34,6 @@ public:
 			this->pp.mPend             = 0.1;
 			this->pp.L                 = 0.5;
 			this->mes_acc              = Eigen::VectorXd(2);
-
 	    };
 
 	    Eigen::VectorXd Dynamics(Eigen::VectorXd cur_state,Eigen::VectorXd action, Eigen::VectorXd & mes_acc){

@@ -31,7 +31,7 @@ control_cost = 1;
 type         = "fixed"; 
 solver       = "QPoases";
 % regulator 
-controller = MpcGen.MpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,type,solver);
+controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,type,solver);
 
 %% testing MPC on the environment 
 if(start_simulation)
