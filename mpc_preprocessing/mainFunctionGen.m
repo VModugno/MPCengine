@@ -23,4 +23,6 @@ solver       = "QPoases";
 % regulator 
 controller = MpcGen.mpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta,N,state_gain,control_cost,type,solver);
 
-controller.GenFunction();
+controller.GenFunctions();
+% TODO add function to create file for constructing mpc problem
+% controller.GenParameters()

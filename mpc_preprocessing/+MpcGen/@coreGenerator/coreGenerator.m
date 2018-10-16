@@ -46,7 +46,7 @@ classdef coreGenerator <  handle
        end
        
        
-       function GenFunction(obj) 
+       function GenFunctions(obj) 
            if(strcmp(obj.type,"fixed") && strcmp(obj.solver,"QPoases"))
                
                %% optmization problem formulation for QPoases
