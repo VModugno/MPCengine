@@ -54,7 +54,7 @@ classdef coreGenerator <  handle
        
        
        function GenFunctions(obj) 
-           if(strcmp(obj.type,"fixed") && strcmp(obj.solver,"QPoases"))
+            if(strcmp(obj.type,"fixed") && strcmp(obj.solver,"QPoases"))
                
                %% optmization problem formulation for QPoases
                % J(z) = z'*H*z + g*z
@@ -65,6 +65,7 @@ classdef coreGenerator <  handle
                %% hessian cost function
                H_  = obj.sym_H(:);
                obj.cCode(H_,'compute_H',{},'H');
+               obj.PostProcessFunctionForqpOASES(strcat(obj.basepath,'/compute_H.c'))
                %% linear term cost function
                g_  = (obj.x_0'*obj.sym_F_tra)'; 
                obj.cCode(g_,'compute_g',{obj.x_0},'g');
@@ -74,9 +75,16 @@ classdef coreGenerator <  handle
                %% constant term constraints
                ub_ = obj.sym_W + obj.sym_S*obj.x_0;
                obj.cCode(ub_,'compute_ub',{obj.x_0},'ub');
-           end
-             
+            end         
        end
+       
+       function PostProcessFunctionForqpOASES(filename)
+               str = fileread(filename);
+               xpr = '(?<=(^|\n))[ ]*201[4567].+?(?=($|[ ]*201[4567]))';
+               blocks = regexp( str, xpr, 'match' );
+               
+       end
+       
     end
     
     

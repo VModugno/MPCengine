@@ -3,10 +3,13 @@ close all
 clc
 
 %% activate or deactivate function generation
-generate_func = false;
+generate_func    = true;
+%%
+%% simulate the mpc 
+start_simulation = false;
 %%
 %% activate or deactivate visualization
-visualization = true;
+visualization    = true;
 %%
 
 % cart pole parameters (to the env class)
@@ -31,29 +34,30 @@ solver       = "QPoases";
 controller = MpcGen.MpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,type,solver);
 
 %% testing MPC on the environment 
-t_f        = 50;   
-t          = 0:delta_t:t_f;
-init_state = [pi; pi/2; 0; 0];
-% environment
-reward = @(x,u)(norm(x));
-env    = CartPole(init_state,delta_t,reward);
-env.Render(obj)
+if(start_simulation)
+    t_f        = 50;   
+    t          = 0:delta_t:t_f;
+    init_state = [pi; pi/2; 0; 0];
+    % environment
+    reward = @(x,u)(norm(x));
+    env    = CartPole(init_state,delta_t,reward);
+    env.Render(obj)
 
-cur_x = init_state;
-all_states(:,1) = cur_x;
-for i=1:length(t)-1
-    if(visualization)   
-        env.UpdateRender(cur_x);  
+    cur_x = init_state;
+    all_states(:,1) = cur_x;
+    for i=1:length(t)-1
+        if(visualization)   
+            env.UpdateRender(cur_x);  
+        end
+        % mpc 
+        u          = controller.ComputeControl(cur_x,i);
+        % update env
+        [new_state]= env.Step(tau);
+        % udapte variables
+        cur_x             = new_state;
+        all_states(:,i+1) = cur_x;
     end
-    % mpc 
-    u          = controller.ComputeControl(cur_x,i);
-    % update env
-    [new_state]= env.Step(tau);
-    % udapte variables
-    cur_x             = new_state;
-    all_states(:,i+1) = cur_x;
 end
-
 
 
 %% generating function (do not change this part)
