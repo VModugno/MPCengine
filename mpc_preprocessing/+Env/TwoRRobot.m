@@ -1,0 +1,173 @@
+classdef TwoRRobot < Env.AbstractEnv
+    
+    properties 
+        num_state
+        state_bounds
+        init_state
+        state
+        state_name
+        dt
+        reward
+        visualization
+        active_visualization
+        prm                   % here i store all the parameters of the env 
+        measured_acc          % updated inside the step function
+    end
+    
+    
+    methods
+        function obj = TwoRRobot(init_state,dt,reward,varargin)
+            obj.num_state            = 4;
+            obj.state_bounds(1,:)    = [-2*pi,2*pi];
+            obj.state_bounds(2,:)    = [-2*pi,2*pi];
+            obj.state_bounds(3,:)    = [-100,100];
+            obj.state_bounds(4,:)    = [-100,100];
+            obj.init_state           = init_state;
+            obj.state                = init_state;
+            obj.state_name           = ["theta1" "theta2" "theta1_dot" "theta2_dot"];
+            obj.dt                   = dt;
+            obj.reward               = reward;
+            obj.active_visualization = false;
+            obj.Load_parameters();
+            if(strcmp(varargin{1},'ConfigFile'))
+                obj.prm = Utils.CopyPrmFromFile(varargin{2},obj.prm);
+            end
+        end
+        
+        function [new_state, mes_acc] = Dynamics(obj,state,action)
+            % Robot with motor at the joint dynamics. IN - [angle,rate] & torque.
+            % OUT - [rate,accel]
+            
+            if action(1) > obj.prm.tq_saturation(1)
+                action(1) = obj.prm.tq_saturation(1);
+            end
+            if action(2) > obj.prm.tq_saturation(2)
+                action(2) = obj.prm.tq_saturation(2);
+            end
+            if action(1) < -obj.prm.tq_saturation(1)
+                action(1) = -obj.prm.tq_saturation(1);
+            end
+            if action(2) < -obj.prm.tq_saturation(2)
+                action(2) = -obj.prm.tq_saturation(2);
+            end
+            
+            
+            
+            M = obj.get_dyn_M_2R_massmatrix(state,obj.prm);
+            C = obj.get_dyn_C_2R_Coriolisvector(state,obj.prm);
+            g = obj.get_dyn_g_2R_gravityvector(state,obj.prm);
+    
+            
+            mes_acc = M\(action - C - g);
+            
+            
+            new_state = [state(3); ...
+                        state(4);...
+                        mes_acc(1);...
+                        mes_acc(2)];
+        end
+        
+        function Render(obj)
+%             %% Set up the pendulum plot
+%             obj.visualization.panel = figure;
+%             obj.visualization.panel.Position = [680 558 400 400];
+%             obj.visualization.panel.Color = [1 1 1];
+%             
+%             hold on
+%     
+%             obj.visualization.size = 0.2;
+%             obj.visualization.rect = rectangle('Position',...
+%                                               [obj.init_state(1)-obj.visualization.size/2, -obj.visualization.size/2, obj.visualization.size, obj.visualization.size]); % cart
+%             obj.visualization.line = line(obj.init_state(1) + [0  sin(obj.init_state(3))], [0  cos(obj.init_state(3))], 'lineWidth', 2); % Pendulum stick
+%             axis equal
+%             axis([-4 4 -1 1])
+%             obj.visualization.f = plot(0,0,'b','LineWidth',10); 
+%             
+% 
+%             hold off
+%             
+%             obj.active_visualization = true;
+        end
+        
+        function UpdateRender(obj,state)
+%             set(obj.visualization.rect,'Position',[state(1)-obj.visualization.size/2, -obj.visualization.size/2, obj.visualization.size, obj.visualization.size]);
+%             set(obj.visualization.line,'XData',[state(1) state(1)+sin(state(3))]);
+%             set(obj.visualization.line,'YData',[0 cos(state(3))]);
+%             drawnow;
+         end
+        
+        function state = Wrapping(obj,state)
+            % no wrapping for now
+        end
+        
+        function M = get_dyn_M_2R_massmatrix(obj,state,prm)
+            M = zeros(2,2);
+            M(1,1) = prm.J1zz + prm.J2zz + prm.l1^2*prm.m1 + prm.l1^2*prm.m2 + prm.l2^2*prm.m2 + 2*prm.c1x*prm.l1*prm.m1 + 2*prm.c2x*prm.l2*prm.m2 + 2*prm.c2x*prm.l1*prm.m2*cos(state(2)) + 2*prm.l1*prm.l2*prm.m2*cos(state(2)) - 2*prm.c2y*prm.l1*prm.m2*sin(state(2));
+            M(1,2) = prm.J2zz + prm.l2^2*prm.m2 + 2*prm.c2x*prm.l2*prm.m2 + prm.c2x*prm.l1*prm.m2*cos(state(2)) + prm.l1*prm.l2*prm.m2*cos(state(2)) - prm.c2y*prm.l1*prm.m2*sin(state(2));
+            M(2,1) = M(1,2);
+            M(2,2) = prm.m2*prm.l2^2 + 2*prm.c2x*prm.m2*prm.l2 + prm.J2zz;
+        end
+        
+        function S = get_dyn_S_2R_Coriolismatrix(obj,state,prm)
+            S = zeros(2,2);
+
+            S(1,1) = -state(4)*prm.l1*prm.m2*(prm.c2y*cos(state(2)) + prm.c2x*sin(state(2)) + prm.l2*sin(state(2)));
+            S(1,2) = -prm.l1*prm.m2*(state(3) + state(4))*(prm.c2y*cos(state(2)) + prm.c2x*sin(state(2)) + prm.l2*sin(state(2)));
+            S(2,1) = state(3)*prm.l1*prm.m2*(prm.c2y*cos(state(2)) + prm.c2x*sin(state(2)) + prm.l2*sin(state(2)));
+            S(2,2) = 0;
+        end 
+        
+        function C = get_dyn_C_2R_Coriolisvector(obj,state,prm)
+            C = zeros(2,1);
+            C(1,1) = -state(4)*prm.l1*prm.m2*(2*state(3) + state(4))*(prm.c2y*cos(state(2)) + prm.c2x*sin(state(2)) + prm.l2*sin(state(2)));
+            C(2,1) = state(3)^2*prm.l1*prm.m2*(prm.c2y*cos(state(2)) + prm.c2x*sin(state(2)) + prm.l2*sin(state(2)));
+        end
+        
+        function g = get_dyn_g_2R_gravityvector(obj,state,prm)
+            g = zeros(2,1);
+            g0 = 9.80665;
+            g(1,1) = g0*prm.m1*(prm.c1x*cos(state(1)) + prm.l1*cos(state(1)) - prm.c1y*sin(state(1))) + g0*prm.m2*(prm.c2x*cos(state(1) + state(2)) + prm.l2*cos(state(1) + state(2)) - prm.c2y*sin(state(1) + state(2)) + prm.l1*cos(state(1)));
+            g(2,1) = g0*prm.m2*(prm.c2x*cos(state(1) + state(2)) + prm.l2*cos(state(1) + state(2)) - prm.c2y*sin(state(1) + state(2)));
+        end
+        
+        %% this function is only used by the class Estimated Model
+        function dynComp = GetDynamicalComponents(obj,state)
+            dynComp.S  = obj.get_dyn_S_2R_Coriolismatrix(state,obj.prm);
+            dynComp.M  = obj.get_dyn_M_2R_massmatrix(state,obj.prm);
+            dynComp.C  = obj.get_dyn_C_2R_Coriolisvector(state,obj.prm);
+            dynComp.g  = obj.get_dyn_g_2R_gravityvector(state,obj.prm);
+        end
+      
+         function acc = GetMeasuredAcc(obj)   
+                acc = obj.measured_acc;
+         end
+         
+         function tau = GetMeasuredAction(obj)
+              M   = obj.get_dyn_M_2R_massmatrix(obj.state,obj.prm);
+              C   = obj.get_dyn_C_2R_Coriolisvector(obj.state,obj.prm);
+              g   = obj.get_dyn_g_2R_gravityvector(obj.state,obj.prm);
+              tau = M*obj.measured_acc + C + g;
+         end
+        
+        function Load_parameters(obj)
+            %%  "actual" dynamic parameters
+            obj.prm.l1 = 1;
+            obj.prm.l2 = 0.5;
+
+            obj.prm.m1 = 3;
+            obj.prm.m2 = 2;
+            obj.prm.c1x = -0.6;
+            obj.prm.c1y = 0.01;
+            obj.prm.c1z = 0;
+            obj.prm.c2x = -0.2;
+            obj.prm.c2y = 0.02;
+            obj.prm.c2z = 0;
+            obj.prm.J1zz = 1/12*obj.prm.m1*obj.prm.l1^2 + obj.prm.m1*obj.prm.c1x^2 + obj.prm.m1*obj.prm.c1y^2;
+            obj.prm.J2zz = 1/12*obj.prm.m2*obj.prm.l2^2 + obj.prm.m2*obj.prm.c2x^2 + obj.prm.m2*obj.prm.c2y^2;
+            obj.prm.tq_saturation = [1e10;1e10];
+        end
+        
+        
+        
+    end
+end
