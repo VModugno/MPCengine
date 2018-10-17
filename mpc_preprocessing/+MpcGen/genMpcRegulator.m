@@ -73,7 +73,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.G    = [S_bar; -S_bar; eye(obj.N*obj.m); -eye(obj.N*obj.m)];
             obj.W    = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.maxInput)];
             obj.S    = [-T_bar; T_bar; zeros(obj.N*obj.m,obj.n); zeros(obj.N*obj.m,obj.n)];
-            
+             
             obj.type   = type; 
             obj.solver = solver; 
             
@@ -82,6 +82,11 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.sym_G      = sym(obj.G);      
             obj.sym_W      = sym(obj.W);
             obj.sym_S      = sym(obj.S);
+            
+             % here i compute the number of constraints for each step it is
+             % very immportant for the Cpp version of mpc
+             obj.N_constr  = size(obj.S,1)/obj.N;
+            
         end
         
         

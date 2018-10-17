@@ -137,7 +137,48 @@ classdef coreGenerator <  handle
                fclose(fid);              
        end
        
-       function GenParametersFile()
+       function GenParametersFile(obj)
+           
+           filepath  = strcat(obj.basepath,'/parameters.xml');
+           
+           pNode     = com.mathworks.xml.XMLUtils.createDocument('parameters');
+           
+           entry_node = pNode.createElement('Entry');
+           pNode.getDocumentElement.appendChild(entry_node);
+         
+           name_node = pNode.createElement('nu');
+           name_text = pNode.createTextNode(char(obj.n));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('m');
+           name_text = pNode.createTextNode(char(obj.m));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('q');
+           name_text = pNode.createTextNode(char(obj.q));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('delta');
+           name_text = pNode.createTextNode(char(obj.delta));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('N');
+           name_text = pNode.createTextNode(char(obj.N));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('N_constr');
+           name_text = pNode.createTextNode(char(obj.N_constr));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           xmlwrite(char(filepath),pNode);
+           
+           
            
        end
        
