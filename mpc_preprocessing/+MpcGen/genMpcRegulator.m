@@ -3,14 +3,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
     properties
         
-        variables   % here I define all the variable (to work on the exact meaning of this)
-        n           % state space dim
-        m           % control space dim 
-        q           % output space dim 
-        delta       % sampling time
-        N           % widht of prediction window
-        N_constr    % number of constraints
-        
+        variables   % here I define all the variable (to work on the exact meaning of this)  
         maxInput    
         maxOutput 
         
@@ -84,11 +77,11 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.type   = type; 
             obj.solver = solver; 
             
-            obj.sym_H      = sym(H);                   
-            obj.sym_F_tra  = sym(F_tra); 
-            obj.sym_G      = sym(G);      
-            obj.sym_W      = sym(W);
-            obj.sym_S      = sym(S);
+            obj.sym_H      = sym(obj.H);                   
+            obj.sym_F_tra  = sym(obj.F_tra); 
+            obj.sym_G      = sym(obj.G);      
+            obj.sym_W      = sym(obj.W);
+            obj.sym_S      = sym(obj.S);
         end
         
         

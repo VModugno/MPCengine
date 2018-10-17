@@ -65,5 +65,5 @@ end
 if(generate_func)
     controller.GenFunctions();
     % TODO add function to create file for constructing mpc problem
-    % controller.GenParameters()
+    % controller.GenParametersFile()
 end

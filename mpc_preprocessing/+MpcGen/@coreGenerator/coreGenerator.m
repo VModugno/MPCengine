@@ -1,9 +1,18 @@
 classdef coreGenerator <  handle
     
     properties 
+        % general information about path and type of solver
         basepath    %
         type
         solver
+        % structure of the problem
+        n           % state space dim
+        m           % control space dim 
+        q           % output space dim 
+        delta       % sampling time
+        N           % widht of prediction window
+        N_constr    % number of constraints
+        
         %  for code generation
         sym_H       %             
         sym_F_tra   %
@@ -17,6 +26,7 @@ classdef coreGenerator <  handle
         G
         W
         S
+       
         
     end
     
@@ -65,25 +75,72 @@ classdef coreGenerator <  handle
                %% hessian cost function
                H_  = obj.sym_H(:);
                obj.cCode(H_,'compute_H',{},'H');
-               obj.PostProcessFunctionForqpOASES(strcat(obj.basepath,'/compute_H.c'))
+               obj.PostProcessFunctionForqpOASES('compute_H','H')
                %% linear term cost function
                g_  = (obj.x_0'*obj.sym_F_tra)'; 
                obj.cCode(g_,'compute_g',{obj.x_0},'g');
+               obj.PostProcessFunctionForqpOASES('compute_g','g')
                %% linear term constraints
                A_  = obj.sym_G(:);
                obj.cCode(A_,'compute_A',{},'A');
+               obj.PostProcessFunctionForqpOASES('compute_A','A')
                %% constant term constraints
                ub_ = obj.sym_W + obj.sym_S*obj.x_0;
                obj.cCode(ub_,'compute_ub',{obj.x_0},'ub');
+               obj.PostProcessFunctionForqpOASES('compute_ub','ub')
             end         
        end
        
-       function PostProcessFunctionForqpOASES(filename)
-               str = fileread(filename);
-               xpr = '(?<=(^|\n))[ ]*201[4567].+?(?=($|[ ]*201[4567]))';
-               blocks = regexp( str, xpr, 'match' );
+       function PostProcessFunctionForqpOASES(obj,filename,namefunc)
+               %% working on .c file
+               filepath            = strcat(obj.basepath,'/',filename,'.c');
+               str                 = fileread(char(filepath));
+               delimiter_for_split = strcat("double ",namefunc,'[]');
+               % i split at the signature of the function
+               new_func1           = split(str,delimiter_for_split);
+               % i split again to get the dimension of the output vector
+               new_func2           = split(new_func1{2},[",",")"]);
+               % here i create all the pieces fo the new function that im
+               % going to stitch togheter
+               new_variable_name   = strcat(namefunc,'_out');
+               new_variable_signa  = strcat("double ","* ",new_variable_name);
+               variable_declare    = strcat(delimiter_for_split,new_func2{1});
+               copy_to_out         = strcat(new_variable_name,"=",namefunc,"[0]",";");
+               % last split 
+               new_func3           = split(new_func1{2},["{","}"]);
                
+               % reconstruct new func for .cpp
+               new_string = new_func1{1} + new_variable_signa + new_func3{1} + "{" + newline + variable_declare + ";" + newline + new_func3{2} ...
+                            + newline + copy_to_out  + newline + "}";
+               
+               % save the new func as .cpp
+               new_name_file = strcat(obj.basepath,'/',filename,'.cpp');
+               fid = fopen(new_name_file,'w');
+               fprintf(fid,'%s',new_string);
+               fclose(fid);
+               
+               % delete old .c file
+               delete(char(filepath));
+               
+               %% working on .h file
+               filepath            = strcat(obj.basepath,'/',filename,'.h');
+               str                 = fileread(char(filepath));
+               delimiter_for_split = variable_declare;
+               new_func1           = split(str,delimiter_for_split);
+               % change the signature of the function in the header file
+               % important!!! in this function it is expecting a function
+               % name inside the comment at the beggining of the header too
+               new_string = new_func1{1} + new_variable_signa + new_func1{2} + new_variable_signa + new_func1{3};
+               % save the new func as .h
+               fid = fopen(filepath,'w');
+               fprintf(fid,'%s',new_string);
+               fclose(fid);              
        end
+       
+       function GenParametersFile()
+           
+       end
+       
        
     end
     
