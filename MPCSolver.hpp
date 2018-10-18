@@ -12,7 +12,7 @@
 
 class MPCSolver{
 	public:
-		MPCSolver(int n,int m,int p,int N, int N_constr);
+		MPCSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver);
 		MPCSolver(const std::string filename);
 		//
 		Eigen::VectorXd initSolver(Eigen::VectorXd x0_in);
@@ -23,6 +23,12 @@ class MPCSolver{
 		// Log
 		void plotInfoQP();
 		void logToFile();
+
+		// GET function
+		int getStateDim(){return this->n;};
+		int getControlDim(){return this->m;};
+		int getOutputDim(){return this->p;};
+
 
 
 	public:
@@ -41,6 +47,8 @@ class MPCSolver{
 		int p;        // output  space dim
 		int N;        // prediction window
 		int N_constr; // number of constraints
+		std::string  type;
+		std::string  solver;
 
 		// solver parameters
 		qpOASES::int_t nWSR         = 3000;

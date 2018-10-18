@@ -100,7 +100,11 @@ classdef genMpcRegulator < MpcGen.coreGenerator
         
         function GenFunctions(obj) 
              GenFunctions@MpcGen.coreGenerator(obj)  
-       end
+        end
+       
+        function GenEnvParametersFile()
+            [pNode]=GenEnvParametersFile@MpcGen.coreGenerator(obj);
+        end
         
     end
 

@@ -3,13 +3,13 @@ close all
 clc
 
 %% activate or deactivate function generation
-generate_func    = false;
+generate_func    = true;
 %%
 %% simulate the mpc 
-start_simulation = true;
+start_simulation = false;
 %%
 %% activate or deactivate visualization
-visualization    = true;
+visualization    = false;
 %%
 
 % cart pole parameters (to the env class)
@@ -36,15 +36,17 @@ solver       = "QPoases";
 controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,type,solver);
 
 %% testing MPC on the environment 
-if(start_simulation)
-    t_f        = 50;   
-    t          = 0:delta_t:t_f;
-    init_state = [0; 0; pi/4; 0];
-    % environment
-    reward = @(x,u)(norm(x));
-    env    = Env.CartPole(init_state,delta_t,reward);
-    env.Render()
+ft        = 50;   
+t          = 0:delta_t:ft;
+init_state = [0; 0; pi/4; 0];
+reward     = @(x,u)(norm(x));
+% environment
+env        = Env.CartPole(init_state,delta_t,reward);
 
+if(visualization) 
+    env.Render();
+end
+if(start_simulation)
     cur_x = init_state;
     all_states(:,1) = cur_x;
     for i=1:length(t)-1
@@ -67,5 +69,6 @@ end
 if(generate_func)
     controller.GenFunctions();
     % function to create file with parameters
-    controller.GenParametersFile()
+    controller.GenParametersFile();
+    env.GenEnvParametersFile(controller.basepath,ft);
 end

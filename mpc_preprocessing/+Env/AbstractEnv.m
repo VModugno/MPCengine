@@ -42,6 +42,40 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
             
         end
         
+        function GenEnvParametersFile(obj,basepath,ft)
+           
+           filepath   = strcat(basepath,'/env_parameters.xml');
+           pNode      = com.mathworks.xml.XMLUtils.createDocument('parameters');
+           
+           entry_node = pNode.createElement('Entry');
+           pNode.getDocumentElement.appendChild(entry_node);
+          
+           name_node = pNode.createElement('delta');
+           name_text = pNode.createTextNode(num2str(obj.dt));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('ft');
+           name_text = pNode.createTextNode(num2str(ft));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           % particular care has to be taken for the array in order to be
+           % properly read in c++
+           string = mat2str(obj.init_state);
+           string = erase(string,["[","]"]);
+           string = strrep(string,";"," ");
+           name_node = pNode.createElement('init_state');
+           name_text = pNode.createTextNode(string);
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           % side effect on pNode
+           obj.LocalGenEnvParametersFile(pNode,entry_node);
+
+           xmlwrite(char(filepath),pNode);   
+        end
+        
         function Reset(obj)
             obj.state = obj.init_state;
         end
@@ -57,6 +91,7 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
         UpdateRender(obj,state)
         state = Wrapping(obj,state)
         Load_parameters(obj,varargin)
+        LocalGenEnvParametersFile(obj,pNode,entry_node)
         
     end    
     

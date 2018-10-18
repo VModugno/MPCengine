@@ -10,7 +10,8 @@ public:
 	std::vector<std::string> state_name;
 	Eigen::VectorXd init_state;
 	Eigen::VectorXd state;
-	double dt;
+	double dt;                            // sample duration (s)
+	double ft;                            // final time      (s)
 	bool active_visualization;
 	Eigen::VectorXd mes_acc;
 

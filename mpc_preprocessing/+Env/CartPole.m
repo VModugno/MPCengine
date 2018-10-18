@@ -96,6 +96,25 @@ classdef CartPole < Env.AbstractEnv
         end
         
         
+        function LocalGenEnvParametersFile(obj,pNode,entry_node)
+            
+           name_node = pNode.createElement('mCart');
+           name_text = pNode.createTextNode(num2str(obj.prm.mCart));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('mPend');
+           name_text = pNode.createTextNode(num2str(obj.prm.mPend));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('L');
+           name_text = pNode.createTextNode(num2str(obj.prm.L));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+        end
+        
     end
     
     %% linearize model around the unstable equilibrium point

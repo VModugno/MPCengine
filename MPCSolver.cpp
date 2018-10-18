@@ -6,13 +6,11 @@
 #include <stdlib.h>
 #include <chrono>
 
-//using namespace mpcSolver;
-//using namespace std::chrono;
 
 namespace pt = boost::property_tree;
 namespace fs = boost::filesystem;
 
-MPCSolver::MPCSolver(int n,int m,int p,int N, int N_constr){
+MPCSolver::MPCSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver){
 	// Set up parameters
 	this->n           = n;
 	this->m           = m;
@@ -21,6 +19,8 @@ MPCSolver::MPCSolver(int n,int m,int p,int N, int N_constr){
     this->N_constr    = N_constr;
     int nVariables    = this->N * this->m;
     int nConstraints  = this->N * this->N_constr;
+    this->type        = type;
+    this->solver      = solver;
     this->qp          = qpOASES::QProblem(nVariables,nConstraints);
 }
 
@@ -47,6 +47,8 @@ MPCSolver::MPCSolver(const std::string filename){
 	this->p           = tree.get<int>("parameters.Entry.q");
     this->N           = tree.get<int>("parameters.Entry.N");
     this->N_constr    = tree.get<int>("parameters.Entry.N_constr");
+    this->type        = tree.get<std::string>("parameters.Entry.type");
+    this->solver      = tree.get<std::string>("parameters.Entry.solver");
     int nVariables    = this->N * this->m;
     int nConstraints  = this->N * this->N_constr;
     this->qp          = qpOASES::QProblem(nVariables,nConstraints);

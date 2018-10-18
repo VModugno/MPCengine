@@ -177,11 +177,20 @@ classdef coreGenerator <  handle
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
-           xmlwrite(char(filepath),pNode);
+           name_node = pNode.createElement('type');
+           name_text = pNode.createTextNode(obj.type);
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
            
+           name_node = pNode.createElement('solver');
+           name_text = pNode.createTextNode(obj.solver);
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
            
-           
+           xmlwrite(char(filepath),pNode);   
        end
+       
+        
        
        
     end
