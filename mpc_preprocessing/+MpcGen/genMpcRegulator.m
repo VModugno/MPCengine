@@ -93,7 +93,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
          function tau = ComputeControl(obj,x_cur)
             % why here we repeat the computation of S at each time
              %S = [-obj.T_bar; obj.T_bar; zeros(obj.N*obj.m,obj.n); zeros(obj.N*obj.m,obj.n)];
-             u_star = quadprog(obj.H, x_cur'*obj.F_tra, obj.G, obj.W+S*x_cur);
+             u_star = quadprog(obj.H, x_cur'*obj.F_tra, obj.G, obj.W+obj.S*x_cur);
              tau = u_star(1:obj.m);
          end
         

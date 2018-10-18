@@ -29,8 +29,10 @@ classdef CartPole < Env.AbstractEnv
             obj.reward               = reward;
             obj.active_visualization = false;
             obj.Load_parameters()
-            if(strcmp(varargin{1},'ConfigFile'))
-                obj.prm = Utils.CopyPrmFromFile(varargin{2},obj.prm);
+            if(~isempty(varargin))
+                if(strcmp(varargin{1},'ConfigFile'))
+                    obj.prm = Utils.CopyPrmFromFile(varargin{2},obj.prm);
+                end
             end
         end
         

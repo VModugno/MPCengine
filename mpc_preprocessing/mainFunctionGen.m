@@ -3,10 +3,10 @@ close all
 clc
 
 %% activate or deactivate function generation
-generate_func    = true;
+generate_func    = false;
 %%
 %% simulate the mpc 
-start_simulation = false;
+start_simulation = true;
 %%
 %% activate or deactivate visualization
 visualization    = true;
@@ -21,11 +21,13 @@ xCartMax = 5;
 % Double integrator
 A_cont = [0 1 0 0; 0 0 -mPend*g/mCart 0; 0 0 0 1; 0 0 (mCart+mPend)*g/(L*mCart) 0];
 B_cont = [0; 1/mCart; 0; -1/(L*mCart)];
-C_cont = [0 1 1 1];
-maxOutput    = [10];
+C_cont = [1 0 0 0;
+          0 0 1 0;
+          0 0 0 1];
+maxOutput    = [10;100;100];
 maxInput     = [20];
 delta_t      = 0.1;     % (to the env class)
-N            = 3;       % prediction window
+N            = 20;       % prediction window
 state_gain   = 100;     % penalty error on the state
 control_cost = 1;
 type         = "fixed"; 
@@ -37,11 +39,11 @@ controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delt
 if(start_simulation)
     t_f        = 50;   
     t          = 0:delta_t:t_f;
-    init_state = [pi; pi/2; 0; 0];
+    init_state = [0; 0; pi/4; 0];
     % environment
     reward = @(x,u)(norm(x));
-    env    = CartPole(init_state,delta_t,reward);
-    env.Render(obj)
+    env    = Env.CartPole(init_state,delta_t,reward);
+    env.Render()
 
     cur_x = init_state;
     all_states(:,1) = cur_x;
@@ -50,9 +52,9 @@ if(start_simulation)
             env.UpdateRender(cur_x);  
         end
         % mpc 
-        u          = controller.ComputeControl(cur_x,i);
+        u          = controller.ComputeControl(cur_x);
         % update env
-        [new_state]= env.Step(tau);
+        [new_state]= env.Step(u);
         % udapte variables
         cur_x             = new_state;
         all_states(:,i+1) = cur_x;

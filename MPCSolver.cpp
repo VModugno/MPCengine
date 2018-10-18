@@ -25,23 +25,17 @@ MPCSolver::MPCSolver(int n,int m,int p,int N, int N_constr){
 }
 
 MPCSolver::MPCSolver(const std::string filename){
-
-	//char * fname = new char [filename.length()+1];
-	//strcpy (fname, filename.c_str());
-
-	//DEBUG
-	//std::cout << full_path << std::endl;
-	//
-
+    // i create a string stream for concatenating strings
 	std::stringstream ss;
-
+    // i get the current working directory
 	fs::path pathfs = fs::current_path();
+	// convert to a string
 	std::string path = pathfs.string();
+	// concat string
 	ss << path <<  "/current_functions/" << filename;
+	// get the final path
 	std::string full_path = ss.str();
-	//DEBUG
-    std::cout << full_path << std::endl;
-    //
+
 
 	// Create empty property tree object
 	pt::ptree tree;
