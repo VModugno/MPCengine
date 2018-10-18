@@ -103,14 +103,14 @@ classdef coreGenerator <  handle
                % here i create all the pieces fo the new function that im
                % going to stitch togheter
                new_variable_name   = strcat(namefunc,'_out');
-               new_variable_signa  = strcat("double ","* ",new_variable_name);
-               variable_declare    = strcat(delimiter_for_split,new_func2{1});
+               new_variable_signa  = strcat("double ",new_variable_name);
+               variable_declare    = strcat("double ",namefunc,'[1]',new_func2{1});
                copy_to_out         = strcat(new_variable_name,"=",namefunc,"[0]",";");
                % last split 
                new_func3           = split(new_func1{2},["{","}"]);
                
                % reconstruct new func for .cpp
-               new_string = new_func1{1} + new_variable_signa + new_func3{1} + "{" + newline + variable_declare + ";" + newline + new_func3{2} ...
+               new_string = new_func1{1} + new_variable_signa +new_func3{1}+ "{" + newline + variable_declare + ";" + newline + new_func3{2} ...
                             + newline + copy_to_out  + newline + "}";
                
                % save the new func as .cpp
@@ -125,7 +125,8 @@ classdef coreGenerator <  handle
                %% working on .h file
                filepath            = strcat(obj.basepath,'/',filename,'.h');
                str                 = fileread(char(filepath));
-               delimiter_for_split = variable_declare;
+               delimiter_for_split = strcat("double ",namefunc,'[]',new_func2{1});
+               new_variable_signa  = strcat("double ",new_variable_name,new_func2{1});
                new_func1           = split(str,delimiter_for_split);
                % change the signature of the function in the header file
                % important!!! in this function it is expecting a function
@@ -146,33 +147,33 @@ classdef coreGenerator <  handle
            entry_node = pNode.createElement('Entry');
            pNode.getDocumentElement.appendChild(entry_node);
          
-           name_node = pNode.createElement('nu');
-           name_text = pNode.createTextNode(char(obj.n));
+           name_node = pNode.createElement('n');
+           name_text = pNode.createTextNode(int2str(obj.n));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
            name_node = pNode.createElement('m');
-           name_text = pNode.createTextNode(char(obj.m));
+           name_text = pNode.createTextNode(int2str(obj.m));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
            name_node = pNode.createElement('q');
-           name_text = pNode.createTextNode(char(obj.q));
+           name_text = pNode.createTextNode(int2str(obj.q));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
            name_node = pNode.createElement('delta');
-           name_text = pNode.createTextNode(char(obj.delta));
+           name_text = pNode.createTextNode(int2str(obj.delta));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
            name_node = pNode.createElement('N');
-           name_text = pNode.createTextNode(char(obj.N));
+           name_text = pNode.createTextNode(int2str(obj.N));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
            name_node = pNode.createElement('N_constr');
-           name_text = pNode.createTextNode(char(obj.N_constr));
+           name_text = pNode.createTextNode(int2str(obj.N_constr));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            

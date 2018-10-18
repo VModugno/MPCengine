@@ -12,7 +12,8 @@
 
 class MPCSolver{
 	public:
-		MPCSolver(int n,int m,int p,int N, int N_constr);//int H_dim,int g_dim,int A_dim, int ub_dim);
+		MPCSolver(int n,int m,int p,int N, int N_constr);
+		MPCSolver(const std::string filename);
 		//
 		Eigen::VectorXd initSolver(Eigen::VectorXd x0_in);
 		Eigen::VectorXd initSolver(double * x0);
@@ -20,7 +21,9 @@ class MPCSolver{
 		Eigen::VectorXd solveQP(Eigen::VectorXd xi_in);
 		Eigen::VectorXd solveQP(double * xi);
 		// Log
+		void plotInfoQP();
 		void logToFile();
+
 
 	public:
 
