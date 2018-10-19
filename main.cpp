@@ -15,26 +15,27 @@ int main(){
 	std::string filename = "parameters.xml";
 	MPCSolver qp         = MPCSolver(filename);
 	qp.plotInfoQP();
-	// solvers initialization
-	qp.initSolver(env.init_state);
 
 	// simulation loop
 	Eigen::VectorXd action(qp.getControlDim());
-	action(0) = 1;
 	Eigen::VectorXd mes_acc(2);
 	Eigen::VectorXd new_state(qp.getStateDim());
 	Eigen::VectorXd cur_state(qp.getStateDim());
+	// solvers initialization
+	action = qp.initSolver(env.init_state);
 	// initializing variables for simulation
 	cur_state = env.init_state;
     int steps = env.ft/env.dt;
 	std::cout << "starting simulation" << std::endl;
 	for(int i=0;i<steps;i++){
-        // compute control actions
-		action = qp.solveQP(cur_state);
 		// updating environment
+		std::cout <<"action = "<<action << std::endl;
 		env.Step(action,mes_acc,new_state);
+		std::cout <<"new_state = "<<new_state << std::endl;
 		// update state
 		cur_state = new_state;
+		// compute control actions
+		action = qp.solveQP(cur_state);
 		std::cout << new_state << std::endl;
 	}
 
