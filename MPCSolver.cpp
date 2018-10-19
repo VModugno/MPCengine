@@ -22,6 +22,7 @@ MPCSolver::MPCSolver(int n,int m,int p,int N, int N_constr,std::string type,std:
     this->type        = type;
     this->solver      = solver;
     this->qp          = qpOASES::QProblem(nVariables,nConstraints);
+    this->nWSR        = 3000;
 }
 
 MPCSolver::MPCSolver(const std::string filename){
@@ -52,6 +53,7 @@ MPCSolver::MPCSolver(const std::string filename){
     int nVariables    = this->N * this->m;
     int nConstraints  = this->N * this->N_constr;
     this->qp          = qpOASES::QProblem(nVariables,nConstraints);
+    this->nWSR        = 30000;
 }
 
 
@@ -71,8 +73,11 @@ Eigen::VectorXd MPCSolver::initSolver(Eigen::VectorXd  x0_in)
 	int nConstraints_batch = this->N * this->N_constr;
 	// qpoases option
 	qpOASES::Options options;
-    options.setToMPC();
-    options.printLevel=qpOASES::PL_NONE;
+    options.setToReliable();
+    options.printLevel           = qpOASES::PL_HIGH;
+    options.enableNZCTests       = qpOASES::BT_TRUE;
+    options.enableFlippingBounds = qpOASES::BT_TRUE;
+    this->qp.setOptions(options);
     // fitness matrices
 	qpOASES::real_t H[nVariables_batch*nVariables_batch];
 	qpOASES::real_t g[nVariables_batch];
@@ -109,7 +114,8 @@ Eigen::VectorXd MPCSolver::initSolver(double * x0)
 	// qpoases option
 	qpOASES::Options options;
     options.setToMPC();
-    options.printLevel=qpOASES::PL_NONE;
+    options.printLevel=qpOASES::PL_HIGH;
+    this->qp.setOptions(options);
     // fitness matrices
 	qpOASES::real_t H[nVariables*nVariables];
 	qpOASES::real_t g[nVariables];
@@ -162,8 +168,12 @@ Eigen::VectorXd MPCSolver::solveQP(Eigen::VectorXd xi_in) {
 	compute_A(A);
 	compute_ub(ubA,xi);
 	// compute solutions
-	qp.hotstart(g,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+	//qp.reset();
+	qpOASES::int_t new_nWSR = 30000;
+	qp.hotstart(g,NULL,NULL,NULL,ubA,new_nWSR,NULL);
+	//qp.init(H,g,A,NULL,NULL,NULL,ubA,new_nWSR,NULL);
     // compute
+	//std::cout << "this->nWSR " << this->nWSR << std::endl;
 	qp.getPrimalSolution(xOpt);
 	for(int i=0;i<m;++i){
 		decisionVariables(i) = xOpt[i];
@@ -195,7 +205,10 @@ Eigen::VectorXd MPCSolver::solveQP(double *xi) {
 	compute_A(A);
 	compute_ub(ubA,xi);
 	// compute solutions
-	qp.hotstart(g,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+	qp.reset();
+	//qp.hotstart(g,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+	qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+	std::cout << "this->nWSR" << this->nWSR << std::endl;
     // compute
 	qp.getPrimalSolution(xOpt);
 	for(int i=0;i<m;++i){
