@@ -1,6 +1,4 @@
 to do for the matlab engine
 
-change the signature of the function 
-add declaration of the inner variable
-close with copy to the out variable
-change the extesion from c to cpp
+add memcopy 
+add include string
