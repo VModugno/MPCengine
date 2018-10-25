@@ -21,7 +21,7 @@ MPCSolver::MPCSolver(int n,int m,int p,int N, int N_constr,std::string type,std:
     int nConstraints  = this->N * this->N_constr;
     this->type        = type;
     this->solver      = solver;
-    this->qp          = qpOASES::QProblem(nVariables,nConstraints);
+    this->qp          = qpOASES::SQProblem(nVariables,nConstraints);
     this->nWSR        = 3000;
 }
 
@@ -52,7 +52,7 @@ MPCSolver::MPCSolver(const std::string filename){
     this->solver      = tree.get<std::string>("parameters.Entry.solver");
     int nVariables    = this->N * this->m;
     int nConstraints  = this->N * this->N_constr;
-    this->qp          = qpOASES::QProblem(nVariables,nConstraints);
+    this->qp          = qpOASES::SQProblem(nVariables,nConstraints);
     this->nWSR        = 30000;
 }
 
@@ -170,7 +170,7 @@ Eigen::VectorXd MPCSolver::solveQP(Eigen::VectorXd xi_in) {
 	// compute solutions
 	//qp.reset();
 	qpOASES::int_t new_nWSR = 30000;
-	qp.hotstart(g,NULL,NULL,NULL,ubA,new_nWSR,NULL);
+	qp.hotstart(H,g,A,NULL,NULL,NULL,ubA,new_nWSR,NULL);
 	//qp.init(H,g,A,NULL,NULL,NULL,ubA,new_nWSR,NULL);
     // compute
 	//std::cout << "this->nWSR " << this->nWSR << std::endl;

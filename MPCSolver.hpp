@@ -61,7 +61,7 @@ class MPCSolver{
 
 
 		// Quadratic problem
-		qpOASES::QProblem qp;
+		qpOASES::SQProblem qp;
 
 };
 
