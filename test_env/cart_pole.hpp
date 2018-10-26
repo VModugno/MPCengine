@@ -116,9 +116,9 @@ public:
 			cur_mes_acc(1) = (-action(0)*cos(cur_state(2))- pp.mPend*pp.L*pow(cur_state(3),2)*sin(cur_state(2))*cos(cur_state(2)) + (pp.mPend+pp.mCart)*g*sin(cur_state(2)))/(pp.L*(pp.mCart+pp.mPend*pow(sin(cur_state(2)),2)));
 			std::cout << "after crash" << std::endl;
 			new_state(0)= cur_state(1);
-			new_state(1)= mes_acc(0);
+			new_state(1)= cur_mes_acc(0);
 			new_state(2)= cur_state(3);
-			new_state(3)= mes_acc(1);
+			new_state(3)= cur_mes_acc(1);
 
 			return new_state;
 

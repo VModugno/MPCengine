@@ -22,7 +22,8 @@ class MPCSolver{
 		Eigen::VectorXd solveQP(double * xi);
 		// Log
 		void plotInfoQP();
-		void logToFile();
+
+		void logToFile(std::string data2log);
 
 		// GET function
 		int getStateDim(){return this->n;};

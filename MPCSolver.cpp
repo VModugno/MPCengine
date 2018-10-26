@@ -228,7 +228,8 @@ void MPCSolver::plotInfoQP(){
 	std::cout << "N_constr = " << this->N_constr << std::endl;
 }
 
-void MPCSolver::logToFile() {
+void MPCSolver::logToFile(std::string data2log) {
+
 }
 
 
