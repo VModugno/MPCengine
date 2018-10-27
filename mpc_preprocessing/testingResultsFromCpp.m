@@ -19,5 +19,6 @@ env.Render();
 for ii=1:size(state,1)
     
     env.UpdateRender(state(ii,:)');
+    pause(30/1000)
     
 end

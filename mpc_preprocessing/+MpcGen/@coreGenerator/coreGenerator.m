@@ -74,8 +74,11 @@ classdef coreGenerator <  handle
                %    l_b <= z <= u_b
                %    l_b <= A*z <= u_b
                
-               %% hessian cost function
-               H_  = obj.sym_H(:);
+               %% Important!!! for QPoases matrix has to be stored row wise
+               %% hessian cost function 
+               %H_  = obj.sym_H(:);
+               H_  = obj.sym_H';
+               H_  = H_(:);
                obj.cCode(H_,'compute_H',{},'H');
                obj.PostProcessFunctionForqpOASES('compute_H','H')
                %% linear term cost function
@@ -83,7 +86,9 @@ classdef coreGenerator <  handle
                obj.cCode(g_,'compute_g',{obj.x_0},'g');
                obj.PostProcessFunctionForqpOASES('compute_g','g')
                %% linear term constraints
-               A_  = obj.sym_G(:);
+               %A_  = obj.sym_G(:);
+               A_  = obj.sym_G';
+               A_  = A_(:);
                obj.cCode(A_,'compute_A',{},'A');
                obj.PostProcessFunctionForqpOASES('compute_A','A')
                %% constant term constraints
