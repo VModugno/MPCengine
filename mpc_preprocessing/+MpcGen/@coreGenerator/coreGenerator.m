@@ -36,13 +36,15 @@ classdef coreGenerator <  handle
    
     methods
        
-        function obj = coreGenerator(type,solver)
+        function obj = coreGenerator(type,solver,generate_functions)
             
             obj.type   = type;
             obj.solver = solver;
             obj.GetBasePath();
-            if ~exist(obj.basepath,'dir')
-                mkdir(convertStringsToChars(obj.basepath));
+            if(generate_functions)
+                if ~exist(obj.basepath,'dir')
+                    mkdir(convertStringsToChars(obj.basepath));
+                end
             end
             
             
@@ -105,12 +107,13 @@ classdef coreGenerator <  handle
                new_variable_name   = strcat(namefunc,'_out');
                new_variable_signa  = strcat("double ",new_variable_name);
                variable_declare    = strcat("double ",namefunc,'[1]',new_func2{1});
-               copy_to_out         = strcat(new_variable_name,"=",namefunc,"[0]",";");
+               vector_dimension    = erase(new_func2{1},["[","]"]);
+               copy_to_out         = strcat("memcpy(",new_variable_name,",",namefunc,"[0]",",sizeof(double)*",vector_dimension,");");
                % last split 
                new_func3           = split(new_func1{2},["{","}"]);
                
                % reconstruct new func for .cpp
-               new_string = new_func1{1} + new_variable_signa +new_func3{1}+ "{" + newline + variable_declare + ";" + newline + new_func3{2} ...
+               new_string = "#include ""string.h"" " + newline + new_func1{1} + new_variable_signa +new_func3{1}+ "{" + newline + variable_declare + ";" + newline + new_func3{2} ...
                             + newline + copy_to_out  + newline + "}";
                
                % save the new func as .cpp
@@ -118,6 +121,8 @@ classdef coreGenerator <  handle
                fid = fopen(new_name_file,'w');
                fprintf(fid,'%s',new_string);
                fclose(fid);
+               
+               % memcpy(H_out,H[0], sizeof(double)*64);
                
                % delete old .c file
                delete(char(filepath));
@@ -162,10 +167,10 @@ classdef coreGenerator <  handle
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
-           name_node = pNode.createElement('delta');
-           name_text = pNode.createTextNode(int2str(obj.delta));
-           name_node.appendChild(name_text);
-           entry_node.appendChild(name_node);
+           %name_node = pNode.createElement('delta');
+           %name_text = pNode.createTextNode(int2str(obj.delta));
+           %name_node.appendChild(name_text);
+           %entry_node.appendChild(name_node);
            
            name_node = pNode.createElement('N');
            name_text = pNode.createTextNode(int2str(obj.N));

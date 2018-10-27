@@ -3,13 +3,13 @@ close all
 clc
 
 %% activate or deactivate function generation
-generate_func    = false;
+generate_func    = true;
 %%
 %% simulate the mpc 
-start_simulation = true;
+start_simulation = false;
 %%
 %% activate or deactivate visualization
-visualization    = true;
+visualization    = false;
 %%
 
 % cart pole parameters (to the env class)
@@ -28,17 +28,17 @@ maxOutput    = [10;100;100];
 maxInput     = [100];
 delta_t      = 0.1;     % (to the env class)
 N            = 8;       % prediction window
-state_gain   = 1000;     % penalty error on the state
+state_gain   = 1000;    % penalty error on the state
 control_cost = 1;
 type         = "fixed"; 
 solver       = "QPoases";
 % regulator 
-controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,type,solver);
+controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,type,solver,generate_func);
 
 %% testing MPC on the environment 
 ft        = 50;   
 t          = 0:delta_t:ft;
-init_state = [0; 0; pi/100; 0];
+init_state = [0; 0; pi/8; 0];
 reward     = @(x,u)(norm(x));
 % environment
 env        = Env.CartPole(init_state,delta_t,reward);

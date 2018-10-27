@@ -95,7 +95,9 @@ Eigen::VectorXd MPCSolver::initSolver(Eigen::VectorXd  x0_in)
 	compute_ub(ubA,x0);
 
 	// solve optimization problem
-	qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+	qpOASES::returnValue ret;
+	ret = qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+	this->GetVerySimpleStatus(ret,true);
     // get results
 	qp.getPrimalSolution(xOpt);
 
@@ -133,7 +135,9 @@ Eigen::VectorXd MPCSolver::initSolver(double * x0)
 	compute_ub(ubA,x0);
 
 	// solve optimization problem
-	qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+	qpOASES::returnValue ret;
+	ret = qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+	this->GetVerySimpleStatus(ret,true);
     // get results
 	qp.getPrimalSolution(xOpt);
 
@@ -168,12 +172,16 @@ Eigen::VectorXd MPCSolver::solveQP(Eigen::VectorXd xi_in) {
 	compute_A(A);
 	compute_ub(ubA,xi);
 	// compute solutions
-	//qp.reset();
 	qpOASES::int_t new_nWSR = 30000;
-	qp.hotstart(H,g,A,NULL,NULL,NULL,ubA,new_nWSR,NULL);
-	//qp.init(H,g,A,NULL,NULL,NULL,ubA,new_nWSR,NULL);
+	qpOASES::returnValue ret;
+	ret       = qp.hotstart(H,g,A,NULL,NULL,NULL,ubA,new_nWSR,NULL);
+	bool pass = this->GetVerySimpleStatus(ret,true);
+	if(!pass){
+		// resetting QP and restarting it
+		qp.reset();
+		qp.init(H,g,A,NULL,NULL,NULL,ubA,new_nWSR,NULL);
+	}
     // compute
-	//std::cout << "this->nWSR " << this->nWSR << std::endl;
 	qp.getPrimalSolution(xOpt);
 	for(int i=0;i<m;++i){
 		decisionVariables(i) = xOpt[i];
@@ -205,10 +213,16 @@ Eigen::VectorXd MPCSolver::solveQP(double *xi) {
 	compute_A(A);
 	compute_ub(ubA,xi);
 	// compute solutions
-	qp.reset();
-	//qp.hotstart(g,NULL,NULL,NULL,ubA,this->nWSR,NULL);
-	qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
-	std::cout << "this->nWSR" << this->nWSR << std::endl;
+	qpOASES::int_t new_nWSR = 30000;
+	qpOASES::returnValue ret;
+	ret       = qp.hotstart(H,g,A,NULL,NULL,NULL,ubA,new_nWSR,NULL);
+	bool pass = this->GetVerySimpleStatus(ret,true);
+	if(!pass){
+		// resetting QP and restarting it
+		qp.reset();
+		qp.init(H,g,A,NULL,NULL,NULL,ubA,new_nWSR,NULL);
+	}
+	//std::cout << "this->nWSR" << this->nWSR << std::endl;
     // compute
 	qp.getPrimalSolution(xOpt);
 	for(int i=0;i<m;++i){
@@ -228,9 +242,7 @@ void MPCSolver::plotInfoQP(){
 	std::cout << "N_constr = " << this->N_constr << std::endl;
 }
 
-void MPCSolver::logToFile(std::string data2log) {
 
-}
 
 
 

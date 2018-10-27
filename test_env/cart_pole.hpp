@@ -22,7 +22,7 @@ public:
 
 	    prm pp;
 
-	    cartPole(const std::string filename,bool act_vis){
+	    cartPole(const std::string filename,bool act_vis,bool log = false){
 	    	// i create a string stream for concatenating strings
 			std::stringstream ss;
 			// i get the current working directory
@@ -63,6 +63,7 @@ public:
 			this->pp.mPend             = tree.get<double>("parameters.Entry.mPend");
 			this->pp.L                 = tree.get<double>("parameters.Entry.L");
 			this->active_visualization = act_vis;
+			this->log                  = log;
 
 	    };
 

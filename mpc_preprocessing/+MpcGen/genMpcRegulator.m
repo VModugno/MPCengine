@@ -22,10 +22,11 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
 
     methods
-        function obj = genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta,N,state_gain,control_cost,type,solver)
+        function obj = genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta,N,state_gain,control_cost,type,solver,generate_functions)
             
             % call super class constructor
-            obj = obj@MpcGen.coreGenerator(type,solver);
+            obj = obj@MpcGen.coreGenerator(type,solver,generate_functions);
+            
             obj.n     = size(A_cont,1);
             obj.m     = size(B_cont,2);
             obj.q     = size(C_cont,1);

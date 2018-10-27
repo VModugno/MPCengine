@@ -30,6 +30,42 @@ class MPCSolver{
 		int getControlDim(){return this->m;};
 		int getOutputDim(){return this->p;};
 
+	    // Analysis of the QPoases result
+		bool GetVerySimpleStatus(qpOASES::returnValue ret,bool debug = false){
+
+			bool result;
+			int r = qpOASES::getSimpleStatus(ret);
+
+
+			if(r == 0){
+				if(debug)
+					std::cout << "QP solved" << std::endl;
+				result = true;
+			}
+			else if(r == 1){
+				if(debug)
+					std::cout << "QP could not be solved within the given number of iterations" << std::endl;
+				result =false;
+			}
+			else if(r == -1){
+				if(debug)
+					std::cout << "QP could not be solved due to an internal error" << std::endl;
+				result =false;
+			}
+			else if(r == -2){
+				if(debug)
+					std::cout << "QP is infeasible and thus could not be solved" << std::endl;
+				result =false;
+			}
+			else if(r == -3){
+				if(debug)
+					std::cout << "QP is unbounded and thus could not be solved" << std::endl;
+				result =false;
+			}
+
+			return result;
+		}
+
 
 
 	public:

@@ -2,6 +2,9 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <fstream>
+
+namespace fs = boost::filesystem;
 
 class abstractEnv {
 public:
@@ -15,7 +18,10 @@ public:
 	double ft;                            // final time      (s)
 	bool active_visualization;
 	Eigen::VectorXd mes_acc;
-
+	// logging vector
+	bool log = false;
+	std::vector<Eigen::VectorXd> states;
+	std::vector<Eigen::VectorXd> actions;
     // integrating dynamics with runge-kutta 4
 	double Step(Eigen::VectorXd action, Eigen::VectorXd & new_state, Eigen::VectorXd & mes_acc)
 	{
@@ -50,7 +56,53 @@ public:
 		if(this->active_visualization)
 			this->UpdateRender(new_state);
 
+		// here i log the data collected while performing the experiments
+		if(this->log){
+			this->states.push_back(new_state);
+			this->actions.push_back(action);
+		}
+
 		return reward;
+	}
+
+	void logToFile() {
+
+        std::string filename_state  = "state.mat";
+        std::string filename_action = "action.mat";
+		// i create a string stream for concatenating strings
+		std::stringstream ss_state,ss_action;
+		// i get the current working directory
+		fs::path pathfs = fs::current_path();
+		// convert to a string
+		std::string path = pathfs.string();
+		// concat string
+		ss_state  << path <<  "/mpc_preprocessing/@log/" << filename_state;
+		ss_action << path <<  "/mpc_preprocessing/@log/" << filename_action;
+
+		// get the final path
+		std::string full_path_state  = ss_state.str();
+		std::string full_path_action = ss_action.str();
+
+		std::ofstream file_state(full_path_state);
+		std::ofstream file_action(full_path_action);
+		// with this eigen class i define the format for plottin eigen vector
+		Eigen::IOFormat fm(Eigen::FullPrecision);
+
+	  if (file_state.is_open())
+	  {
+		for(unsigned int i = 0; i < this->states.size();i++){
+			file_state << states[i].transpose().format(fm) << std::endl;
+		}
+
+	  }
+	  if (file_action.is_open())
+	  {
+		  for(unsigned int i = 0; i < this->actions.size();i++){
+		  			file_action << actions[i].transpose().format(fm) << std::endl;
+		  		}
+	  }
+
+
 	}
 
     // virtual function

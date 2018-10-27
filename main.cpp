@@ -9,7 +9,9 @@ int main(){
 	// construction of the environment
 	std::cout << "creating environment" << std::endl;
 	std::string filename_env = "env_parameters.xml";
-	cartPole env             = cartPole(filename_env,false);
+	bool visualization       = false;
+    bool log                 = true;
+	cartPole env             = cartPole(filename_env,visualization,log);
 	env.plotInfoEnv();
 	// construction of the MPC controller
 	std::string filename = "parameters.xml";
@@ -36,6 +38,10 @@ int main(){
 		cur_state = new_state;
 		// compute control actions
 		action = qp.solveQP(cur_state);
+	}
+
+	if(log){
+		env.logToFile();
 	}
 
 	std::cout << "the end" << std::endl;
