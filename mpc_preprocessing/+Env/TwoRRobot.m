@@ -68,32 +68,40 @@ classdef TwoRRobot < Env.AbstractEnv
         end
         
         function Render(obj)
-%             %% Set up the pendulum plot
-%             obj.visualization.panel = figure;
-%             obj.visualization.panel.Position = [680 558 400 400];
-%             obj.visualization.panel.Color = [1 1 1];
-%             
-%             hold on
-%     
-%             obj.visualization.size = 0.2;
-%             obj.visualization.rect = rectangle('Position',...
-%                                               [obj.init_state(1)-obj.visualization.size/2, -obj.visualization.size/2, obj.visualization.size, obj.visualization.size]); % cart
-%             obj.visualization.line = line(obj.init_state(1) + [0  sin(obj.init_state(3))], [0  cos(obj.init_state(3))], 'lineWidth', 2); % Pendulum stick
-%             axis equal
-%             axis([-4 4 -1 1])
-%             obj.visualization.f = plot(0,0,'b','LineWidth',10); 
-%             
-% 
-%             hold off
-%             
-%             obj.active_visualization = true;
+            %% Set up the pendulum plot
+            obj.visualization.panel = figure;
+            obj.visualization.panel.Position = [680 558 400 400];
+            obj.visualization.panel.Color = [1 1 1];
+            
+            hold on
+    
+            obj.visualization.size = 0.2;
+            obj.visualization.line1 = line([0  sin(obj.init_state(1))], [0  cos(obj.init_state(1))], 'lineWidth', 2); % link 1
+            obj.visualization.line2 = line([sin(obj.init_state(1))  sin(obj.init_state(1))+sin(obj.init_state(2))], [cos(obj.init_state(1)) cos(obj.init_state(1))+cos(obj.init_state(2))], 'lineWidth', 2); % link 2
+%             obj.visualization.line3 = line([sin(obj.init_state(1))+sin(obj.init_state(2)) sin(obj.init_state(1))+sin(obj.init_state(2)) + 0.2*sin(obj.init_state(2) - pi+pi/2)], [cos(obj.init_state(1))+cos(obj.init_state(2)) cos(obj.init_state(1))+cos(obj.init_state(2)) + 0.2*cos(obj.init_state(2) - pi + pi/2)], 'lineWidth', 2); % e-e 1
+%             obj.visualization.line3.Color = 'green';
+%             obj.visualization.line4 = line([sin(obj.init_state(1))+sin(obj.init_state(2)) sin(obj.init_state(1))+sin(obj.init_state(2)) + 0.2*sin(obj.init_state(2) + pi/4)], [cos(obj.init_state(1))+cos(obj.init_state(2)) cos(obj.init_state(1))+cos(obj.init_state(2)) + 0.2*cos(obj.init_state(2) + pi/4)], 'lineWidth', 2); % e-e 2
+%             obj.visualization.line4.Color = 'red';
+            axis equal
+            axis([-4 4 -3 3])
+            obj.visualization.f = plot(0,0,'b','LineWidth',10); 
+            
+
+            hold off
+            
+            obj.active_visualization = true;
         end
         
         function UpdateRender(obj,state)
-%             set(obj.visualization.rect,'Position',[state(1)-obj.visualization.size/2, -obj.visualization.size/2, obj.visualization.size, obj.visualization.size]);
-%             set(obj.visualization.line,'XData',[state(1) state(1)+sin(state(3))]);
-%             set(obj.visualization.line,'YData',[0 cos(state(3))]);
-%             drawnow;
+            set(obj.visualization.line1,'XData',[0  sin(state(1))]);
+            set(obj.visualization.line1,'YData',[0  cos(state(1))]);
+            set(obj.visualization.line2,'XData',[sin(state(1))  sin(state(1))+sin(state(2))]);
+            set(obj.visualization.line2,'YData',[cos(state(1))  cos(state(1))+cos(state(2))]);
+%             set(obj.visualization.line3,'XData',[sin(state(1))+sin(state(2)) sin(state(1))+sin(state(2))+0.2*sin(state(2) - pi+pi/2)]);
+%             set(obj.visualization.line3,'YData',[cos(state(1))+cos(state(2)) cos(state(1))+cos(state(2))+0.2*cos(state(2) - pi+pi/2)]);
+%             set(obj.visualization.line4,'XData',[sin(state(1))+sin(state(2)) sin(state(1))+sin(state(2))+0.2*sin(state(2) + pi/4)]);
+%             set(obj.visualization.line4,'YData',[cos(state(1))+cos(state(2)) cos(state(1))+cos(state(2))+0.2*cos(state(2) + pi/4)]);
+            drawnow;
          end
         
         function state = Wrapping(obj,state)
@@ -130,7 +138,7 @@ classdef TwoRRobot < Env.AbstractEnv
             g(2,1) = g0*prm.m2*(prm.c2x*cos(state(1) + state(2)) + prm.l2*cos(state(1) + state(2)) - prm.c2y*sin(state(1) + state(2)));
         end
         
-        %% this function is only used by the class Estimated Model
+        %% this function is only used by the class Estimated Model and the feedback linearization controller
         function dynComp = GetDynamicalComponents(obj,state)
             dynComp.S  = obj.get_dyn_S_2R_Coriolismatrix(state,obj.prm);
             dynComp.M  = obj.get_dyn_M_2R_massmatrix(state,obj.prm);
@@ -167,6 +175,70 @@ classdef TwoRRobot < Env.AbstractEnv
             obj.prm.tq_saturation = [1e10;1e10];
         end
         
+        
+        function LocalGenEnvParametersFile(obj,pNode,entry_node)
+            
+           name_node = pNode.createElement('l1');
+           name_text = pNode.createTextNode(num2str(obj.prm.l1));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('l2');
+           name_text = pNode.createTextNode(num2str(obj.prm.l2));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('m1');
+           name_text = pNode.createTextNode(num2str(obj.prm.m1));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('m2');
+           name_text = pNode.createTextNode(num2str(obj.prm.m2));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('c1x');
+           name_text = pNode.createTextNode(num2str(obj.prm.c1x));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('c1y');
+           name_text = pNode.createTextNode(num2str(obj.prm.c1y));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('c1z');
+           name_text = pNode.createTextNode(num2str(obj.prm.c1z));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('c2x');
+           name_text = pNode.createTextNode(num2str(obj.prm.c2x));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('c2y');
+           name_text = pNode.createTextNode(num2str(obj.prm.c2y));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('c2z');
+           name_text = pNode.createTextNode(num2str(obj.prm.c2z));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('J1zz');
+           name_text = pNode.createTextNode(num2str(obj.prm.J1zz));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('J2zz');
+           name_text = pNode.createTextNode(num2str(obj.prm.J2zz));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+        end
         
         
     end

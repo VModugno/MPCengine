@@ -3,9 +3,10 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
     properties
         
-        variables   % here I define all the variable (to work on the exact meaning of this)  
+        outer_x   % here i set all the variables that do not belongs to the intrisic stucture of the mpc  
         maxInput    
         maxOutput 
+        
         
         % they are in the  superclass
         %type        % ltv or fixed 
@@ -27,6 +28,12 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             % call super class constructor
             obj = obj@MpcGen.coreGenerator(type,solver,generate_functions);
             
+            % problem structure
+            obj.type         = type; 
+            obj.solver       = solver; 
+            obj.problemClass = 'regulator';
+            
+            % problem dimensions
             obj.n     = size(A_cont,1);
             obj.m     = size(B_cont,2);
             obj.q     = size(C_cont,1);
@@ -75,9 +82,6 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.W    = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.maxInput)];
             obj.S    = [-T_bar; T_bar; zeros(obj.N*obj.m,obj.n); zeros(obj.N*obj.m,obj.n)];
              
-            obj.type   = type; 
-            obj.solver = solver; 
-            
             obj.sym_H      = sym(obj.H);                   
             obj.sym_F_tra  = sym(obj.F_tra); 
             obj.sym_G      = sym(obj.G);      

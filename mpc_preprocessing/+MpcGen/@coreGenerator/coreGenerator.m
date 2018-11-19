@@ -1,3 +1,8 @@
+%% design choice: i would like to split variables in two different class:
+%%                inner_variables = (in this order) current_state, last_control, current_ref, (we need them bot for fixed and ltv mpc)
+%%                outer_variables = model parameters that we want to optimize with an external optimization loop (such as cmaes, or other black box optimization)
+
+
 classdef coreGenerator <  handle
     
     properties 
@@ -5,6 +10,7 @@ classdef coreGenerator <  handle
         basepath    %
         type
         solver
+        problemClass
         % structure of the problem
         n           % state space dim
         m           % control space dim 
@@ -19,7 +25,10 @@ classdef coreGenerator <  handle
         sym_G       %
         sym_W       %
         sym_S       %
-        x_0         %
+        x_0         % inner_variables
+        u_0         % inner_variables
+        ref_0       % inner_variables
+        outer_x     % parameters to optimize that do not belong to the mpc variables
         % for control
         H
         F_tra
@@ -66,15 +75,18 @@ classdef coreGenerator <  handle
        
        
        function GenFunctions(obj) 
-            if(strcmp(obj.type,"fixed") && strcmp(obj.solver,"QPoases"))
-               
+           if(strcmp(obj.solver,"QPoases"))
                %% optmization problem formulation for QPoases
                % J(z) = z'*H*z + g*z
                % s.t
                %    l_b <= z <= u_b
                %    l_b <= A*z <= u_b
-               
-               %% Important!!! for QPoases matrix has to be stored row wise
+               %% here i define the structure of the inner_x
+               if(strcmp(obj.problemClass,"tracker"))
+                    inner_x = [obj.x_0;obj.u_0;obj.ref_0];
+               else
+                    inner_x = [obj.x_0];
+               end
                %% hessian cost function 
                %H_  = obj.sym_H(:);
                H_  = obj.sym_H';
@@ -82,8 +94,12 @@ classdef coreGenerator <  handle
                obj.cCode(H_,'compute_H',{},'H');
                obj.PostProcessFunctionForqpOASES('compute_H','H')
                %% linear term cost function
-               g_  = (obj.x_0'*obj.sym_F_tra)'; 
-               obj.cCode(g_,'compute_g',{obj.x_0},'g');
+               if(strcmp(obj.problemClass,"tracker"))
+                    g_  = ([obj.ref_0;obj.x_0;obj.u_0]'*obj.F_tra)'; 
+               else
+                    g_  = (obj.x_0'*obj.sym_F_tra)';
+               end
+               obj.cCode(g_,'compute_g',{inner_x},'g');
                obj.PostProcessFunctionForqpOASES('compute_g','g')
                %% linear term constraints
                %A_  = obj.sym_G(:);
@@ -92,10 +108,62 @@ classdef coreGenerator <  handle
                obj.cCode(A_,'compute_A',{},'A');
                obj.PostProcessFunctionForqpOASES('compute_A','A')
                %% constant term constraints
-               ub_ = obj.sym_W + obj.sym_S*obj.x_0;
-               obj.cCode(ub_,'compute_ub',{obj.x_0},'ub');
-               obj.PostProcessFunctionForqpOASES('compute_ub','ub')
-            end         
+               if(strcmp(obj.problemClass,"tracker"))
+                    ub_ = obj.sym_W + obj.sym_S*[obj.x_0;obj.u_0];
+               else
+                    ub_ = obj.sym_W + obj.sym_S*obj.x_0;
+               end
+               obj.cCode(ub_,'compute_ub',{inner_x},'ub');
+               obj.PostProcessFunctionForqpOASES('compute_ub','ub') 
+               %% Important!!! for QPoases matrix has to be stored row wise
+%                if(strcmp(obj.problemClass,"tracker"))
+%                    
+%                    %% all variables
+%                    % the order of inner_x matters 
+%                    inner_x = [obj.x_0;obj.u_0;obj.ref_0];
+%                    %% hessian cost function 
+%                    %H_  = obj.sym_H(:);
+%                    H_  = obj.sym_H';
+%                    H_  = H_(:);
+%                    obj.cCode(H_,'compute_H',{},'H');
+%                    obj.PostProcessFunctionForqpOASES('compute_H','H')
+%                    %% linear term cost function
+%                    g_  = ([obj.ref_0;obj.x_0;obj.u_0]'*obj.F_tra)'; 
+%                    obj.cCode(g_,'compute_g',{inner_x},'g');
+%                    obj.PostProcessFunctionForqpOASES('compute_g','g')
+%                    %% linear term constraints
+%                    %A_  = obj.sym_G(:);
+%                    A_  = obj.sym_G';
+%                    A_  = A_(:);
+%                    obj.cCode(A_,'compute_A',{},'A');
+%                    obj.PostProcessFunctionForqpOASES('compute_A','A')
+%                    %% constant term constraints
+%                    ub_ = obj.sym_W + obj.sym_S*[obj.x_0;obj.u_0];
+%                    obj.cCode(ub_,'compute_ub',{inner_x},'ub');
+%                    obj.PostProcessFunctionForqpOASES('compute_ub','ub')        
+%                elseif(strcmp(obj.problemClass,"regulator"))
+%                    %% hessian cost function 
+%                    %H_  = obj.sym_H(:);
+%                    H_  = obj.sym_H';
+%                    H_  = H_(:);
+%                    obj.cCode(H_,'compute_H',{},'H');
+%                    obj.PostProcessFunctionForqpOASES('compute_H','H')
+%                    %% linear term cost function
+%                    g_  = (obj.x_0'*obj.sym_F_tra)'; 
+%                    obj.cCode(g_,'compute_g',{obj.x_0},'g');
+%                    obj.PostProcessFunctionForqpOASES('compute_g','g')
+%                    %% linear term constraints
+%                    %A_  = obj.sym_G(:);
+%                    A_  = obj.sym_G';
+%                    A_  = A_(:);
+%                    obj.cCode(A_,'compute_A',{},'A');
+%                    obj.PostProcessFunctionForqpOASES('compute_A','A')
+%                    %% constant term constraints
+%                    ub_ = obj.sym_W + obj.sym_S*obj.x_0;
+%                    obj.cCode(ub_,'compute_ub',{obj.x_0},'ub');
+%                    obj.PostProcessFunctionForqpOASES('compute_ub','ub')
+%                end   
+           end
        end
        
        function PostProcessFunctionForqpOASES(obj,filename,namefunc)

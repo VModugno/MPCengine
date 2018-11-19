@@ -1,3 +1,7 @@
+
+#ifndef TEST_ENV_CART_POLE_HPP_
+#define TEST_ENV_CART_POLE_HPP_
+
 #include <math.h>
 #include <vector>
 #include <iostream>
@@ -38,9 +42,10 @@ public:
 			// Parse the XML into the property tree.
 			pt::read_xml(full_path, tree);
 	    	this->num_state            = 4;
-	    	this->state_bounds         = Eigen::MatrixXd(3,2);
+	    	this->state_bounds         = Eigen::MatrixXd(4,2);
 			this->state_bounds         << -100,100,
 				                          -100,100,
+										  -M_PI,M_PI,
 										  -M_PI,M_PI;
 			const char *vinit[]        = {"x_c", "x_c_dot", "theta","theta_dot"};
 			this->state_name           = std::vector<std::string>(vinit,vinit+4);
@@ -67,17 +72,19 @@ public:
 
 	    };
 
-	    cartPole(Eigen::VectorXd init_state,double dt,prm param,bool act_vis){
+	    cartPole(Eigen::VectorXd init_state,double dt,double ft,prm param,bool act_vis){
 	    	    this->num_state            = 4;
-	   	    	this->state_bounds         = Eigen::MatrixXd(3,2);
+	   	    	this->state_bounds         = Eigen::MatrixXd(4,2);
 	   			this->state_bounds         << -100,100,
 	   				                          -100,100,
-	   										  -M_PI,M_PI;
+	   										  -M_PI,M_PI,
+	   			                              -M_PI,M_PI;
 	   			const char *vinit[]        = {"x_c", "x_c_dot", "theta","theta_dot"};
 	   			this->state_name           = std::vector<std::string>(vinit,vinit+4);
 	   			this->init_state           = init_state;
 	   			this->state                = this->init_state;
 	   			this->dt                   = dt;
+	   			this->ft                   = ft;
 	   			this->active_visualization = act_vis;
 	   			this->pp.mCart             = param.mCart;
 	   			this->pp.mPend             = param.mPend;
@@ -151,4 +158,6 @@ public:
         ~cartPole(){};
 
 };
+
+#endif /* TEST_ENV_CART_POLE_HPP_ */
 

@@ -10,7 +10,7 @@ function new_prm = CopyPrmFromFile(conf,cur_prm)
         found = false;
         for j = 1:length(param_list)
             if(strcmp(param_fields{i},param_list(j)))
-                new_prm.(param_fields{i}) = value(j);
+                new_prm.(param_fields{i}) = value_(1,j);
                 found = true;
                 break;
             end 
