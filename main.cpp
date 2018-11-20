@@ -1,5 +1,5 @@
 #include "test_env/all_env.hpp"
-#include "MPCSolver.hpp"
+#include "solvers/all_solvers.hpp"
 #include <iostream>
 
 
@@ -12,22 +12,19 @@ int main(){
 	bool visualization       = false;
     bool log                 = true;
     P_unique_env env;
-    // enviroment selector
+    // environment selector
     std::string  switch_env("2RR");
     if(switch_env.compare("cart_pole") == 0){
-    	cartPole cur_env  = cartPole(filename_env,visualization,log);
-    	env.reset(&cur_env);
+    	env.reset(new cartPole(filename_env,visualization,log));
     }
     else if(switch_env.compare("2RR") == 0) {
-    	twoRRobot cur_env = twoRRobot(filename_env,visualization,log);
-    	env.reset(&cur_env);
+    	env.reset(new twoRRobot(filename_env,visualization,log));
     }
-
 
 	env->plotInfoEnv();
 	// construction of the MPC controller
 	std::string filename = "parameters.xml";
-	MPCSolver qp         = MPCSolver(filename);
+	qpoasesSolver qp         = qpoasesSolver(filename);
 	qp.plotInfoQP();
 
 	// simulation loop

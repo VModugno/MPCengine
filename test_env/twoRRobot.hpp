@@ -43,7 +43,7 @@ public:
 			// convert to a string
 			std::string path = pathfs.string();
 			// concat string
-			ss << path <<  "/current_functions/" << filename;
+			ss << path <<  "/solvers/current_functions/" << filename;
 			// get the final path
 			std::string full_path = ss.str();
 			// Create empty property tree object
@@ -235,7 +235,6 @@ public:
 			std::cout << "c2z = "        << this->pp.c2z     << std::endl;
 			std::cout << "J1zz = "       << this->pp.J1zz    << std::endl;
 			std::cout << "J2zz = "       << this->pp.J2zz    << std::endl;
-
 	    };
 
 

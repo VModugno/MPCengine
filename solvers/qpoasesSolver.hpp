@@ -1,19 +1,16 @@
-#ifndef MPCSOLVER_HPP
-#define MPCSOLVER_HPP
-#include <vector>
-#include <Eigen/Core>
-#include <iostream>
+#ifndef QPOASESSOLVER_HPP
+#define QPOASESSOLVER_HPP
+
+
 #include "qpOASES.hpp"
+#include "MPCsolver.hpp"
 #include "qpOASESFunction.h"
 
 
-
-
-
-class MPCSolver{
+class qpoasesSolver  : public MPCsolver {
 	public:
-		MPCSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver);
-		MPCSolver(const std::string filename);
+	qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver);
+	qpoasesSolver(const std::string filename);
 		//
 		Eigen::VectorXd initSolver(Eigen::VectorXd x0_in);
 		Eigen::VectorXd initSolver(double * x0);

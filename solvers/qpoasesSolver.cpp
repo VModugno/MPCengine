@@ -1,4 +1,4 @@
-#include "MPCSolver.hpp"
+#include "qpoasesSolver.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/filesystem.hpp>
@@ -10,7 +10,7 @@
 namespace pt = boost::property_tree;
 namespace fs = boost::filesystem;
 
-MPCSolver::MPCSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver){
+qpoasesSolver::qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver){
 	// Set up parameters
 	this->n           = n;
 	this->m           = m;
@@ -25,7 +25,7 @@ MPCSolver::MPCSolver(int n,int m,int p,int N, int N_constr,std::string type,std:
     this->nWSR        = 3000;
 }
 
-MPCSolver::MPCSolver(const std::string filename){
+qpoasesSolver::qpoasesSolver(const std::string filename){
     // i create a string stream for concatenating strings
 	std::stringstream ss;
     // i get the current working directory
@@ -33,7 +33,7 @@ MPCSolver::MPCSolver(const std::string filename){
 	// convert to a string
 	std::string path = pathfs.string();
 	// concat string
-	ss << path <<  "/current_functions/" << filename;
+	ss << path << "/solvers/current_functions/" << filename;
 	// get the final path
 	std::string full_path = ss.str();
 
@@ -57,7 +57,7 @@ MPCSolver::MPCSolver(const std::string filename){
 }
 
 
-Eigen::VectorXd MPCSolver::initSolver(Eigen::VectorXd  x0_in)
+Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in)
 {
 	// eigen to array conversion
 	double *x0;
@@ -88,7 +88,7 @@ Eigen::VectorXd MPCSolver::initSolver(Eigen::VectorXd  x0_in)
 	qpOASES::real_t xOpt[nVariables_batch];
 	Eigen::VectorXd decisionVariables(this->m);
 
-    // compute components
+    // compute components (TO UPDATE IN ORDER TO TAKE INTO ACCOUNT DIFFERENT WAY TO COMPUTE THEM GIVEN THE DIFFERENT PROBLEM TO SOLVE)
 	compute_H(H);
 	compute_g(g,x0);
 	compute_A(A);
@@ -109,7 +109,7 @@ Eigen::VectorXd MPCSolver::initSolver(Eigen::VectorXd  x0_in)
 }
 
 
-Eigen::VectorXd MPCSolver::initSolver(double * x0)
+Eigen::VectorXd qpoasesSolver::initSolver(double * x0)
 {
 	int nVariables   = this->N * this->m;
 	int nConstraints = this->N * this->N_constr;
@@ -148,7 +148,7 @@ Eigen::VectorXd MPCSolver::initSolver(double * x0)
     return decisionVariables;
 }
 
-Eigen::VectorXd MPCSolver::solveQP(Eigen::VectorXd xi_in) {
+Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in) {
 
 	double *xi;
 	xi = xi_in.data(); // pointing to the area of memory owned by the eigen vector
@@ -192,7 +192,7 @@ Eigen::VectorXd MPCSolver::solveQP(Eigen::VectorXd xi_in) {
 }
 
 
-Eigen::VectorXd MPCSolver::solveQP(double *xi) {
+Eigen::VectorXd qpoasesSolver::solveQP(double *xi) {
 
 	int nVariables   = this->N*this->m;
 	int nConstraints = this->N*this->N_constr;
@@ -234,7 +234,7 @@ Eigen::VectorXd MPCSolver::solveQP(double *xi) {
 }
 
 
-void MPCSolver::plotInfoQP(){
+void qpoasesSolver::plotInfoQP(){
 	std::cout << "n = " << this->n << std::endl;
 	std::cout << "m = " << this->m << std::endl;
 	std::cout << "p = " << this->p << std::endl;
