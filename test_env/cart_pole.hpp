@@ -2,16 +2,10 @@
 #ifndef TEST_ENV_CART_POLE_HPP_
 #define TEST_ENV_CART_POLE_HPP_
 
-#include <math.h>
-#include <vector>
-#include <iostream>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
-#include <boost/filesystem.hpp>
-#include <sstream>
+
 #include "abstract_env.hpp"
 
-struct prm {
+struct prmCP {
   double mCart;
   double mPend;
   double L;
@@ -24,7 +18,7 @@ class cartPole : public abstractEnv {
 
 public:
 
-	    prm pp;
+	    prmCP pp;
 
 	    cartPole(const std::string filename,bool act_vis,bool log = false){
 	    	// i create a string stream for concatenating strings
@@ -72,7 +66,7 @@ public:
 
 	    };
 
-	    cartPole(Eigen::VectorXd init_state,double dt,double ft,prm param,bool act_vis){
+	    cartPole(Eigen::VectorXd init_state,double dt,double ft,prmCP param,bool act_vis){
 	    	    this->num_state            = 4;
 	   	    	this->state_bounds         = Eigen::MatrixXd(4,2);
 	   			this->state_bounds         << -100,100,
@@ -92,6 +86,8 @@ public:
 	   			this->mes_acc              = Eigen::VectorXd(2);
 	   	};
 
+
+	    DynComp GetDynamicalComponents(Eigen::VectorXd cur_state){};
 
 	    Eigen::VectorXd Dynamics(Eigen::VectorXd cur_state,Eigen::VectorXd action, Eigen::VectorXd & mes_acc){
 	    	double g   = 9.8;

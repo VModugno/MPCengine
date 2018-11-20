@@ -8,19 +8,10 @@
 #ifndef TEST_ENV_TWORROBOT_HPP_
 #define TEST_ENV_TWORROBOT_HPP_
 
-
-
-
-#include <math.h>
-#include <vector>
-#include <iostream>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
-#include <boost/filesystem.hpp>
-#include <sstream>
 #include "abstract_env.hpp"
 
-struct prm {
+
+struct prmRR {
   double l1;
   double l2;
   double m1;
@@ -42,7 +33,7 @@ class twoRRobot : public abstractEnv {
 
 public:
 
-	    prm pp;
+	    prmRR pp;
 
 	    twoRRobot(const std::string filename,bool act_vis,bool log = false){
 	    	// i create a string stream for concatenating strings
@@ -60,10 +51,11 @@ public:
 			// Parse the XML into the property tree.
 			pt::read_xml(full_path, tree);
 	    	this->num_state            = 4;
-	    	this->state_bounds         = Eigen::MatrixXd(3,2);
-			this->state_bounds         << -100,100,
-				                          -100,100,
-										  -M_PI,M_PI;
+	    	this->state_bounds         = Eigen::MatrixXd(4,2);
+			this->state_bounds         << -2*M_PI,2*M_PI,
+					                      -2*M_PI,2*M_PI,
+						                  -2*M_PI,2*M_PI,
+					                      -2*M_PI,2*M_PI;
 			const char *vinit[]        = {"theta1", "theta2", "theta1_dot","theta2_dot"};
 			this->state_name           = std::vector<std::string>(vinit,vinit+4);
 			this->mes_acc              = Eigen::VectorXd(2);
@@ -99,7 +91,7 @@ public:
 
 	    };
 
-	    twoRRobot(Eigen::VectorXd init_state,double dt,double ft,prm param,bool act_vis){
+	    twoRRobot(Eigen::VectorXd init_state,double dt,double ft,prmRR param,bool act_vis){
 	    	    this->num_state              = 4;
 	   	    	this->state_bounds           = Eigen::MatrixXd(4,2);
 	   			this->state_bounds           <<-2*M_PI,2*M_PI,
@@ -129,13 +121,95 @@ public:
 	   	};
 
 
+
+	    Eigen::MatrixXd get_M(Eigen::VectorXd state,prmRR pp){
+	    	Eigen::MatrixXd M(2,2);
+			M(0,0) = pp.J1zz + pp.J2zz + pow(pp.l1,2)*pp.m1 + pow(pp.l1,2)*pp.m2 + pow(pp.l2,2)*pp.m2 + 2*pp.c1x*pp.l1*pp.m1 + 2*pp.c2x*pp.l2*pp.m2 + 2*pp.c2x*pp.l1*pp.m2*cos(state(2)) + 2*pp.l1*pp.l2*pp.m2*cos(state(1)) - 2*pp.c2y*pp.l1*pp.m2*sin(state(1));
+			M(0,1) = pp.J2zz + pow(pp.l2,2)*pp.m2 + 2*pp.c2x*pp.l2*pp.m2 + pp.c2x*pp.l1*pp.m2*cos(state(1)) + pp.l1*pp.l2*pp.m2*cos(state(1)) - pp.c2y*pp.l1*pp.m2*sin(state(1));
+			M(1,0) = M(0,1);
+			M(1,1) = pp.m2*pow(pp.l2,2) + 2*pp.c2x*pp.m2*pp.l2 + pp.J2zz;
+			return M;
+	    }
+
+	    Eigen::MatrixXd get_S(Eigen::VectorXd state,prmRR pp){
+	    	Eigen::MatrixXd S(2,2);
+			S(0,0) = -state(3)*pp.l1*pp.m2*(pp.c2y*cos(state(1)) + pp.c2x*sin(state(1)) + pp.l2*sin(state(1)));
+			S(0,1) = -pp.l1*pp.m2*(state(2) + state(3))*(pp.c2y*cos(state(1)) + pp.c2x*sin(state(1)) + pp.l2*sin(state(1)));
+			S(1,0) = state(2)*pp.l1*pp.m2*(pp.c2y*cos(state(1)) + pp.c2x*sin(state(1)) + pp.l2*sin(state(1)));
+			S(1,1) = 0;
+			return S;
+
+	    }
+
+	    Eigen::VectorXd get_C(Eigen::VectorXd state,prmRR pp){
+	    	Eigen::VectorXd C(2);
+			C(0) = -state(3)*pp.l1*pp.m2*(2*state(2) + state(3))*(pp.c2y*cos(state(1)) + pp.c2x*sin(state(1)) + pp.l2*sin(state(1)));
+			C(1) = pow(state(2),2)*pp.l1*pp.m2*(pp.c2y*cos(state(1)) + pp.c2x*sin(state(1)) + pp.l2*sin(state(1)));
+			return C;
+	    }
+
+	    Eigen::VectorXd get_g(Eigen::VectorXd state,prmRR pp){
+	    	Eigen::VectorXd g(2);
+			double g0 = 9.80665;
+			g(1,1) = g0*pp.m1*(pp.c1x*cos(state(0)) + pp.l1*cos(state(0)) - pp.c1y*sin(state(0))) + g0*pp.m2*(pp.c2x*cos(state(0) + state(1)) + pp.l2*cos(state(0) + state(1)) - pp.c2y*sin(state(0) + state(1)) + pp.l1*cos(state(0)));
+			g(2,1) = g0*pp.m2*(pp.c2x*cos(state(0) + state(1)) + pp.l2*cos(state(0) + state(1)) - pp.c2y*sin(state(0) + state(1)));
+			return g;
+	    }
+
+	    DynComp GetDynamicalComponents(Eigen::VectorXd cur_state)
+	    {
+	    	DynComp res;
+
+	    	res.M = get_M(cur_state,this->pp);
+			res.C = get_C(cur_state,this->pp);
+			res.g = get_g(cur_state,this->pp);
+
+			return res;
+
+	    }
+
 	    Eigen::VectorXd Dynamics(Eigen::VectorXd cur_state,Eigen::VectorXd action, Eigen::VectorXd & mes_acc){
 
+	    	Eigen::VectorXd new_state(4);
+
+	    	Eigen::MatrixXd M = get_M(cur_state,this->pp);
+	    	Eigen::VectorXd C = get_C(cur_state,this->pp);
+	    	Eigen::VectorXd g = get_g(cur_state,this->pp);
+
+
+	    	Eigen::MatrixXd M_inv = M.inverse();
+
+	    	mes_acc = M_inv*(action - C - g);
+
+
+			new_state(0) = cur_state(2);
+			new_state(1) = cur_state(3);
+			new_state(2) = mes_acc(0);
+			new_state(3) = mes_acc(1);
+
+			return new_state;
 
 	    };
 
 	    Eigen::VectorXd Dynamics(Eigen::VectorXd cur_state,Eigen::VectorXd action){
 
+	    	Eigen::VectorXd new_state(4),mes_acc(2);
+
+			Eigen::MatrixXd M = get_M(cur_state,this->pp);
+			Eigen::VectorXd C = get_C(cur_state,this->pp);
+			Eigen::VectorXd g = get_g(cur_state,this->pp);
+
+			//Eigen::MatrixXd M_inv = M.inverse();
+
+			mes_acc = M.inverse()*(action - C - g);
+
+
+			new_state(0) = cur_state(2);
+			new_state(1) = cur_state(3);
+			new_state(2) = mes_acc(0);
+			new_state(3) = mes_acc(1);
+
+			return new_state;
 
 	    };
 
@@ -168,7 +242,7 @@ public:
 		void Load_parameters(Eigen::VectorXd params){};
 		void Render(){};
 		void UpdateRender(Eigen::VectorXd state){};
-        ~cartPole(){};
+        ~twoRRobot(){};
 
 };
 

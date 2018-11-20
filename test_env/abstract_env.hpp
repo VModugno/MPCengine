@@ -1,10 +1,29 @@
+#ifndef ABSTSTRACT_ENV
+#define ABSTSTRACT_ENV
+
 #include <Eigen/Core>
+#include <Eigen/LU>    // necessary for matrix inversion in Eigen
+#include <cmath>
 #include <vector>
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <fstream>
+#include <memory>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
+
+struct DynComp{
+
+	Eigen::MatrixXd M;
+	Eigen::MatrixXd S;
+	Eigen::VectorXd C;
+	Eigen::VectorXd g;
+};
+
 
 class abstractEnv {
 public:
@@ -107,13 +126,19 @@ public:
 
     // virtual function
 	// with this function we collect the acceleration to simulate measure of acceleration
+	virtual DynComp         GetDynamicalComponents(Eigen::VectorXd cur_state) = 0;
 	virtual Eigen::VectorXd Dynamics(Eigen::VectorXd state,Eigen::VectorXd action, Eigen::VectorXd & mes_acc) = 0;
 	// with this function i do not update the mes_action
 	virtual Eigen::VectorXd Dynamics(Eigen::VectorXd state,Eigen::VectorXd action) = 0;
 	virtual void            Wrapping(Eigen::VectorXd & state) = 0;
+	virtual void            plotInfoEnv() = 0;
 	virtual void            Load_parameters(Eigen::VectorXd params) = 0;
 	virtual void            Render() = 0;
     virtual void            UpdateRender(Eigen::VectorXd state) = 0;
     virtual                 ~abstractEnv(){};
 
 };
+
+typedef std::unique_ptr<abstractEnv> P_unique_env;
+
+#endif /* ABSTSTRACT_ENV  */
