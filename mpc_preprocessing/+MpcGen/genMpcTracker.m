@@ -3,7 +3,6 @@ classdef genMpcTracker < MpcGen.coreGenerator
     properties
         
         orig_n      % state dimension before the exstension with the control input
-        variables   % here I define all the variable (to work on the exact meaning of this)
         u_cur       % last input value
        
         maxInput    

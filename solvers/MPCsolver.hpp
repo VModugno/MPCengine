@@ -27,8 +27,8 @@ public:
 
 };
 
-
 typedef std::unique_ptr<MPCsolver> P_unique_solv;
+typedef std::shared_ptr<MPCsolver> P_solv;
 
 
 #endif /* SOLVERS_MPCSOLVER_HPP_ */
