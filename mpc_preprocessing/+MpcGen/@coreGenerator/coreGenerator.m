@@ -260,8 +260,12 @@ classdef coreGenerator <  handle
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
-           name_node = pNode.createElement('solver');
-           name_text = pNode.createTextNode(obj.solver);
+           name_node = pNode.createElement('external_x');
+           if(isempty(obj.outer_x))
+                name_text = pNode.createTextNode('false');
+           else
+                name_text = pNode.createTextNode('true');
+           end
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            

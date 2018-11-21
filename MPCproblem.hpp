@@ -8,24 +8,26 @@
 #ifndef MPCPROBLEM_HPP_
 #define MPCPROBLEM_HPP_
 
-#include "solvers/MPCsolver.hpp"
+#include "solvers/AbsSolver.hpp"
 
-struct ProblemDetails{
-
-	bool             external_variables;  // we are optimizing something else?
-	std::string      type;                // fixed or LTV
-	std::string      problemClass;        // tracker or regulator (for now only two classes maybe i will need to extend it)
-};
 
 class MPCproblem {
 public:
 
-	P_solv           solve;
+	P_solv           solver;               // all the dimension of the problem are stored in the abstract solver
 	ProblemDetails   pd;
+	Eigen::VectorXd  external_variables;   // here i store the external variables for the current experiment
+	int              ex_var_dim;           // dimension of the exeternal variables vector (0 if there is no external variable vector)
+	Eigen::VectorXd  action;               // here i define the action vectors
+
+
+    void SetExtVariables(Eigen::VectorXd cur_ext_var){
+    	this->external_variables = cur_ext_var;
+    };
     // virtual function
 	// initialize the solver if necessary
-	virtual Eigen::VectorXd Init(Eigen::VectorXd x0_in) = 0;
-	virtual Eigen::VectorXd ComputeControl(Eigen::VectorXd xi_in) = 0;
+	virtual Eigen::VectorXd Init(Eigen::VectorXd state_0_in) = 0;
+	virtual Eigen::VectorXd ComputeControl(Eigen::VectorXd state_i_in) = 0;
 
     virtual                 ~MPCproblem(){};
 

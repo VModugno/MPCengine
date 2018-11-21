@@ -1,5 +1,7 @@
 #include "test_env/all_env.hpp"
 #include "solvers/all_solvers.hpp"
+#include "MPCregulator.hpp"
+#include "MPCtracker.hpp"
 #include <iostream>
 
 
@@ -20,12 +22,24 @@ int main(){
     else if(switch_env.compare("2RR") == 0) {
     	env.reset(new twoRRobot(filename_env,visualization,log));
     }
-
+    // plot information about the current environment
 	env->plotInfoEnv();
 	// construction of the MPC controller
 	std::string filename = "parameters.xml";
-	qpoasesSolver qp         = qpoasesSolver(filename);
+	qpoasesSolver qp     = qpoasesSolver(filename);
 	qp.plotInfoQP();
+
+	P_unique_MPCinstance mpc;
+	// MPC problem selector
+	std::string  switch_env("2RR");
+	if(switch_env.compare("cart_pole") == 0){
+		mpc.reset(new cartPole(filename,qp));
+	}
+	//else if(switch_env.compare("2RR") == 0) {
+	//	mpc.reset(new twoRRobot(filename_env,visualization,log));
+	//}
+
+
 
 	// simulation loop
 	Eigen::VectorXd action(qp.getControlDim());

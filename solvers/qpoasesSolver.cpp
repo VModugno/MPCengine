@@ -19,8 +19,6 @@ qpoasesSolver::qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string t
     this->N_constr    = N_constr;
     int nVariables    = this->N * this->m;
     int nConstraints  = this->N * this->N_constr;
-    this->type        = type;
-    this->solver      = solver;
     this->qp          = qpOASES::SQProblem(nVariables,nConstraints);
     this->nWSR        = 3000;
 }
@@ -48,8 +46,6 @@ qpoasesSolver::qpoasesSolver(const std::string filename){
 	this->p           = tree.get<int>("parameters.Entry.q");
     this->N           = tree.get<int>("parameters.Entry.N");
     this->N_constr    = tree.get<int>("parameters.Entry.N_constr");
-    this->type        = tree.get<std::string>("parameters.Entry.type");
-    this->solver      = tree.get<std::string>("parameters.Entry.solver");
     int nVariables    = this->N * this->m;
     int nConstraints  = this->N * this->N_constr;
     this->qp          = qpOASES::SQProblem(nVariables,nConstraints);
@@ -57,11 +53,13 @@ qpoasesSolver::qpoasesSolver(const std::string filename){
 }
 
 
-Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in)
+Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd  x0_ext,ProblemDetails & pd)
 {
 	// eigen to array conversion
 	double *x0;
-	x0 = x0_in.data(); // pointing to the area of memory owned by the eigen vector
+	x0   = x0_in.data(); // pointing to the area of memory owned by the eigen vector
+	double *x0_e;
+	x0_e = x0_ext.data();
 
 	//DEBUG
 	for(int ii = 0; ii<4; ii++)
@@ -89,11 +87,7 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in)
 	Eigen::VectorXd decisionVariables(this->m);
 
     // compute components (TO UPDATE IN ORDER TO TAKE INTO ACCOUNT DIFFERENT WAY TO COMPUTE THEM GIVEN THE DIFFERENT PROBLEM TO SOLVE)
-	compute_H(H);
-	compute_g(g,x0);
-	compute_A(A);
-	compute_ub(ubA,x0);
-
+	computeMatrix(H,g,A,ubA,x0,x0_e,pd);
 	// solve optimization problem
 	qpOASES::returnValue ret;
 	ret = qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
@@ -109,7 +103,7 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in)
 }
 
 
-Eigen::VectorXd qpoasesSolver::initSolver(double * x0)
+Eigen::VectorXd qpoasesSolver::initSolver(double * x0_in,double * x0_ext,ProblemDetails & pd)
 {
 	int nVariables   = this->N * this->m;
 	int nConstraints = this->N * this->N_constr;
@@ -129,11 +123,7 @@ Eigen::VectorXd qpoasesSolver::initSolver(double * x0)
 	Eigen::VectorXd decisionVariables(this->m);
 
     // compute components
-	compute_H(H);
-	compute_g(g,x0);
-	compute_A(A);
-	compute_ub(ubA,x0);
-
+	computeMatrix(H,g,A,ubA,x0_in,x0_ext,pd);
 	// solve optimization problem
 	qpOASES::returnValue ret;
 	ret = qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
@@ -148,10 +138,12 @@ Eigen::VectorXd qpoasesSolver::initSolver(double * x0)
     return decisionVariables;
 }
 
-Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in) {
+Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi_ext,ProblemDetails & pd) {
 
 	double *xi;
 	xi = xi_in.data(); // pointing to the area of memory owned by the eigen vector
+	double *xi_e;
+	xi_e = xi_ext.data();
 
 	int nVariables_batch   = this->N*this->m;
 	int nConstraints_batch = this->N*this->N_constr;
@@ -167,10 +159,7 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in) {
 	Eigen::VectorXd decisionVariables(this->m);
 
 	// compute components
-	compute_H(H);
-	compute_g(g,xi);
-	compute_A(A);
-	compute_ub(ubA,xi);
+	computeMatrix(H,g,A,ubA,xi,xi_e,pd);
 	// compute solutions
 	qpOASES::int_t new_nWSR = 30000;
 	qpOASES::returnValue ret;
@@ -192,7 +181,7 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in) {
 }
 
 
-Eigen::VectorXd qpoasesSolver::solveQP(double *xi) {
+Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetails & pd) {
 
 	int nVariables   = this->N*this->m;
 	int nConstraints = this->N*this->N_constr;
@@ -208,10 +197,7 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi) {
 	Eigen::VectorXd decisionVariables(this->m);
 
 	// compute components
-	compute_H(H);
-	compute_g(g,xi);
-	compute_A(A);
-	compute_ub(ubA,xi);
+	computeMatrix(H,g,A,ubA,xi_in,xi_ext,pd);
 	// compute solutions
 	qpOASES::int_t new_nWSR = 30000;
 	qpOASES::returnValue ret;
@@ -242,6 +228,50 @@ void qpoasesSolver::plotInfoQP(){
 	std::cout << "N_constr = " << this->N_constr << std::endl;
 }
 
+
+bool qpoasesSolver::GetVerySimpleStatus(qpOASES::returnValue ret,bool debug = false){
+
+	bool result;
+	int r = qpOASES::getSimpleStatus(ret);
+
+
+	if(r == 0){
+		if(debug)
+			std::cout << "QP solved" << std::endl;
+		result = true;
+	}
+	else if(r == 1){
+		if(debug)
+			std::cout << "QP could not be solved within the given number of iterations" << std::endl;
+		result =false;
+	}
+	else if(r == -1){
+		if(debug)
+			std::cout << "QP could not be solved due to an internal error" << std::endl;
+		result =false;
+	}
+	else if(r == -2){
+		if(debug)
+			std::cout << "QP is infeasible and thus could not be solved" << std::endl;
+		result =false;
+	}
+	else if(r == -3){
+		if(debug)
+			std::cout << "QP is unbounded and thus could not be solved" << std::endl;
+		result =false;
+	}
+
+	return result;
+}
+
+void qpoasesSolver::computeMatrix(qpOASES::real_t H[],qpOASES::real_t g[],qpOASES::real_t A[],qpOASES::real_t ubA[],double * xi_in,double * xi_ext,ProblemDetails & pd){
+
+	// add all the cases given the problem details
+	compute_H(H);
+	compute_g(g,xi_in);
+	compute_A(A);
+	compute_ub(ubA,xi_in);
+}
 
 
 
