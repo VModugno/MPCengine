@@ -1,11 +1,19 @@
 /*
+ * MPCtracker.cpp
+ *
+ *  Created on: Nov 22, 2018
+ *      Author: vale
+ */
+
+
+/*
  * MPCregulator.cpp
  *
  *  Created on: Nov 21, 2018
  *      Author: vale
  */
 
-#include "MPCregulator.hpp"
+#include "MPCtracker.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/filesystem.hpp>
@@ -14,7 +22,7 @@
 namespace pt = boost::property_tree;
 namespace fs = boost::filesystem;
 
-MPCregulator::MPCregulator(const std::string filename,P_solv solv)
+MPCtracker::MPCtracker(const std::string filename,P_solv solv)
 {
 	std::stringstream ss;
 	// i get the current working directory
@@ -36,22 +44,43 @@ MPCregulator::MPCregulator(const std::string filename,P_solv solv)
 	// copy shared pointer
     this->solver.reset(solv.get());
     // initialize action
-    this->action(solver->getControlDim());
+    this->action = Eigen::VectorXd::Zero(solver->getControlDim());
+    // initialize delta action
+    this->delta_action = Eigen::VectorXd::Zero(solver->getControlDim());
+    this->inner_x      = Eigen::VectorXd::Zero(solver->getStateDim() + solver->getControlDim() + solver->getPredictionDim()*solver->getOutputDim());
+    // initialize internal sample step
+    this->current_step = 0;
     // i initialize the external  variables if the current problem has set them
     if(this->pd.external_variables.compare("true") == 0){
     	this->external_variables(this->ex_var_dim);
     }
 }
 
-Eigen::VectorXd MPCregulator::Init(Eigen::VectorXd state_0_in){
-	this->action = solver->initSolver(state_0_in,this->external_variables,this->pd);
+Eigen::VectorXd MPCtracker::Init(Eigen::VectorXd state_0_in){
+	Eigen::VectorXd ref;
+	this->inner_x << state_0_in,this->action,ref;
+	this->delta_action = solver->initSolver(this->inner_x,this->external_variables,this->pd);
+    // update of last_action
+	this->action  = this->action + this->delta_action;
+    // update step
+	this->current_step = this->current_step + 1;
+
 	return this->action;
 }
 
-Eigen::VectorXd MPCregulator::ComputeControl(Eigen::VectorXd state_i_in){
-	this->action = solver->solveQP(state_i_in,this->external_variables,this->pd);
+Eigen::VectorXd MPCtracker::ComputeControl(Eigen::VectorXd state_i_in){
+	Eigen::VectorXd ref;
+	this->inner_x << state_i_in,this->action,ref;
+	this->delta_action = solver->solveQP(this->inner_x,this->external_variables,this->pd);
+	// update of last_action
+    this->action  = this->action + this->delta_action;
+    // update step
+    this->current_step = this->current_step + 1;
+
 	return this->action;
 }
+
+
 
 
 

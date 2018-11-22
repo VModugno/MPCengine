@@ -33,9 +33,16 @@ classdef genMpcTracker < MpcGen.coreGenerator
             obj.N           = N;
             obj.delta       = delta;
             % symbolic parameters
-            obj.x_0   = sym('x_0',[obj.orig_n,1],'real');
-            obj.u_0   = sym('u_0',[obj.m,1],'real');
-            obj.ref_0 = sym('ref_0',[obj.N*obj.q,1],'real'); % TOFIX
+            obj.x_0     = sym('x_0',[obj.orig_n,1],'real');
+            obj.u_0     = sym('u_0',[obj.m,1],'real');
+            obj.ref_0   = sym('ref_0',[obj.N*obj.q,1],'real'); 
+            % when we do not have external varialbes to optimize  we assign a dimension of one just to allow
+            % matlab to provide the right functions signature
+            % i need to set a dimension of 2 here in order to force the
+            % ccode function to generate a pointer in the signature
+            obj.outer_x    = sym('outer_x',[2,1],'real'); 
+            obj.extern_var = "false";
+            obj.extern_dim = 0;
             
             obj.u_cur = zeros(obj.m,1);
             

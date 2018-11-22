@@ -20,7 +20,11 @@ public:
 	int              ex_var_dim;           // dimension of the exeternal variables vector (0 if there is no external variable vector)
 	Eigen::VectorXd  action;               // here i define the action vectors
 
-
+	// GET function
+	int getStateDim()     {return solver->getStateDim();};
+	int getControlDim()   {return solver->getControlDim();};
+	int getOutputDim()    {return solver->getOutputDim();};
+	int getPredictionDim(){return solver->getPredictionDim();};
     void SetExtVariables(Eigen::VectorXd cur_ext_var){
     	this->external_variables = cur_ext_var;
     };

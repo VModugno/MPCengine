@@ -28,7 +28,7 @@ class qpoasesSolver  : public AbsSolver {
 	private:
 		// Compute MAtrix for the MPC QP batch problem
 	    void computeMatrix(qpOASES::real_t  H[],qpOASES::real_t g[],qpOASES::real_t A[],qpOASES::real_t ubA[],double * xi_in,double * xi_ext,ProblemDetails & pd);
-		// solver parameters
+	    // solver parameters
 		qpOASES::int_t nWSR         = 3000;
 		double mpcTimeStep          = 100;
 		double controlTimeStep      = 100;

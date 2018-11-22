@@ -13,8 +13,8 @@ int main(){
 	std::string filename_env = "env_parameters.xml";
 	bool visualization       = false;
     bool log                 = true;
+    // selecting environment
     P_unique_env env;
-    // environment selector
     std::string  switch_env("2RR");
     if(switch_env.compare("cart_pole") == 0){
     	env.reset(new cartPole(filename_env,visualization,log));
@@ -24,30 +24,32 @@ int main(){
     }
     // plot information about the current environment
 	env->plotInfoEnv();
-	// construction of the MPC controller
+	// selecting sovler
 	std::string filename = "parameters.xml";
-	qpoasesSolver qp     = qpoasesSolver(filename);
-	qp.plotInfoQP();
+	std::string  switch_solver("qpoases");
+	P_solv qp;
+	if(switch_solver.compare("qpoases") == 0){
+		qp.reset(new qpoasesSolver(filename));
+	}else if(switch_solver.compare("") == 0){
 
-	P_unique_MPCinstance mpc;
-	// MPC problem selector
-	std::string  switch_env("2RR");
-	if(switch_env.compare("cart_pole") == 0){
-		mpc.reset(new cartPole(filename,qp));
 	}
-	//else if(switch_env.compare("2RR") == 0) {
-	//	mpc.reset(new twoRRobot(filename_env,visualization,log));
-	//}
+	qp->plotInfoQP();
+	// selecting MPC problem
+	P_unique_MPCinstance mpc;
+	std::string  switch_problem("regulator");
+	if(switch_problem.compare("regulator") == 0){
+		mpc.reset(new MPCregulator(filename,qp));
+	}else if(switch_problem.compare("tracker") == 0){
 
-
+	}
 
 	// simulation loop
-	Eigen::VectorXd action(qp.getControlDim());
+	Eigen::VectorXd action(mpc->getControlDim());
 	Eigen::VectorXd mes_acc(2);
-	Eigen::VectorXd new_state(qp.getStateDim());
-	Eigen::VectorXd cur_state(qp.getStateDim());
+	Eigen::VectorXd new_state(mpc->getStateDim());
+	Eigen::VectorXd cur_state(mpc->getStateDim());
 	// solvers initialization
-	action = qp.initSolver(env->init_state);
+	action = mpc->Init(env->init_state);
 	// initializing variables for simulation
 	cur_state = env->init_state;
     int steps = env->ft/env->dt;
@@ -60,7 +62,7 @@ int main(){
 		// update state
 		cur_state = new_state;
 		// compute control actions
-		action = qp.solveQP(cur_state);
+		action = mpc->ComputeControl(cur_state);
 		// computed torque for 2r robot
 		if(switch_env.compare("2RR")){
 			DynComp comp   = env->GetDynamicalComponents(cur_state);

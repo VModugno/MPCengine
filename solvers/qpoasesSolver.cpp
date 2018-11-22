@@ -99,6 +99,7 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 		decisionVariables(i) = xOpt[i];
 	}
 
+
     return decisionVariables;
 }
 
@@ -267,11 +268,14 @@ bool qpoasesSolver::GetVerySimpleStatus(qpOASES::returnValue ret,bool debug = fa
 void qpoasesSolver::computeMatrix(qpOASES::real_t H[],qpOASES::real_t g[],qpOASES::real_t A[],qpOASES::real_t ubA[],double * xi_in,double * xi_ext,ProblemDetails & pd){
 
 	// add all the cases given the problem details
-	compute_H(H);
-	compute_g(g,xi_in);
-	compute_A(A);
-	compute_ub(ubA,xi_in);
+	if(pd.type.compare("fixed") && pd.external_variables.compare("false")){
+		compute_H(H,xi_in,xi_ext);
+		compute_g(g,xi_in,xi_ext);
+		compute_A(A,xi_in,xi_ext);
+		compute_ub(ubA,xi_in,xi_ext);
+	}
 }
+
 
 
 

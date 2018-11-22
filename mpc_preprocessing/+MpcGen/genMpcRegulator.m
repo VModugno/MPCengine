@@ -2,8 +2,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
 
     properties
-        
-        outer_x   % here i set all the variables that do not belongs to the intrisic stucture of the mpc  
+          
         maxInput    
         maxOutput 
         
@@ -40,6 +39,14 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.N     = N;
             obj.delta = delta; 
             obj.x_0   = sym('x_0',[obj.n,1],'real');
+            % when we do not have external varialbes to optimize we assign a dimension of one just to allow
+            % matlab to provide the right functions signature
+            % i need to set a dimension of 2 here in order to force the
+            % ccode function to generate a pointer in the signature
+            obj.outer_x = sym('outer_x',[2,1],'real');    
+            obj.extern_var = "false";
+            obj.extern_dim = 0;
+            
             if(length(maxInput)~= obj.m)
                 error('the maxInput has to be a vector with m elements wehre m is the number of input')
             else

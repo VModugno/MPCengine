@@ -17,7 +17,6 @@ struct ProblemDetails{
 
 	std::string      external_variables;  // we are optimizing problem parameters
 	std::string      type;                // fixed or LTV
-	std::string      problemClass;        // tracker or regulator (for now only two classes maybe i will need to extend it)
 };
 
 class AbsSolver {
@@ -32,7 +31,7 @@ public:
 	// initialize the solver if necessary
 	virtual Eigen::VectorXd initSolver(Eigen::VectorXd x0_in,Eigen::VectorXd  x0_ext,ProblemDetails & pd) = 0;
 	virtual Eigen::VectorXd solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  x0_ext,ProblemDetails &  pd) = 0;
-
+    virtual void            plotInfoQP()=0;
     virtual                 ~AbsSolver(){};
 
 protected:

@@ -20,15 +20,17 @@ classdef coreGenerator <  handle
         N_constr    % number of constraints
         
         %  for code generation
-        sym_H       %             
-        sym_F_tra   %
-        sym_G       %
-        sym_W       %
-        sym_S       %
-        x_0         % inner_variables
-        u_0         % inner_variables
-        ref_0       % inner_variables
-        outer_x     % parameters to optimize that do not belong to the mpc variables
+        sym_H           %             
+        sym_F_tra       %
+        sym_G           %
+        sym_W           %
+        sym_S           %
+        x_0             % inner_variables
+        u_0             % inner_variables
+        ref_0           % inner_variables
+        outer_x         % parameters to optimize that do not belong to the mpc variables
+        extern_var      % "true" or "false"
+        extern_dim      % dimension of external variable vector to optimize
         % for control
         H
         F_tra
@@ -91,7 +93,7 @@ classdef coreGenerator <  handle
                %H_  = obj.sym_H(:);
                H_  = obj.sym_H';
                H_  = H_(:);
-               obj.cCode(H_,'compute_H',{},'H');
+               obj.cCode(H_,'compute_H',{inner_x,obj.outer_x},'H');
                obj.PostProcessFunctionForqpOASES('compute_H','H')
                %% linear term cost function
                if(strcmp(obj.problemClass,"tracker"))
@@ -99,13 +101,13 @@ classdef coreGenerator <  handle
                else
                     g_  = (obj.x_0'*obj.sym_F_tra)';
                end
-               obj.cCode(g_,'compute_g',{inner_x},'g');
+               obj.cCode(g_,'compute_g',{inner_x,obj.outer_x},'g');
                obj.PostProcessFunctionForqpOASES('compute_g','g')
                %% linear term constraints
                %A_  = obj.sym_G(:);
                A_  = obj.sym_G';
                A_  = A_(:);
-               obj.cCode(A_,'compute_A',{},'A');
+               obj.cCode(A_,'compute_A',{inner_x,obj.outer_x},'A');
                obj.PostProcessFunctionForqpOASES('compute_A','A')
                %% constant term constraints
                if(strcmp(obj.problemClass,"tracker"))
@@ -113,7 +115,7 @@ classdef coreGenerator <  handle
                else
                     ub_ = obj.sym_W + obj.sym_S*obj.x_0;
                end
-               obj.cCode(ub_,'compute_ub',{inner_x},'ub');
+               obj.cCode(ub_,'compute_ub',{inner_x,obj.outer_x},'ub');
                obj.PostProcessFunctionForqpOASES('compute_ub','ub') 
                %% Important!!! for QPoases matrix has to be stored row wise
 %                if(strcmp(obj.problemClass,"tracker"))
@@ -261,11 +263,12 @@ classdef coreGenerator <  handle
            entry_node.appendChild(name_node);
            
            name_node = pNode.createElement('external_x');
-           if(isempty(obj.outer_x))
-                name_text = pNode.createTextNode('false');
-           else
-                name_text = pNode.createTextNode('true');
-           end
+           name_text = pNode.createTextNode(obj.extern_var);
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('external_dim');
+           name_text = pNode.createTextNode(int2str(obj.extern_dim));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
