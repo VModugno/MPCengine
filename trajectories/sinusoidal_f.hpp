@@ -23,8 +23,9 @@ inline double d_sin_f(double t,int current_step,std::vector<double> param){
 	double k = param[0];
 	double w = param[1];
 	double dt= param[2];
-
-	return k*w*cos(w*t)/dt;
+	//DEBUG
+    std::cout<<"k = "<<k<< ",w= "<< w << ",dt= "<< dt << std::endl;
+	return (k*w*cos(w*t));///dt;
 };
 
 inline double cos_f  (double t,int current_step,std::vector<double> param){
@@ -40,8 +41,9 @@ inline double d_cos_f(double t,int current_step,std::vector<double> param){
 	double k = param[0];
 	double w = param[1];
 	double dt= param[2];
-
-	return -k*w*sin(w*t)/dt;
+	//DEBUG
+	std::cout<<"k= "<<k<< ",w= "<< w << ",dt= "<< dt << std::endl;
+	return (-k*w*sin(w*t));///dt;
 };
 
 

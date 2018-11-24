@@ -44,7 +44,10 @@ public:
 		this->parameters  = param;
 		this->online_comp = online_comp;
 		if(online_comp){
-			Eigen::VectorXd numerical_ref = Eigen::VectorXd::Zero(refs.size()*this->pred_window);
+			this->numerical_ref = Eigen::VectorXd::Zero(refs.size()*this->pred_window);
+			// DEBUG
+			std::cout << "numerical_ref.size() = " << numerical_ref.size() << std::endl;
+			std::cout << "numerical_ref = " << numerical_ref << std::endl;
 		}
 		else{
 			// here i have to precompute the vector numerical_ref
@@ -54,15 +57,25 @@ public:
 
 	Eigen::VectorXd ComputeTraj(double curr_time,int curr_sample){
 
+
 		if(online_comp){
 
 			for(int i=0;i<this->pred_window;i=i+refs.size()){
+				//DEBUG
+				std::cout << "i = "<<i<<std::endl;
 				for(unsigned int j=0;j<refs.size();j++){
-					numerical_ref(i+j)=refs[j](curr_time,curr_sample,parameters[j]);
+					//DEBUG
+					std::cout << "j = "<<j<<std::endl;
+					double res        = refs[j](curr_time,curr_sample,parameters[j]);
+					//DEBUG
+					std::cout << "double res  = "<<res<<std::endl;
+					this->numerical_ref(i+j)= res;
+
 				}
 				curr_time   = curr_time + this->dt;
 				curr_sample = curr_sample + 1;
 			}
+
 
 			return numerical_ref;
 		}else{

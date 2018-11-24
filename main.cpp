@@ -46,15 +46,15 @@ int main(){
 	}else if(switch_problem.compare("tracker") == 0){
 		bool online_comp = true;
 		std::vector<traj> refs;
-		refs[0]  = sin_f;                            // q1
-		refs[1]  = cos_f;                            // q2
-		refs[2]  = d_sin_f;                          // d_q1
-		refs[3]  = d_cos_f;                          // d_q2
+		refs.push_back(sin_f);                            // q1
+		refs.push_back(cos_f);                            // q2
+		refs.push_back(d_sin_f);                          // d_q1
+		refs.push_back(d_cos_f);                          // d_q2
 		param_vec param;
-		param[0] = std::vector<double>{M_PI/2,1.0};          // q1
-		param[1] = std::vector<double>{M_PI/3,1.0};          // q2
-		param[2] = std::vector<double>{M_PI/2,1.0,env->dt};  // d_q1
-		param[3] = std::vector<double>{M_PI/3,1.0,env->dt};  // d_q2
+		param.push_back(std::vector<double>{M_PI/2,1.0});          // q1
+		param.push_back(std::vector<double>{M_PI/3,1.0});          // q2
+		param.push_back(std::vector<double>{M_PI/2,1.0,env->dt});  // d_q1
+		param.push_back(std::vector<double>{M_PI/3,1.0,env->dt});  // d_q2
 		trajectories traj = trajectories(env->dt,env->ft,qp->getPredictionDim(),refs,param,online_comp);
 		mpc.reset(new MPCtracker(filename,qp,traj));
 

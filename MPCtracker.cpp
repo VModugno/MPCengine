@@ -64,6 +64,9 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & tra
 }
 
 Eigen::VectorXd MPCtracker::Init(Eigen::VectorXd state_0_in){
+	//DEBUG
+	std::cout << "ref.size() = "<< ref.size() << std::endl;
+
 	ref = traj.ComputeTraj(current_time_step,current_step);
 	this->inner_x << state_0_in,this->action,ref;
 	this->delta_action = solver->initSolver(this->inner_x,this->external_variables,this->pd);

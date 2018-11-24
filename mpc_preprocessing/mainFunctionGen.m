@@ -9,7 +9,7 @@ generate_func    = false;
 start_simulation = true;
 %%
 %% activate or deactivate visualization
-visualization    = false;
+visualization    = true;
 %%
 
 %% tracking or regulator
@@ -55,13 +55,14 @@ elseif(strcmp(control_mode,"tracker"))
     t          = 0:delta_t:ft;
     % reference (TODO reference class)-----------------------------------------
     % sin traj
-    q1des_t = pi/2*sin(t);
-    q2des_t = pi/3*cos(t);
-
-    dq1des_t = diff(q1des_t)/delta_t;
-    dq1des_t = [dq1des_t , dq1des_t(end)];
-    dq2des_t = diff(q2des_t)/delta_t;
-    dq2des_t = [dq2des_t , dq2des_t(end)];
+    q1des_t  = pi/2*sin(t);
+    q2des_t  = pi/3*cos(t);
+    dq1des_t = pi/2*cos(t);
+    dq2des_t = -pi/3*sin(t);
+    %dq1des_t = diff(q1des_t)/delta_t;
+    %dq1des_t = [dq1des_t , dq1des_t(end)];
+    %dq2des_t = diff(q2des_t)/delta_t;
+    %dq2des_t = [dq2des_t , dq2des_t(end)];
 
     x_des    = [q1des_t;q2des_t;dq1des_t;dq2des_t];
 
