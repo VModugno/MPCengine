@@ -22,7 +22,7 @@
 namespace pt = boost::property_tree;
 namespace fs = boost::filesystem;
 
-MPCtracker::MPCtracker(const std::string filename,P_solv solv)
+MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & traj)
 {
 	std::stringstream ss;
 	// i get the current working directory
@@ -41,15 +41,22 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv)
 	this->pd.external_variables = tree.get<std::string>("parameters.Entry.external_x"); // true or false
 	this->ex_var_dim            = tree.get<int>("parameters.Entry.external_dim"); // true or false
 
-	// copy shared pointer
+	// copy shared pointer for the solver class
     this->solver.reset(solv.get());
+    // copy trajectories
+    this->traj   = traj;
     // initialize action
     this->action = Eigen::VectorXd::Zero(solver->getControlDim());
     // initialize delta action
     this->delta_action = Eigen::VectorXd::Zero(solver->getControlDim());
     this->inner_x      = Eigen::VectorXd::Zero(solver->getStateDim() + solver->getControlDim() + solver->getPredictionDim()*solver->getOutputDim());
+    this->ref          = Eigen::VectorXd::Zero(solver->getPredictionDim()*solver->getOutputDim());
+    // initialize time step
+    this->dt                 =traj.GetDt();
     // initialize internal sample step
-    this->current_step = 0;
+    this->current_step       = 0;
+    // initilize internal time step
+    this->current_time_step  = 0;
     // i initialize the external  variables if the current problem has set them
     if(this->pd.external_variables.compare("true") == 0){
     	this->external_variables(this->ex_var_dim);
@@ -57,25 +64,29 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv)
 }
 
 Eigen::VectorXd MPCtracker::Init(Eigen::VectorXd state_0_in){
-	Eigen::VectorXd ref;
+	ref = traj.ComputeTraj(current_time_step,current_step);
 	this->inner_x << state_0_in,this->action,ref;
 	this->delta_action = solver->initSolver(this->inner_x,this->external_variables,this->pd);
     // update of last_action
 	this->action  = this->action + this->delta_action;
     // update step
 	this->current_step = this->current_step + 1;
+	// update time step
+    this->current_time_step = this->current_time_step + this->dt;
 
-	return this->action;
+    return this->action;
 }
 
 Eigen::VectorXd MPCtracker::ComputeControl(Eigen::VectorXd state_i_in){
-	Eigen::VectorXd ref;
+	ref = traj.ComputeTraj(current_time_step,current_step);
 	this->inner_x << state_i_in,this->action,ref;
 	this->delta_action = solver->solveQP(this->inner_x,this->external_variables,this->pd);
 	// update of last_action
     this->action  = this->action + this->delta_action;
     // update step
     this->current_step = this->current_step + 1;
+    // update time step
+    this->current_time_step = this->current_time_step + this->dt;
 
 	return this->action;
 }

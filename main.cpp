@@ -8,14 +8,21 @@
 
 
 int main(){
-	// construction of the environment
-	std::cout << "creating environment" << std::endl;
+
 	std::string filename_env = "env_parameters.xml";
+	std::string filename = "parameters.xml";
+	// env selector
+    std::string  switch_env("2RR");
+    // solver selector
+    std::string  switch_solver("qpoases");
+    // problem selector
+    std::string  switch_problem("tracker");
+    // swtich behaviour
 	bool visualization       = false;
     bool log                 = true;
-    // selecting environment
+    // construction of the environment
+    std::cout << "creating environment" << std::endl;
     P_unique_env env;
-    std::string  switch_env("2RR");
     if(switch_env.compare("cart_pole") == 0){
     	env.reset(new cartPole(filename_env,visualization,log));
     }
@@ -24,9 +31,7 @@ int main(){
     }
     // plot information about the current environment
 	env->plotInfoEnv();
-	// selecting sovler
-	std::string filename = "parameters.xml";
-	std::string  switch_solver("qpoases");
+	// constructing solver
 	P_solv qp;
 	if(switch_solver.compare("qpoases") == 0){
 		qp.reset(new qpoasesSolver(filename));
@@ -34,12 +39,24 @@ int main(){
 
 	}
 	qp->plotInfoQP();
-	// selecting MPC problem
+	// constructing MPC problem
 	P_unique_MPCinstance mpc;
-	std::string  switch_problem("regulator");
 	if(switch_problem.compare("regulator") == 0){
 		mpc.reset(new MPCregulator(filename,qp));
 	}else if(switch_problem.compare("tracker") == 0){
+		bool online_comp = true;
+		std::vector<traj> refs;
+		refs[0]  = sin_f;                            // q1
+		refs[1]  = cos_f;                            // q2
+		refs[2]  = d_sin_f;                          // d_q1
+		refs[3]  = d_cos_f;                          // d_q2
+		param_vec param;
+		param[0] = std::vector<double>{M_PI/2,1.0};          // q1
+		param[1] = std::vector<double>{M_PI/3,1.0};          // q2
+		param[2] = std::vector<double>{M_PI/2,1.0,env->dt};  // d_q1
+		param[3] = std::vector<double>{M_PI/3,1.0,env->dt};  // d_q2
+		trajectories traj = trajectories(env->dt,env->ft,qp->getPredictionDim(),refs,param,online_comp);
+		mpc.reset(new MPCtracker(filename,qp,traj));
 
 	}
 
