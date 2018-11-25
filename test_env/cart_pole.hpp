@@ -35,7 +35,8 @@ public:
 			pt::ptree tree;
 			// Parse the XML into the property tree.
 			pt::read_xml(full_path, tree);
-	    	this->num_state            = 4;
+	    	this->dim_state            = 4;
+	    	this->DOF                  = 2;
 	    	this->state_bounds         = Eigen::MatrixXd(4,2);
 			this->state_bounds         << -100,100,
 				                          -100,100,
@@ -46,7 +47,7 @@ public:
 			this->mes_acc              = Eigen::VectorXd(2);
             // particular care has to be taken for copying the init_state into an eigen vector
 			// here i initialize the init_state variable
-			this->init_state           = Eigen::VectorXd(this->num_state);
+			this->init_state           = Eigen::VectorXd(this->dim_state);
 			std::stringstream sss(tree.get<std::string>("parameters.Entry.init_state"));
 			double d;
 			int    count=0;
@@ -63,11 +64,13 @@ public:
 			this->pp.L                 = tree.get<double>("parameters.Entry.L");
 			this->active_visualization = act_vis;
 			this->log                  = log;
+			this->feedback_lin         = false;
 
 	    };
 
 	    cartPole(Eigen::VectorXd init_state,double dt,double ft,prmCP param,bool act_vis){
-	    	    this->num_state            = 4;
+	    	    this->dim_state            = 4;
+	    	    this->DOF                  = 2;
 	   	    	this->state_bounds         = Eigen::MatrixXd(4,2);
 	   			this->state_bounds         << -100,100,
 	   				                          -100,100,
@@ -84,10 +87,11 @@ public:
 	   			this->pp.mPend             = param.mPend;
 	   			this->pp.L                 = param.L;
 	   			this->mes_acc              = Eigen::VectorXd(2);
+	   			this->feedback_lin         = false;
 	   	};
 
 
-	    DynComp GetDynamicalComponents(Eigen::VectorXd cur_state){};
+	    P_DynComp GetDynamicalComponents(Eigen::VectorXd cur_state){};
 
 	    Eigen::VectorXd Dynamics(Eigen::VectorXd cur_state,Eigen::VectorXd action, Eigen::VectorXd & mes_acc){
 	    	double g   = 9.8;

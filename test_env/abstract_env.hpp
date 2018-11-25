@@ -22,30 +22,42 @@ struct DynComp{
 	Eigen::MatrixXd S;
 	Eigen::VectorXd C;
 	Eigen::VectorXd g;
+	DynComp(){};
+	DynComp(int DOF):M(DOF,DOF),S(DOF,DOF),C(DOF),g(DOF){
+		//this->M = Eigen::MatrixXd::Zero(DOF,DOF);
+		//this->S = Eigen::MatrixXd::Zero(DOF,DOF);
+		//this->C = Eigen::VectorXd::Zero(DOF);
+		//this->g = Eigen::VectorXd::Zero(DOF);
+	};
 };
+
+typedef std::shared_ptr<DynComp> P_DynComp;
 
 
 class abstractEnv {
 public:
 
-	int num_state;
-	Eigen::MatrixXd state_bounds;
-	std::vector<std::string> state_name;
-	Eigen::VectorXd init_state;
-	Eigen::VectorXd state;
-	double dt;                            // sample duration (s)
-	double ft;                            // final time      (s)
-	bool active_visualization;
-	Eigen::VectorXd mes_acc;
+	int                          dim_state;
+	int                          DOF;
+	Eigen::MatrixXd              state_bounds;
+	std::vector<std::string>     state_name;
+	Eigen::VectorXd              init_state;
+	Eigen::VectorXd              state;
+	double                       dt;                         // sample duration (s)
+	double                       ft;                         // final time      (s)
+	bool                         active_visualization;
+	Eigen::VectorXd              mes_acc;
+	bool                         feedback_lin;               // whit this field i specify if the system require a feedback linearization or not
 	// logging vector
-	bool log = false;
+	bool                         log = false;
 	std::vector<Eigen::VectorXd> states;
 	std::vector<Eigen::VectorXd> actions;
+	P_DynComp                    comps;
     // integrating dynamics with runge-kutta 4
 	double Step(Eigen::VectorXd action, Eigen::VectorXd & new_state, Eigen::VectorXd & mes_acc)
 	{
 		double reward = 0;
-		Eigen::VectorXd k1(num_state),k2(num_state),k3(num_state),k4(num_state);
+		Eigen::VectorXd k1(dim_state),k2(dim_state),k3(dim_state),k4(dim_state);
 
 		// to fix
 		int substeps = 1;
@@ -64,6 +76,7 @@ public:
 			new_state = this->state + this->dt/6*(k1 + 2*k2 + 2*k3 + k4);
 			//All states wrapped to 2pi (when necessary)
 			this->Wrapping(new_state);
+			//DEBUG
 			std::cout << "new_state = " << new_state << std::endl;
 		}
 
@@ -124,9 +137,16 @@ public:
 
 	}
 
+	void DysplayComp(){
+		std::cout <<"M = "<< this->comps->M << std::endl;
+		std::cout <<"S = "<< this->comps->S << std::endl;
+		std::cout <<"C = "<< this->comps->C << std::endl;
+		std::cout <<"g = "<< this->comps->g << std::endl;
+	};
+
     // virtual function
 	// with this function we collect the acceleration to simulate measure of acceleration
-	virtual DynComp         GetDynamicalComponents(Eigen::VectorXd cur_state) = 0;
+	virtual P_DynComp       GetDynamicalComponents(Eigen::VectorXd cur_state) = 0;
 	virtual Eigen::VectorXd Dynamics(Eigen::VectorXd state,Eigen::VectorXd action, Eigen::VectorXd & mes_acc) = 0;
 	// with this function i do not update the mes_action
 	virtual Eigen::VectorXd Dynamics(Eigen::VectorXd state,Eigen::VectorXd action) = 0;

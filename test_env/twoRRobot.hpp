@@ -50,7 +50,8 @@ public:
 			pt::ptree tree;
 			// Parse the XML into the property tree.
 			pt::read_xml(full_path, tree);
-	    	this->num_state            = 4;
+	    	this->dim_state            = 4;
+	    	this->DOF                  = 2;
 	    	this->state_bounds         = Eigen::MatrixXd(4,2);
 			this->state_bounds         << -2*M_PI,2*M_PI,
 					                      -2*M_PI,2*M_PI,
@@ -61,7 +62,7 @@ public:
 			this->mes_acc              = Eigen::VectorXd(2);
             // particular care has to be taken for copying the init_state into an eigen vector
 			// here i initialize the init_state variable
-			this->init_state           = Eigen::VectorXd(this->num_state);
+			this->init_state           = Eigen::VectorXd(this->dim_state);
 			std::stringstream sss(tree.get<std::string>("parameters.Entry.init_state"));
 			double d;
 			int    count=0;
@@ -88,36 +89,41 @@ public:
 
 			this->active_visualization   = act_vis;
 			this->log                    = log;
+			this->comps.reset(new DynComp(DOF));
+			this->feedback_lin           = true;
 
 	    };
 
 	    twoRRobot(Eigen::VectorXd init_state,double dt,double ft,prmRR param,bool act_vis){
-	    	    this->num_state              = 4;
-	   	    	this->state_bounds           = Eigen::MatrixXd(4,2);
-	   			this->state_bounds           <<-2*M_PI,2*M_PI,
-	   									      -2*M_PI,2*M_PI,
-	   										  -2*M_PI,2*M_PI,
-											  -2*M_PI,2*M_PI;
-	   			const char *vinit[]          = {"x_c", "x_c_dot", "theta","theta_dot"};
-	   			this->state_name             = std::vector<std::string>(vinit,vinit+4);
-	   			this->init_state             = init_state;
-	   			this->state                  = this->init_state;
-	   			this->dt                     = dt;
-	   			this->active_visualization   = act_vis;
-				this->ft                     = ft;
-				this->pp.l1                  = param.l1;
-				this->pp.l2                  = param.l2;
-				this->pp.m1                  = param.m1;
-				this->pp.m2                  = param.m2;
-				this->pp.c1x                 = param.c1x;
-				this->pp.c1y                 = param.c1y;
-				this->pp.c1z                 = param.c1z;
-				this->pp.c2x                 = param.c2x;
-				this->pp.c2y                 = param.c2y;
-				this->pp.c2z                 = param.c2z;
-				this->pp.J1zz                = param.J1zz;
-				this->pp.J2zz                = param.J2zz;
-	   			this->mes_acc                = Eigen::VectorXd(2);
+			this->dim_state              = 4;
+			this->DOF                    = 2;
+			this->state_bounds           = Eigen::MatrixXd(4,2);
+			this->state_bounds           <<-2*M_PI,2*M_PI,
+										  -2*M_PI,2*M_PI,
+										  -2*M_PI,2*M_PI,
+										  -2*M_PI,2*M_PI;
+			const char *vinit[]          = {"x_c", "x_c_dot", "theta","theta_dot"};
+			this->state_name             = std::vector<std::string>(vinit,vinit+4);
+			this->init_state             = init_state;
+			this->state                  = this->init_state;
+			this->dt                     = dt;
+			this->active_visualization   = act_vis;
+			this->ft                     = ft;
+			this->pp.l1                  = param.l1;
+			this->pp.l2                  = param.l2;
+			this->pp.m1                  = param.m1;
+			this->pp.m2                  = param.m2;
+			this->pp.c1x                 = param.c1x;
+			this->pp.c1y                 = param.c1y;
+			this->pp.c1z                 = param.c1z;
+			this->pp.c2x                 = param.c2x;
+			this->pp.c2y                 = param.c2y;
+			this->pp.c2z                 = param.c2z;
+			this->pp.J1zz                = param.J1zz;
+			this->pp.J2zz                = param.J2zz;
+			this->mes_acc                = Eigen::VectorXd(2);
+			this->comps.reset(new DynComp(DOF));
+			this->feedback_lin           = true;
 	   	};
 
 
@@ -151,20 +157,19 @@ public:
 	    Eigen::VectorXd get_g(Eigen::VectorXd state,prmRR pp){
 	    	Eigen::VectorXd g(2);
 			double g0 = 9.80665;
-			g(1,1) = g0*pp.m1*(pp.c1x*cos(state(0)) + pp.l1*cos(state(0)) - pp.c1y*sin(state(0))) + g0*pp.m2*(pp.c2x*cos(state(0) + state(1)) + pp.l2*cos(state(0) + state(1)) - pp.c2y*sin(state(0) + state(1)) + pp.l1*cos(state(0)));
-			g(2,1) = g0*pp.m2*(pp.c2x*cos(state(0) + state(1)) + pp.l2*cos(state(0) + state(1)) - pp.c2y*sin(state(0) + state(1)));
+			g(0) = g0*pp.m1*(pp.c1x*cos(state(0)) + pp.l1*cos(state(0)) - pp.c1y*sin(state(0))) + g0*pp.m2*(pp.c2x*cos(state(0) + state(1)) + pp.l2*cos(state(0) + state(1)) - pp.c2y*sin(state(0) + state(1)) + pp.l1*cos(state(0)));
+			g(1) = g0*pp.m2*(pp.c2x*cos(state(0) + state(1)) + pp.l2*cos(state(0) + state(1)) - pp.c2y*sin(state(0) + state(1)));
 			return g;
 	    }
 
-	    DynComp GetDynamicalComponents(Eigen::VectorXd cur_state)
+	    P_DynComp GetDynamicalComponents(Eigen::VectorXd cur_state)
 	    {
-	    	DynComp res;
 
-	    	res.M = get_M(cur_state,this->pp);
-			res.C = get_C(cur_state,this->pp);
-			res.g = get_g(cur_state,this->pp);
+	    	this->comps->M = get_M(cur_state,this->pp);
+	    	this->comps->C = get_C(cur_state,this->pp);
+	    	this->comps->g = get_g(cur_state,this->pp);
 
-			return res;
+			return this->comps;
 
 	    }
 
@@ -172,14 +177,17 @@ public:
 
 	    	Eigen::VectorXd new_state(4);
 
-	    	Eigen::MatrixXd M = get_M(cur_state,this->pp);
-	    	Eigen::VectorXd C = get_C(cur_state,this->pp);
-	    	Eigen::VectorXd g = get_g(cur_state,this->pp);
+	    	this->comps->M = get_M(cur_state,this->pp);
+	    	this->comps->C = get_C(cur_state,this->pp);
+	    	this->comps->g = get_g(cur_state,this->pp);
 
+	    	//DEBUG
+	    	this->DysplayComp();
 
-	    	Eigen::MatrixXd M_inv = M.inverse();
+	    	Eigen::MatrixXd M_inv(2,2);
+	    	M_inv = comps->M.inverse();
 
-	    	mes_acc = M_inv*(action - C - g);
+	    	mes_acc = M_inv*(action - comps->C - comps->g);
 
 
 			new_state(0) = cur_state(2);
@@ -195,13 +203,13 @@ public:
 
 	    	Eigen::VectorXd new_state(4),mes_acc(2);
 
-			Eigen::MatrixXd M = get_M(cur_state,this->pp);
-			Eigen::VectorXd C = get_C(cur_state,this->pp);
-			Eigen::VectorXd g = get_g(cur_state,this->pp);
+	    	this->comps->M = get_M(cur_state,this->pp);
+	    	this->comps->C = get_C(cur_state,this->pp);
+	    	this->comps->g = get_g(cur_state,this->pp);
 
 			//Eigen::MatrixXd M_inv = M.inverse();
 
-			mes_acc = M.inverse()*(action - C - g);
+			mes_acc = comps->M.inverse()*(action - comps->C - comps->g);
 
 
 			new_state(0) = cur_state(2);

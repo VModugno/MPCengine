@@ -67,6 +67,11 @@ int main(){
 	Eigen::VectorXd cur_state(mpc->getStateDim());
 	// solvers initialization
 	action = mpc->Init(env->init_state);
+	if(env->feedback_lin){
+		P_DynComp comp   = env->GetDynamicalComponents(cur_state);
+		// the choice of cur_state.tail(2) is tailored for the 2R robot it has to be extended
+		action         = comp->M*action + comp->S*cur_state.tail(2) + comp->g;
+	}
 	// initializing variables for simulation
 	cur_state = env->init_state;
     int steps = env->ft/env->dt;
@@ -81,10 +86,10 @@ int main(){
 		// compute control actions
 		action = mpc->ComputeControl(cur_state);
 		// computed torque for 2r robot
-		if(switch_env.compare("2RR")){
-			DynComp comp   = env->GetDynamicalComponents(cur_state);
+		if(env->feedback_lin){
+			P_DynComp comp   = env->GetDynamicalComponents(cur_state);
 			// the choice of cur_state.tail(2) is tailored for the 2R robot it has to be extended
-			action         = comp.M*action + comp.S*cur_state.tail(2) + comp.g;
+			action         = comp->M*action + comp->S*cur_state.tail(2) + comp->g;
 		}
 	}
 
