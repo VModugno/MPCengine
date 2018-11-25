@@ -21,6 +21,7 @@ int main(){
 	bool visualization       = false;
     bool log                 = true;
     // construction of the environment
+    //DEBUG
     std::cout << "creating environment" << std::endl;
     P_unique_env env;
     if(switch_env.compare("cart_pole") == 0){
@@ -68,9 +69,13 @@ int main(){
 	// solvers initialization
 	action = mpc->Init(env->init_state);
 	if(env->feedback_lin){
-		P_DynComp comp   = env->GetDynamicalComponents(cur_state);
+		P_DynComp comp   = env->GetDynamicalComponents(env->init_state);
+
+		//DEBUG
+	    env->DysplayComp();
+		std::cout << "action before feedback lin = "<<action <<std::endl;
 		// the choice of cur_state.tail(2) is tailored for the 2R robot it has to be extended
-		action         = comp->M*action + comp->S*cur_state.tail(2) + comp->g;
+		action         = comp->M*action + comp->S*(env->init_state.tail(2)) + comp->g;
 	}
 	// initializing variables for simulation
 	cur_state = env->init_state;
@@ -78,8 +83,11 @@ int main(){
 	std::cout << "starting simulation" << std::endl;
 	for(int i=0;i<steps;i++){
 		// updating environment
+		//DEBUG
 		std::cout <<"action = "<<action << std::endl;
+
 		env->Step(action,new_state,mes_acc);
+		//DEBUG
 		std::cout <<"new_state = "<<new_state << std::endl;
 		// update state
 		cur_state = new_state;
@@ -97,6 +105,7 @@ int main(){
 		env->logToFile();
 	}
 
+	//DEBUG
 	std::cout << "the end" << std::endl;
 
 }

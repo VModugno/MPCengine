@@ -130,7 +130,8 @@ public:
 
 	    Eigen::MatrixXd get_M(Eigen::VectorXd state,prmRR pp){
 	    	Eigen::MatrixXd M(2,2);
-			M(0,0) = pp.J1zz + pp.J2zz + pow(pp.l1,2)*pp.m1 + pow(pp.l1,2)*pp.m2 + pow(pp.l2,2)*pp.m2 + 2*pp.c1x*pp.l1*pp.m1 + 2*pp.c2x*pp.l2*pp.m2 + 2*pp.c2x*pp.l1*pp.m2*cos(state(2)) + 2*pp.l1*pp.l2*pp.m2*cos(state(1)) - 2*pp.c2y*pp.l1*pp.m2*sin(state(1));
+	    	         //prm.J1zz+ prm.J2zz+ prm.l1^2*prm.m1    + prm.l1^2*prm.m2    + prm.l2^2*prm.m2 + 2*prm.c1x*prm.l1*prm.m1 + 2*prm.c2x*prm.l2*prm.m2 + 2*prm.c2x*prm.l1*prm.m2*cos(state(2)) + 2*prm.l1*prm.l2*prm.m2*cos(state(2)) - 2*prm.c2y*prm.l1*prm.m2*sin(state(2));
+			M(0,0) = pp.J1zz + pp.J2zz + pow(pp.l1,2)*pp.m1 + pow(pp.l1,2)*pp.m2 + pow(pp.l2,2)*pp.m2 + 2*pp.c1x*pp.l1*pp.m1 + 2*pp.c2x*pp.l2*pp.m2 + 2*pp.c2x*pp.l1*pp.m2*cos(state(1)) + 2*pp.l1*pp.l2*pp.m2*cos(state(1)) - 2*pp.c2y*pp.l1*pp.m2*sin(state(1));
 			M(0,1) = pp.J2zz + pow(pp.l2,2)*pp.m2 + 2*pp.c2x*pp.l2*pp.m2 + pp.c2x*pp.l1*pp.m2*cos(state(1)) + pp.l1*pp.l2*pp.m2*cos(state(1)) - pp.c2y*pp.l1*pp.m2*sin(state(1));
 			M(1,0) = M(0,1);
 			M(1,1) = pp.m2*pow(pp.l2,2) + 2*pp.c2x*pp.m2*pp.l2 + pp.J2zz;
@@ -180,9 +181,6 @@ public:
 	    	this->comps->M = get_M(cur_state,this->pp);
 	    	this->comps->C = get_C(cur_state,this->pp);
 	    	this->comps->g = get_g(cur_state,this->pp);
-
-	    	//DEBUG
-	    	this->DysplayComp();
 
 	    	Eigen::MatrixXd M_inv(2,2);
 	    	M_inv = comps->M.inverse();
