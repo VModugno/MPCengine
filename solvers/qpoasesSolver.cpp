@@ -55,6 +55,10 @@ qpoasesSolver::qpoasesSolver(const std::string filename){
 
 Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd  x0_ext,ProblemDetails & pd)
 {
+	//DEBUG
+	std::cout << "x0_in = "<<x0_in<<std::endl;
+	std::cout << "x0_ext = "<<x0_ext<<std::endl;
+
 	// eigen to array conversion
 	double *x0;
 	x0   = x0_in.data(); // pointing to the area of memory owned by the eigen vector
@@ -62,16 +66,16 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 	x0_e = x0_ext.data();
 
 	//DEBUG
-	for(int ii = 0; ii<4; ii++)
-		std::cout << x0[ii] << " ";
-	std::cout << std::endl;
+	//for(int ii = 0; ii<4; ii++)
+	//	std::cout << x0[ii] << " ";
+	//std::cout << std::endl;
 
 
 	int nVariables_batch   = this->N * this->m;
 	int nConstraints_batch = this->N * this->N_constr;
 	// qpoases option
 	qpOASES::Options options;
-    options.setToReliable();
+    options.setToMPC();
     options.printLevel           = qpOASES::PL_HIGH;
     options.enableNZCTests       = qpOASES::BT_TRUE;
     options.enableFlippingBounds = qpOASES::BT_TRUE;
@@ -99,6 +103,8 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 		decisionVariables(i) = xOpt[i];
 	}
 
+    //DEBUG
+	std::cout <<"decisionVariables = "<<decisionVariables << std::endl;
 
     return decisionVariables;
 }
@@ -267,13 +273,13 @@ bool qpoasesSolver::GetVerySimpleStatus(qpOASES::returnValue ret,bool debug = fa
 
 void qpoasesSolver::computeMatrix(qpOASES::real_t H[],qpOASES::real_t g[],qpOASES::real_t A[],qpOASES::real_t ubA[],double * xi_in,double * xi_ext,ProblemDetails & pd){
 
-	// add all the cases given the problem details
-	if(pd.type.compare("fixed") && pd.external_variables.compare("false")){
+	// add all the cases given the problem details (remove this line ASAP)
+	//if(pd.type.compare("fixed") && pd.external_variables.compare("false")){
 		compute_H(H,xi_in,xi_ext);
 		compute_g(g,xi_in,xi_ext);
 		compute_A(A,xi_in,xi_ext);
 		compute_ub(ubA,xi_in,xi_ext);
-	}
+	//}
 }
 
 

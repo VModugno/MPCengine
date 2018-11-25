@@ -57,10 +57,10 @@ public:
 
 	Eigen::VectorXd ComputeTraj(double curr_time,int curr_sample){
 
-
+        int counter = 0;
 		if(online_comp){
 
-			for(int i=0;i<this->pred_window;i=i+refs.size()){
+			for(int i=0;i<this->pred_window;i++){
 				//DEBUG
 				std::cout << "i = "<<i<<std::endl;
 				for(unsigned int j=0;j<refs.size();j++){
@@ -69,7 +69,8 @@ public:
 					double res        = refs[j](curr_time,curr_sample,parameters[j]);
 					//DEBUG
 					std::cout << "double res  = "<<res<<std::endl;
-					this->numerical_ref(i+j)= res;
+					this->numerical_ref(counter)= res;
+					counter++;
 
 				}
 				curr_time   = curr_time + this->dt;

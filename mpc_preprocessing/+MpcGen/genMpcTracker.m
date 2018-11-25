@@ -121,6 +121,16 @@ classdef genMpcTracker < MpcGen.coreGenerator
             % MPC
             %new_F_tra    = [obj.total_ref((it-1)*obj.q + 1:(it-1)*obj.q + obj.N*obj.q) ; x_cur;obj.u_cur]'*obj.F_tra;
             new_F_tra     = [cur_ref; x_cur;obj.u_cur]'*obj.F_tra;
+            
+            %% debug
+            inner_x = [cur_ref; x_cur;obj.u_cur];
+            A_      = obj.G';
+            A_      = A_(:);
+            g_      = ([cur_ref; x_cur;obj.u_cur]'*obj.F_tra)';
+            H_      = obj.H';
+            H_      = H_(:);
+            ub_     = W + obj.S*[x_cur;obj.u_cur];
+            
             [u_star,fval] = quadprog(obj.H, new_F_tra, obj.G,W + obj.S*[x_cur;obj.u_cur]);
             
             obj.u_cur     = obj.u_cur + u_star(1: obj.m);
@@ -129,7 +139,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
             obj.Ustar{obj.it}        = reshape(u_star,[obj.m,obj.N]);
             obj.Ustar_used(:,obj.it) = obj.u_cur + u_star(1:obj.m);
             obj.all_fval(1,obj.it)   = fval;
-            obj.it               = obj.it + 1;
+            obj.it                   = obj.it + 1;
             %
             % control action 
             tau = obj.u_cur; 

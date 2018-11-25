@@ -9,7 +9,7 @@ generate_func    = false;
 start_simulation = true;
 %%
 %% activate or deactivate visualization
-visualization    = true;
+visualization    = false;
 %%
 
 %% tracking or regulator

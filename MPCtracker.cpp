@@ -48,8 +48,10 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & tra
     // initialize action
     this->action = Eigen::VectorXd::Zero(solver->getControlDim());
     // initialize delta action
+    //DEBUG
+    std::cout<<"solver->getStateDim() = "<<solver->getStateDim() << ",solver->getControlDim() = "<< solver->getControlDim() << ",solver->getPredictionDim()*solver->getOutputDim()= "<<solver->getPredictionDim()*solver->getOutputDim()<<std::endl;
     this->delta_action = Eigen::VectorXd::Zero(solver->getControlDim());
-    this->inner_x      = Eigen::VectorXd::Zero(solver->getStateDim() + solver->getControlDim() + solver->getPredictionDim()*solver->getOutputDim());
+    this->inner_x      = Eigen::VectorXd::Zero(solver->getStateDim() + solver->getPredictionDim()*solver->getOutputDim());
     this->ref          = Eigen::VectorXd::Zero(solver->getPredictionDim()*solver->getOutputDim());
     // initialize time step
     this->dt                 =traj.GetDt();
@@ -59,7 +61,11 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & tra
     this->current_time_step  = 0;
     // i initialize the external  variables if the current problem has set them
     if(this->pd.external_variables.compare("true") == 0){
-    	this->external_variables(this->ex_var_dim);
+    	this->external_variables = Eigen::VectorXd::Zero(this->ex_var_dim);
+    }else{
+    // even if external variables are not used we need to initialize the external_variables to zero with dim 2
+    // (the explanation of dim 2 is in the matlab files)
+    	this->external_variables = Eigen::VectorXd::Zero(2);
     }
 }
 
@@ -68,10 +74,26 @@ Eigen::VectorXd MPCtracker::Init(Eigen::VectorXd state_0_in){
 	std::cout << "ref.size() = "<< ref.size() << std::endl;
 
 	ref = traj.ComputeTraj(current_time_step,current_step);
+	//DEBUG
+	std::cout << "after computeTraj ref.size() = "<< ref.size()   << std::endl;
+	std::cout << "state_0_in.size() = "<< state_0_in.size()       << std::endl;
+	std::cout << "this->action.size() = "<< this->action.size()   << std::endl;
+	std::cout << "this->inner_x.size() = "<< this->inner_x.size() << std::endl;
+
+	// DONT CHANGE! the right order is set inside the code generator class in matlab with the inner_x variables
 	this->inner_x << state_0_in,this->action,ref;
+
+	//DEBUG
+	std::cout << "this->inner_x = "<<this->inner_x<<std::endl;
+
 	this->delta_action = solver->initSolver(this->inner_x,this->external_variables,this->pd);
     // update of last_action
 	this->action  = this->action + this->delta_action;
+
+	//DEBUG
+	std::cout<<"delta_action = "<< this->delta_action<<std::endl;
+	std::cout<<"action = "<<std::endl;
+
     // update step
 	this->current_step = this->current_step + 1;
 	// update time step
