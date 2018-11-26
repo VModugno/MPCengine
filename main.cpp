@@ -12,11 +12,11 @@ int main(){
 	std::string filename_env = "env_parameters.xml";
 	std::string filename = "parameters.xml";
 	// env selector
-    std::string  switch_env("2RR");
+    std::string  switch_env("cart_pole");
     // solver selector
     std::string  switch_solver("qpoases");
     // problem selector
-    std::string  switch_problem("tracker");
+    std::string  switch_problem("regulator");
     // switch behaviour
 	bool visualization       = false;
     bool log                 = true;
@@ -112,5 +112,7 @@ int main(){
 
 	//DEBUG
 	std::cout << "the end" << std::endl;
+
+	return 0;
 
 }

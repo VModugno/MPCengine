@@ -9,13 +9,13 @@ generate_func    = false;
 start_simulation = true;
 %%
 %% activate or deactivate visualization
-visualization    = false;
+visualization    = true;
 %%
 %% logging data for comparison with results obtained with c++
-logging          = true;
+logging          = false;
 %% tracking or regulator
 
-control_mode     = "tracker"; % tracker, regulator
+control_mode     = "regulator"; % tracker, regulator
 
 %% regulator testing
 if(strcmp(control_mode,"regulator"))
@@ -42,7 +42,7 @@ if(strcmp(control_mode,"regulator"))
     % regulator 
     controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,type,solver,generate_func);
     %% environment regulator
-    ft         = 50;   
+    ft         = 20;   
     t          = 0:delta_t:ft;
     init_state = [0; 0; pi/8; 0];
     reward     = @(x,u)(norm(x));
@@ -108,7 +108,7 @@ if(start_simulation)
         end
         % mpc controller  
         if(strcmp(control_mode,"regulator"))
-            tau = ComputeControl(obj,cur_x);          
+            tau = controller.ComputeControl(cur_x);          
         elseif(strcmp(control_mode,"tracker"))
             u          = controller.ComputeControl(cur_x,total_ref((i-1)*controller.q + 1:(i-1)*controller.q + controller.N*controller.q));
             %% only for test with MPC tracking with 2r robot (for this test the reference model for control is the same as the real system)

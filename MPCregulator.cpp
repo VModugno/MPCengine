@@ -34,13 +34,19 @@ MPCregulator::MPCregulator(const std::string filename,P_solv solv)
 	this->ex_var_dim            = tree.get<int>("parameters.Entry.external_dim"); // true or false
 
 	// copy shared pointer
-    this->solver.reset(solv.get());
+    //this->solver.reset(solv.get());
+	this->solver = solv;
     // initialize action
-    this->action(solver->getControlDim());
+    this->action=Eigen::VectorXd::Zero(solver->getControlDim());;
     // i initialize the external  variables if the current problem has set them
     if(this->pd.external_variables.compare("true") == 0){
-    	this->external_variables(this->ex_var_dim);
-    }
+		this->external_variables = Eigen::VectorXd::Zero(this->ex_var_dim);
+	}else{
+	// even if external variables are not used we need to initialize the external_variables to zero with dim 2
+	// (the explanation of dim 2 is in the matlab files)
+		this->external_variables = Eigen::VectorXd::Zero(2);
+	}
+
 }
 
 Eigen::VectorXd MPCregulator::Init(Eigen::VectorXd state_0_in){

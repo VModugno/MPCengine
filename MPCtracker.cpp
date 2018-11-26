@@ -42,7 +42,8 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & tra
 	this->ex_var_dim            = tree.get<int>("parameters.Entry.external_dim"); // true or false
 
 	// copy shared pointer for the solver class
-    this->solver.reset(solv.get());
+    //this->solver.reset(solv.get());
+	this->solver = solv;
     // copy trajectories
     this->traj   = traj;
     // initialize action

@@ -75,7 +75,8 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 	int nConstraints_batch = this->N * this->N_constr;
 	// qpoases option
 	qpOASES::Options options;
-    options.setToReliable();
+    //options.setToReliable();
+	options.setToMPC();
     options.printLevel           = qpOASES::PL_HIGH;
     options.enableNZCTests       = qpOASES::BT_TRUE;
     options.enableFlippingBounds = qpOASES::BT_TRUE;
