@@ -46,8 +46,8 @@ public:
 		if(online_comp){
 			this->numerical_ref = Eigen::VectorXd::Zero(refs.size()*this->pred_window);
 			// DEBUG
-			std::cout << "numerical_ref.size() = " << numerical_ref.size() << std::endl;
-			std::cout << "numerical_ref = " << numerical_ref << std::endl;
+			//std::cout << "numerical_ref.size() = " << numerical_ref.size() << std::endl;
+			//std::cout << "numerical_ref = " << numerical_ref << std::endl;
 		}
 		else{
 			// here i have to precompute the vector numerical_ref
@@ -62,13 +62,13 @@ public:
 
 			for(int i=0;i<this->pred_window;i++){
 				//DEBUG
-				std::cout << "i = "<<i<<std::endl;
+				//std::cout << "i = "<<i<<std::endl;
 				for(unsigned int j=0;j<refs.size();j++){
 					//DEBUG
-					std::cout << "j = "<<j<<std::endl;
+					//std::cout << "j = "<<j<<std::endl;
 					double res        = refs[j](curr_time,curr_sample,parameters[j]);
 					//DEBUG
-					std::cout << "double res  = "<<res<<std::endl;
+					//std::cout << "double res  = "<<res<<std::endl;
 					this->numerical_ref(counter)= res;
 					counter++;
 

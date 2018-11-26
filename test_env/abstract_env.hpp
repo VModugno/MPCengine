@@ -65,19 +65,23 @@ public:
 		for (int i=0;i<substeps;i++)
 		{
 			k1 = this->Dynamics(this->state,action,this->mes_acc);
-			std::cout << "k1  = " << k1 << std::endl;
+			//DEBUG
+			//std::cout << "k1  = " << k1 << std::endl;
 			k2 = this->Dynamics(this->state+this->dt/2*k1,action);
-			std::cout << "k2  = " << k2 << std::endl;
+			//DEBUG
+			//std::cout << "k2  = " << k2 << std::endl;
 			k3 = this->Dynamics(this->state+this->dt/2*k2,action);
-			std::cout << "k3  = " << k3 << std::endl;
+			//DEBUG
+			//std::cout << "k3  = " << k3 << std::endl;
 			k4 = this->Dynamics(this->state+this->dt*k3,action);
-			std::cout << "k4  = " << k4 << std::endl;
+			//DEBUG
+			//std::cout << "k4  = " << k4 << std::endl;
 
 			new_state = this->state + this->dt/6*(k1 + 2*k2 + 2*k3 + k4);
 			//All states wrapped to 2pi (when necessary)
 			this->Wrapping(new_state);
 			//DEBUG
-			std::cout << "new_state = " << new_state << std::endl;
+			//std::cout << "new_state = " << new_state << std::endl;
 		}
 
 		this->state = new_state; // Old state = new state
@@ -99,8 +103,8 @@ public:
 
 	void logToFile() {
 
-        std::string filename_state  = "state.mat";
-        std::string filename_action = "action.mat";
+        std::string filename_state  = "state_from_mpc_cpp.mat";
+        std::string filename_action = "action_from_mpc_cpp.mat";
 		// i create a string stream for concatenating strings
 		std::stringstream ss_state,ss_action;
 		// i get the current working directory

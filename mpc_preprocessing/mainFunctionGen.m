@@ -11,10 +11,11 @@ start_simulation = true;
 %% activate or deactivate visualization
 visualization    = false;
 %%
-
+%% logging data for comparison with results obtained with c++
+logging          = true;
 %% tracking or regulator
 
-control_mode    = "tracker"; % tracker, regulator
+control_mode     = "tracker"; % tracker, regulator
 
 %% regulator testing
 if(strcmp(control_mode,"regulator"))
@@ -41,7 +42,7 @@ if(strcmp(control_mode,"regulator"))
     % regulator 
     controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,type,solver,generate_func);
     %% environment regulator
-    ft        = 50;   
+    ft         = 50;   
     t          = 0:delta_t:ft;
     init_state = [0; 0; pi/8; 0];
     reward     = @(x,u)(norm(x));
@@ -120,6 +121,7 @@ if(start_simulation)
         % update variables
         cur_x             = new_state;
         all_states(:,i+1) = cur_x;
+        all_action(:,i)   = tau;
     end
 end
 
@@ -131,4 +133,13 @@ if(generate_func)
     % function to create file with parameters
     controller.GenParametersFile();
     env.GenEnvParametersFile(controller.basepath,ft);
+end
+if(logging)
+    str           = which('readme_log_mpc.txt');
+    path          = fileparts(str);
+    full_path     = strcat(path,'/trajectories_from_matlab.mat');
+    % i need to transpose because the data from c are ordered as columns
+    all_states_gt = all_states';
+    all_action_gt = all_action';
+    save(full_path,'all_states_gt','all_action_gt');
 end

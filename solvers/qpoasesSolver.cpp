@@ -49,15 +49,15 @@ qpoasesSolver::qpoasesSolver(const std::string filename){
     int nVariables    = this->N * this->m;
     int nConstraints  = this->N * this->N_constr;
     this->qp          = qpOASES::SQProblem(nVariables,nConstraints);
-    this->nWSR        = 30000;
+    this->nWSR        = 5000000;
 }
 
 
 Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd  x0_ext,ProblemDetails & pd)
 {
 	//DEBUG
-	std::cout << "x0_in = "<<x0_in<<std::endl;
-	std::cout << "x0_ext = "<<x0_ext<<std::endl;
+	//std::cout << "x0_in = "<<x0_in<<std::endl;
+	//std::cout << "x0_ext = "<<x0_ext<<std::endl;
 
 	// eigen to array conversion
 	double *x0;
@@ -75,7 +75,7 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 	int nConstraints_batch = this->N * this->N_constr;
 	// qpoases option
 	qpOASES::Options options;
-    options.setToMPC();
+    options.setToReliable();
     options.printLevel           = qpOASES::PL_HIGH;
     options.enableNZCTests       = qpOASES::BT_TRUE;
     options.enableFlippingBounds = qpOASES::BT_TRUE;
@@ -104,7 +104,7 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 	}
 
     //DEBUG
-	std::cout <<"decisionVariables = "<<decisionVariables << std::endl;
+	//std::cout <<"decisionVariables = "<<decisionVariables << std::endl;
 
     return decisionVariables;
 }

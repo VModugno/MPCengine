@@ -17,7 +17,7 @@ int main(){
     std::string  switch_solver("qpoases");
     // problem selector
     std::string  switch_problem("tracker");
-    // swtich behaviour
+    // switch behaviour
 	bool visualization       = false;
     bool log                 = true;
     // construction of the environment
@@ -72,8 +72,9 @@ int main(){
 		P_DynComp comp   = env->GetDynamicalComponents(env->init_state);
 
 		//DEBUG
-	    env->DysplayComp();
+	    //env->DysplayComp();
 		std::cout << "action before feedback lin = "<<action <<std::endl;
+
 		// the choice of cur_state.tail(2) is tailored for the 2R robot it has to be extended
 		action         = comp->M*action + comp->S*(env->init_state.tail(2)) + comp->g;
 	}
@@ -96,6 +97,10 @@ int main(){
 		// computed torque for 2r robot
 		if(env->feedback_lin){
 			P_DynComp comp   = env->GetDynamicalComponents(cur_state);
+			//DEBUG
+			//env->DysplayComp();
+			std::cout << "action before feedback lin = "<<action <<std::endl;
+
 			// the choice of cur_state.tail(2) is tailored for the 2R robot it has to be extended
 			action         = comp->M*action + comp->S*cur_state.tail(2) + comp->g;
 		}

@@ -49,7 +49,7 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & tra
     this->action = Eigen::VectorXd::Zero(solver->getControlDim());
     // initialize delta action
     //DEBUG
-    std::cout<<"solver->getStateDim() = "<<solver->getStateDim() << ",solver->getControlDim() = "<< solver->getControlDim() << ",solver->getPredictionDim()*solver->getOutputDim()= "<<solver->getPredictionDim()*solver->getOutputDim()<<std::endl;
+    //std::cout<<"solver->getStateDim() = "<<solver->getStateDim() << ",solver->getControlDim() = "<< solver->getControlDim() << ",solver->getPredictionDim()*solver->getOutputDim()= "<<solver->getPredictionDim()*solver->getOutputDim()<<std::endl;
     this->delta_action = Eigen::VectorXd::Zero(solver->getControlDim());
     this->inner_x      = Eigen::VectorXd::Zero(solver->getStateDim() + solver->getPredictionDim()*solver->getOutputDim());
     this->ref          = Eigen::VectorXd::Zero(solver->getPredictionDim()*solver->getOutputDim());
@@ -71,28 +71,28 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & tra
 
 Eigen::VectorXd MPCtracker::Init(Eigen::VectorXd state_0_in){
 	//DEBUG
-	std::cout << "ref.size() = "<< ref.size() << std::endl;
+	//std::cout << "ref.size() = "<< ref.size() << std::endl;
 
 	ref = traj.ComputeTraj(current_time_step,current_step);
 	//DEBUG
-	std::cout << "after computeTraj ref.size() = "<< ref.size()   << std::endl;
-	std::cout << "state_0_in.size() = "<< state_0_in.size()       << std::endl;
-	std::cout << "this->action.size() = "<< this->action.size()   << std::endl;
-	std::cout << "this->inner_x.size() = "<< this->inner_x.size() << std::endl;
+	//std::cout << "after computeTraj ref.size() = "<< ref.size()   << std::endl;
+	//std::cout << "state_0_in.size() = "<< state_0_in.size()       << std::endl;
+	//std::cout << "this->action.size() = "<< this->action.size()   << std::endl;
+	//std::cout << "this->inner_x.size() = "<< this->inner_x.size() << std::endl;
 
 	// DONT CHANGE! the right order is set inside the code generator class in matlab with the inner_x variables
 	this->inner_x << state_0_in,this->action,ref;
 
 	//DEBUG
-	std::cout << "this->inner_x = "<<this->inner_x<<std::endl;
+	//std::cout << "this->inner_x = "<<this->inner_x<<std::endl;
 
 	this->delta_action = solver->initSolver(this->inner_x,this->external_variables,this->pd);
     // update of last_action
 	this->action  = this->action + this->delta_action;
 
 	//DEBUG
-	std::cout<<"delta_action = "<< this->delta_action<<std::endl;
-	std::cout<<"action = "<<std::endl;
+	//std::cout<<"delta_action = "<< this->delta_action<<std::endl;
+	//std::cout<<"action = "<<std::endl;
 
     // update step
 	this->current_step = this->current_step + 1;
