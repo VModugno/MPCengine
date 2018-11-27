@@ -30,8 +30,8 @@ if(strcmp(control_mode,"regulator"))
     run(str);
     %% environment for regulator ------------------------------------------
     reward     = @(x,u)(norm(x));
-    env_call   = "Env."+ env_name + "(init_state,delta_t,reward)";
-    env        = eval(env_call);
+    env_call   = ""
+    env        = Env.CartPole(init_state,delta_t,reward);
     %% MPC ----------------------------------------------------------------
     % prediction windows
     N            = 30;      
@@ -44,9 +44,8 @@ elseif(strcmp(control_mode,"tracker"))
     str = "MpcModel." + model_name + ".m";
     run(str);
     %% enviroment for tracker ---------------------------------------------
-    reward     = @(x,u)(norm(x));  %(TODO reward class)
-    env_call   = "Env."+ env_name + "(init_state,delta_t,reward)";
-    env        = eval(env_call);
+    reward = @(x,u)(norm(x));  %(TODO reward class)
+    env = Env.TwoRRobot(init_state,delta_t,reward,'ConfigFile','robot_payload');
     %% reference (TODO reference class)------------------------------------
     % sin traj
     q1des_t  = pi/2*sin(t);
