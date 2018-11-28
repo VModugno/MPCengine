@@ -32,12 +32,12 @@ MPCregulator::MPCregulator(const std::string filename,P_solv solv)
 	this->pd.type               = tree.get<std::string>("parameters.Entry.type");       // fixed or LTV
 	this->pd.external_variables = tree.get<std::string>("parameters.Entry.external_x"); // true or false
 	this->ex_var_dim            = tree.get<int>("parameters.Entry.external_dim"); // true or false
-
 	// copy shared pointer
-    //this->solver.reset(solv.get());
 	this->solver = solv;
     // initialize action
-    this->action=Eigen::VectorXd::Zero(solver->getControlDim());;
+    this->action=Eigen::VectorXd::Zero(solver->getControlDim());
+    // initialize internal sample step
+    this->current_step       = 0;
     // i initialize the external  variables if the current problem has set them
     if(this->pd.external_variables.compare("true") == 0){
 		this->external_variables = Eigen::VectorXd::Zero(this->ex_var_dim);
@@ -51,11 +51,15 @@ MPCregulator::MPCregulator(const std::string filename,P_solv solv)
 
 Eigen::VectorXd MPCregulator::Init(Eigen::VectorXd state_0_in){
 	this->action = solver->initSolver(state_0_in,this->external_variables,this->pd);
+	// update step
+    this->current_step = this->current_step + 1;
 	return this->action;
 }
 
 Eigen::VectorXd MPCregulator::ComputeControl(Eigen::VectorXd state_i_in){
 	this->action = solver->solveQP(state_i_in,this->external_variables,this->pd);
+	// update step
+	this->current_step = this->current_step + 1;
 	return this->action;
 }
 

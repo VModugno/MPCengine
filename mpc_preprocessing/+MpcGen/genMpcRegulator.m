@@ -26,7 +26,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                                        type,solver,generate_functions,discretized,mutable_constr)
             
             % call super class constructor
-            obj = obj@MpcGen.coreGenerator(type,solver,generate_functions);
+            obj = obj@MpcGen.coreGenerator(type,solver,generate_functions,size(A_cont,1),size(B_cont,2),size(C_cont,1),N);
             
             % problem structure
             obj.type         = type; 
@@ -38,8 +38,9 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.m     = size(B_cont,2);
             obj.q     = size(C_cont,1);
             obj.N     = N;
-            obj.delta = delta; 
-            obj.x_0   = sym('x_0',[obj.n,1],'real');
+            obj.delta = delta;
+            
+            %obj.x_0   = sym('x_0',[obj.n,1],'real');
             % when we do not have external varialbes to optimize we assign a dimension of one just to allow
             % matlab to provide the right functions signature
             % i need to set a dimension of 2 here in order to force the

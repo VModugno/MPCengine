@@ -27,6 +27,7 @@ classdef coreGenerator <  handle
         sym_G           %
         sym_W           %
         sym_S           %
+        index           % inner variables for mutable constraints (in order to select the different W structure)
         x_0             % inner_variables
         u_0             % inner_variables
         ref_0           % inner_variables
@@ -49,8 +50,11 @@ classdef coreGenerator <  handle
    
     methods
        
-        function obj = coreGenerator(type,solver,generate_functions)
-            
+        function obj = coreGenerator(type,solver,generate_functions,n,m,q,N)
+            obj.index   = sym('ind',[1,1],'real');
+            obj.x_0     = sym('x_0',[n,1],'real');
+            obj.u_0     = sym('u_0',[m,1],'real');
+            obj.ref_0   = sym('ref_0',[N*q,1],'real');
             obj.type   = type;
             obj.solver = solver;
             obj.GetBasePath();

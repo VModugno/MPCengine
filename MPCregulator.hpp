@@ -15,6 +15,8 @@ class MPCregulator : public MPCproblem {
 
 public:
 
+	int             current_step;
+
 	MPCregulator(const std::string filename,P_solv  solv);
 	Eigen::VectorXd Init(Eigen::VectorXd state_0_in);
 	Eigen::VectorXd ComputeControl(Eigen::VectorXd state_i_in);
