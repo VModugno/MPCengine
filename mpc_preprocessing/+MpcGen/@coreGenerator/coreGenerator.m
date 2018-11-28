@@ -92,9 +92,9 @@ classdef coreGenerator <  handle
                %    l_b <= A*z <= u_b
                %% here i define the structure of the inner_x
                if(strcmp(obj.problemClass,"tracker"))
-                    inner_x = [obj.x_0;obj.u_0;obj.ref_0];
+                    inner_x = [obj.x_0;obj.u_0;obj.ref_0;obj.index];
                else
-                    inner_x = [obj.x_0];
+                    inner_x = [obj.x_0;obj.index];
                end
                %% hessian cost function 
                %H_  = obj.sym_H(:);
@@ -111,77 +111,93 @@ classdef coreGenerator <  handle
                obj.cCode(g_,'compute_g',{inner_x,obj.outer_x},'g');
                obj.PostProcessFunctionForqpOASES('compute_g','g')
                %% linear term constraints
-               %A_  = obj.sym_G(:);
-               A_  = obj.sym_G';
-               A_  = A_(:);
-               obj.cCode(A_,'compute_A',{inner_x,obj.outer_x},'A');
-               obj.PostProcessFunctionForqpOASES('compute_A','A')
+               %% comment just for now
+%                A_  = obj.sym_G';
+%                A_  = A_(:);
+%                obj.cCode(A_,'compute_A',{inner_x,obj.outer_x},'A');
+%                obj.PostProcessFunctionForqpOASES('compute_A','A')
                %% constant term constraints
                if(strcmp(obj.problemClass,"tracker"))
-                    ub_ = obj.sym_W + obj.sym_S*[obj.x_0;obj.u_0];
+                   if(obj.m_c_flag)
+                        % with this functions i write the function and i correct it 
+                        obj.MutableConstraits_ub(obj.sym_S,[obj.x_0;obj.u_0],inner_x);
+                        obj.PostProcessFunctionForqpOASES('compute_ub','ub')
+                   else
+                        ub_ = obj.sym_W + obj.sym_S*[obj.x_0;obj.u_0];
+                        % with this functions i write the function and i correct it 
+                        obj.cCode(ub_,'compute_ub',{inner_x,obj.outer_x},'ub');
+                        obj.PostProcessFunctionForqpOASES('compute_ub','ub') 
+                   end
                else
-                    ub_ = obj.sym_W + obj.sym_S*obj.x_0;
+                    if(obj.m_c_flag)
+                        % with this functions i write the function and i correct it 
+                        obj.MutableConstraits_ub(obj.sym_S,obj.x_0,inner_x);
+                        obj.PostProcessFunctionForqpOASES('compute_ub','ub')
+                    else
+                        ub_ = obj.sym_W + obj.sym_S*obj.x_0;
+                        % with this functions i write the function and i correct it 
+                        obj.cCode(ub_,'compute_ub',{inner_x,obj.outer_x},'ub');
+                        obj.PostProcessFunctionForqpOASES('compute_ub','ub') 
+                    end
                end
-               obj.cCode(ub_,'compute_ub',{inner_x,obj.outer_x},'ub');
-               obj.PostProcessFunctionForqpOASES('compute_ub','ub') 
            end
        end
        
        function PostProcessFunctionForqpOASES(obj,filename,namefunc)
-               %% working on .c file
-               filepath            = strcat(obj.basepath,'/',filename,'.c');
-               str                 = fileread(char(filepath));
-               delimiter_for_split = strcat("double ",namefunc,'[]');
-               % i split at the signature of the function
-               new_func1           = split(str,delimiter_for_split);
-               % i split again to get the dimension of the output vector
-               new_func2           = split(new_func1{2},[",",")"]);
-               % here i create all the pieces fo the new function that im
-               % going to stitch togheter
-               new_variable_name   = strcat(namefunc,'_out');
-               new_variable_signa  = strcat("double ",new_variable_name);
-               variable_declare    = strcat("double ",namefunc,'[1]',new_func2{1});
-               vector_dimension    = erase(new_func2{1},["[","]"]);
-               copy_to_out         = strcat("memcpy(",new_variable_name,",",namefunc,"[0]",",sizeof(double)*",vector_dimension,");");
-               % last split 
-               new_func3           = split(new_func1{2},["{","}"]);
-               
-               % reconstruct new func for .cpp
-               new_string = "#include ""string.h"" " + newline + new_func1{1} + new_variable_signa +new_func3{1}+ "{" + newline + variable_declare + ";" + newline + new_func3{2} ...
-                            + newline + copy_to_out  + newline + "}";
-               
-               % save the new func as .cpp
-               new_name_file = strcat(obj.basepath,'/',filename,'.cpp');
-               fid = fopen(new_name_file,'w');
-               fprintf(fid,'%s',new_string);
-               fclose(fid);
-               
-               % memcpy(H_out,H[0], sizeof(double)*64);
-               
-               % delete old .c file
-               delete(char(filepath));
-               
-               %% working on .h file
-               filepath            = strcat(obj.basepath,'/',filename,'.h');
-               str                 = fileread(char(filepath));
-               delimiter_for_split = strcat("double ",namefunc,'[]',new_func2{1});
-               new_variable_signa  = strcat("double ",new_variable_name,new_func2{1});
-               new_func1           = split(str,delimiter_for_split);
-               % change the signature of the function in the header file
-               % important!!! in this function it is expecting a function
-               % name inside the comment at the beggining of the header too
-               new_string = new_func1{1} + new_variable_signa + new_func1{2} + new_variable_signa + new_func1{3};
-               % save the new func as .h
-               fid = fopen(filepath,'w');
-               fprintf(fid,'%s',new_string);
-               fclose(fid);              
+           %% working on .c file
+           filepath            = strcat(obj.basepath,'/',filename,'.c');
+           str                 = fileread(char(filepath));
+           delimiter_for_split = strcat("double ",namefunc,'[]');
+           % i split at the signature of the function
+           new_func1           = split(str,delimiter_for_split);
+           % i split again to get the dimension of the output vector
+           new_func2           = split(new_func1{2},[",",")"]);
+           % here i create all the pieces fo the new function that im
+           % going to stitch togheter
+           new_variable_name   = strcat(namefunc,'_out');
+           new_variable_signa  = strcat("double ",new_variable_name);
+           variable_declare    = strcat("double ",namefunc,'[1]',new_func2{1});
+           vector_dimension    = erase(new_func2{1},["[","]"]);
+           copy_to_out         = strcat("memcpy(",new_variable_name,",",namefunc,"[0]",",sizeof(double)*",vector_dimension,");");
+           % last split 
+           new_func3           = split(new_func1{2},["{","}"]);
+
+           % reconstruct new func for .cpp
+           new_string = "#include ""string.h"" " + newline + new_func1{1} + new_variable_signa +new_func3{1}+ "{" + newline + variable_declare + ";" + newline + new_func3{2} ...
+                        + newline + copy_to_out  + newline + "}";
+
+           % save the new func as .cpp
+           new_name_file = strcat(obj.basepath,'/',filename,'.cpp');
+           fid = fopen(new_name_file,'w');
+           fprintf(fid,'%s',new_string);
+           fclose(fid);
+
+           % memcpy(H_out,H[0], sizeof(double)*64);
+
+           % delete old .c file
+           delete(char(filepath));
+
+           %% working on .h file
+           filepath            = strcat(obj.basepath,'/',filename,'.h');
+           str                 = fileread(char(filepath));
+           delimiter_for_split = strcat("double ",namefunc,'[]',new_func2{1});
+           new_variable_signa  = strcat("double ",new_variable_name,new_func2{1});
+           new_func1           = split(str,delimiter_for_split);
+           % change the signature of the function in the header file
+           % important!!! in this function it is expecting a function
+           % name inside the comment at the beggining of the header too
+           new_string = new_func1{1} + new_variable_signa + new_func1{2} + new_variable_signa + new_func1{3};
+           % save the new func as .h
+           fid = fopen(filepath,'w');
+           fprintf(fid,'%s',new_string);
+           fclose(fid);              
        end
        
        function GenParametersFile(obj)
            
-           filepath  = strcat(obj.basepath,'/parameters.xml');
+           filepath   = strcat(obj.basepath,'/parameters.xml');
            
-           pNode     = com.mathworks.xml.XMLUtils.createDocument('parameters');
+           pNode      = com.mathworks.xml.XMLUtils.createDocument('parameters');
            
            entry_node = pNode.createElement('Entry');
            pNode.getDocumentElement.appendChild(entry_node);
@@ -260,6 +276,54 @@ classdef coreGenerator <  handle
             end
             
        end
+       %% mtuable constraints maanagement for code generation
+       % this function substitute cCode for the mutable constraints case 
+       function MutableConstraits_ub(obj,sym_S,var,inner_x)
+           % i compute all the W inside the prediction window
+           all_W = zeros(2*(obj.N*obj.q) + 2*(obj.N*obj.m),obj.N);
+           for i=1:obj.N      
+               all_W(:,i) = obj.MutableConstraints_W();
+               obj.UpdateConstrPattern();
+           end
+           % i compute all the function ub_ to stitch togheter 
+           all_ub = cell(obj.N,1);
+           for i=1:obj.N
+               all_ub{i} = all_W(:,i) + sym_S*var;
+           end
+           
+           % delimiter for the second split (on the body) to separate the
+           % declaration of variables from the actual value assignement
+           W_length = 2*(obj.N*obj.q) + 2*(obj.N*obj.m);
+           delimiter = "ub[0][" + num2string(W_length-1) + "]=0;";
+           %% with the first ccode initilialize the function structure
+           [funstr, hstring] = ccodefunctionstring(all_ub{1},'funname','compute_ub','vars',{inner_x,obj.outer_x},'output','ub');
+           % here i remove the bracket parethensis and i split signature
+           % from the body of the function
+           first_split       = strsplit(funstr,{'{','}'});
+           signature         = first_split{1};
+           body              = first_split{2};
+           
+           %% with the second split i separate between varaibles declaration and assignement 
+           second_split       = strsplit(body,{delimiter});
+           var_declaration    = second_split{1};
+           var_assignement    = second_split{2};
+           
+           cpp_final_func     = signature + "{" + newline + var_declaration + newline + delimiter + "if(ind1 = 0){" + newline + var_assignement...
+                                + newline + '}';
+           % i start to collect the structure for each variables 
+           for i = 2:obj.N
+               [funstr_cur]   = ccodefunctionstring(all_ub{i},'funname','compute_ub','vars',{inner_x,obj.outer_x},'output','ub');
+               first_split    = strsplit(funstr_cur,{'{','}'});
+               second_split   = strsplit(first_split{2},{delimiter});       
+               cpp_final_func = cpp_final_func + "else if(ind1="+ num2string(i-1) + "){" + newline + second_split{2} + newlline + "}";
+               
+           end
+           % adding closing bracket
+           cpp_final_func = cpp_final_func + newlline + "}";
+           
+       end
+       
+       
        
     end
     
