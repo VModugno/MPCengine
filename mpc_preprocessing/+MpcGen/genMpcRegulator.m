@@ -22,7 +22,8 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
 
     methods
-        function obj = genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta,N,state_gain,control_cost,type,solver,generate_functions)
+        function obj = genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta,N,state_gain,control_cost,...
+                                       type,solver,generate_functions,discretized,mutable_constr)
             
             % call super class constructor
             obj = obj@MpcGen.coreGenerator(type,solver,generate_functions);
@@ -48,26 +49,63 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.extern_dim = 0;
             
             if(length(maxInput)~= obj.m)
-                error('the maxInput has to be a vector with m elements wehre m is the number of input')
+                % i need to avoid to rise an error for dimension mismatch
+                % when i have mutable constraints
+                if(isempty(mutable_constr))
+                    error('the maxInput has to be a vector with m elements wehre m is the number of input')
+                end
             else
                 obj.maxInput = maxInput;
             end
             if(length(maxOutput)~= obj.q)
-                error('the maxOutput has to be a vector with q elements wehre q is the number of output')
+                % i need to avoid to rise an error for dimension mismatch
+                % when i have mutable constraints
+                if(isempty(mutable_constr))
+                    error('the maxOutput has to be a vector with q elements wehre q is the number of output')
+                end
             else
                 obj.maxOutput = maxOutput;    
             end
             
+            %% Discrete system (when necessary)
+            if(~discretized)
+                A = eye(obj.n) + delta*A_cont;
+                B = obj.delta*B_cont;
+                C = C_cont;
+            else
+                A = A_cont;
+                B = B_cont;
+                C = C_cont;
+            end
 
-            %% Discrete system
-            A = eye(obj.n) + delta*A_cont;
-            B = obj.delta*B_cont;
-            C = C_cont;
+            %% Cost Function (here i can manage both scalar and vector cost)
+            if(length(state_gain)==1)
+                Q = state_gain*eye(obj.q);
+            else
+                if(length(state_gain) == obj.q)
+                    Q = diag(state_gain);
+                else
+                    error('diagonal state gain has the wrong size, fix it!');
+                end
+            end
+            if(length(state_gain)==1)
+                R = control_cost*eye(obj.m);
+            else
+                if(length(control_cost) == obj.m)
+                R = diag(control_cost);
+                else
+                    error('diagonal control cost has the wrong size, fix it!');
+                end
+            end
 
-            %% Cost Function
-            Q = state_gain*eye(obj.q);
-            R = control_cost*eye(obj.m);
-
+            %% managing mutable constraints
+            obj.m_c = mutable_constr;
+            if(isempty(mutable_constr))
+                obj.m_c_flag = false;
+            else
+                obj.m_c_flag = true;
+            end
+            
             %% Construct matrices
             for k = 1:obj.N
                 for j = 1:k
@@ -86,7 +124,13 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
             %% Constraint matrices
             obj.G    = [S_bar; -S_bar; eye(obj.N*obj.m); -eye(obj.N*obj.m)];
-            obj.W    = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.maxInput)];
+            % if mutable_constr_flag is true i need to build the W matrix
+            % according to the foot_patter
+            if (obj.m_c_flag)      
+               obj.W     = obj.MutableConstraints_W();
+            else
+               obj.W     = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.maxInput)];
+            end
             obj.S    = [-T_bar; T_bar; zeros(obj.N*obj.m,obj.n); zeros(obj.N*obj.m,obj.n)];
              
             obj.sym_H      = sym(obj.H);                   
@@ -103,10 +147,14 @@ classdef genMpcRegulator < MpcGen.coreGenerator
         
         
          function tau = ComputeControl(obj,x_cur)
-            % why here we repeat the computation of S at each time
-             %S = [-obj.T_bar; obj.T_bar; zeros(obj.N*obj.m,obj.n); zeros(obj.N*obj.m,obj.n)];
-             u_star = quadprog(obj.H, x_cur'*obj.F_tra, obj.G, obj.W+obj.S*x_cur);
+             %options = optimset('Algorithm','interior-point-convex','Display','off');
+             u_star = quadprog(obj.H, x_cur'*obj.F_tra, obj.G, obj.W+obj.S*x_cur);%,[],[],[],[],[],options);
              tau = u_star(1:obj.m);
+             % W has to be update after each new control signal has been computed if i have mutable 
+             if (obj.m_c_flag)
+                 obj.UpdateConstrPattern();
+                 obj.W   = obj.MutableConstraints_W();
+             end
          end
         
         

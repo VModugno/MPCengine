@@ -7,10 +7,12 @@ classdef coreGenerator <  handle
     
     properties 
         % general information about path and type of solver
-        basepath    %
-        type
-        solver
-        problemClass
+        basepath                 % to identify the folder to write the generated functions
+        type                     % fixed or LTV
+        solver                   % generate functions for target solver (qpoases)
+        m_c                      % mutable constraints aka m_c is the structure that contains all the data about the mutable constraints
+        m_c_flag                 % this is a flag tha represents if the the constraints change over time or not (case for gait generation)
+        problemClass             % tracker or regulator
         % structure of the problem
         n           % state space dim
         m           % control space dim 
@@ -79,6 +81,7 @@ classdef coreGenerator <  handle
        function GenFunctions(obj) 
            if(strcmp(obj.solver,"QPoases"))
                %% optmization problem formulation for QPoases
+               %% inportant for QPoases matrix has to be stored row wise
                % J(z) = z'*H*z + g*z
                % s.t
                %    l_b <= z <= u_b
@@ -117,54 +120,6 @@ classdef coreGenerator <  handle
                end
                obj.cCode(ub_,'compute_ub',{inner_x,obj.outer_x},'ub');
                obj.PostProcessFunctionForqpOASES('compute_ub','ub') 
-               %% Important!!! for QPoases matrix has to be stored row wise
-%                if(strcmp(obj.problemClass,"tracker"))
-%                    
-%                    %% all variables
-%                    % the order of inner_x matters 
-%                    inner_x = [obj.x_0;obj.u_0;obj.ref_0];
-%                    %% hessian cost function 
-%                    %H_  = obj.sym_H(:);
-%                    H_  = obj.sym_H';
-%                    H_  = H_(:);
-%                    obj.cCode(H_,'compute_H',{},'H');
-%                    obj.PostProcessFunctionForqpOASES('compute_H','H')
-%                    %% linear term cost function
-%                    g_  = ([obj.ref_0;obj.x_0;obj.u_0]'*obj.F_tra)'; 
-%                    obj.cCode(g_,'compute_g',{inner_x},'g');
-%                    obj.PostProcessFunctionForqpOASES('compute_g','g')
-%                    %% linear term constraints
-%                    %A_  = obj.sym_G(:);
-%                    A_  = obj.sym_G';
-%                    A_  = A_(:);
-%                    obj.cCode(A_,'compute_A',{},'A');
-%                    obj.PostProcessFunctionForqpOASES('compute_A','A')
-%                    %% constant term constraints
-%                    ub_ = obj.sym_W + obj.sym_S*[obj.x_0;obj.u_0];
-%                    obj.cCode(ub_,'compute_ub',{inner_x},'ub');
-%                    obj.PostProcessFunctionForqpOASES('compute_ub','ub')        
-%                elseif(strcmp(obj.problemClass,"regulator"))
-%                    %% hessian cost function 
-%                    %H_  = obj.sym_H(:);
-%                    H_  = obj.sym_H';
-%                    H_  = H_(:);
-%                    obj.cCode(H_,'compute_H',{},'H');
-%                    obj.PostProcessFunctionForqpOASES('compute_H','H')
-%                    %% linear term cost function
-%                    g_  = (obj.x_0'*obj.sym_F_tra)'; 
-%                    obj.cCode(g_,'compute_g',{obj.x_0},'g');
-%                    obj.PostProcessFunctionForqpOASES('compute_g','g')
-%                    %% linear term constraints
-%                    %A_  = obj.sym_G(:);
-%                    A_  = obj.sym_G';
-%                    A_  = A_(:);
-%                    obj.cCode(A_,'compute_A',{},'A');
-%                    obj.PostProcessFunctionForqpOASES('compute_A','A')
-%                    %% constant term constraints
-%                    ub_ = obj.sym_W + obj.sym_S*obj.x_0;
-%                    obj.cCode(ub_,'compute_ub',{obj.x_0},'ub');
-%                    obj.PostProcessFunctionForqpOASES('compute_ub','ub')
-%                end   
            end
        end
        
@@ -273,10 +228,34 @@ classdef coreGenerator <  handle
            entry_node.appendChild(name_node);
            
            xmlwrite(char(filepath),pNode);   
+       end 
+       
+       %% TODO: this is different between tracker and regulator 
+       %%       this one is for regulator only
+       function W = MutableConstraints_W(obj)
+            part_W = zeros(obj.N*obj.q,1);
+            for jj = 1:obj.m_c.N_state
+                part_W  = part_W + kron(obj.m_c.const_pattern(:,jj), obj.m_c.bounds(:,jj));
+            end
+            W = [part_W;part_W];
+
+
+            % adding constraints about input
+            W =[W;
+               kron(ones(obj.N,1), obj.maxInput);
+               kron(ones(obj.N,1), obj.maxInput)]; 
        end
-       
-        
-       
+
+       % each time i call this function i get one step update of
+       % constraints
+       % i update m_c inside
+       function UpdateConstrPattern(obj)
+            for i = 1:obj.m_c.N_state
+                % circular buffer (each pattern with this update behave as a circular buffer)
+                obj.m_c.const_pattern(:,i) = [ obj.m_c.const_pattern(2:end,i);obj.m_c.const_pattern(1,i)];
+            end
+            
+       end
        
     end
     

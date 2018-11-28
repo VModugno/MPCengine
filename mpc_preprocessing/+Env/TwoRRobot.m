@@ -1,19 +1,5 @@
 classdef TwoRRobot < Env.AbstractEnv
     
-    properties 
-        num_state
-        state_bounds
-        init_state
-        state
-        state_name
-        dt
-        reward
-        visualization
-        active_visualization
-        prm                   % here i store all the parameters of the env 
-        measured_acc          % updated inside the step function
-    end
-    
     
     methods
         function obj = TwoRRobot(init_state,dt,reward,varargin)

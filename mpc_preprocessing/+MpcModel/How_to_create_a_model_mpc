@@ -1,0 +1,36 @@
+Mandatory elements that has to be defined inside the a mpc model
+
+env_name    = specify the name of the corresponding env (use class name)
+
+syms delta  = this sym variables has to be declared only for already discretized system
+
+for continuos system
+	A_cont
+	B_cont 
+	C_cont      = tre matrix of the linearized/linear system
+for discretized system
+	A
+	B
+	C           = tre matrix of the linearized/linear system
+
+discretized   = a flag that specify if the system is discretized or not
+
+init_state    = initial state of the system 
+maxOutput
+maxInput      = specify respectively the bound for state and control
+
+state_gain    = gains for the state matrix in the obj func of the MPC
+                it can be a single value or an array (diag of matrix)
+control_cost  = gains for the state matrix in the obj func of the MPC
+                it can be a single value or an array (diag of matrix)
+N             = it represents the predictive windows of the MPC
+type          = string value that specify if the method is constant or ltv
+
+mutable_const = is a struct that contains information about the mutable constraints
+
+mutable_const.N_state           = N of state in which the mutable constraints transit into (such as double support single support etc)
+mutable_const.const_pattern     = size(N,N_state), here i define the pattern for the different state each 
+                                  each pattern has zero and one corresponding to when the constraints are active or not 
+                                  the 1 and zero of each pattern are not overlapping
+
+mutable_const.bounds            = size(q,N_state), this contains the mutable constraints one for each state 

@@ -1,19 +1,5 @@
 classdef CartPole < Env.AbstractEnv
-    
-    properties 
-        num_state
-        state_bounds
-        init_state
-        state
-        state_name
-        dt
-        reward
-        visualization
-        active_visualization
-        prm
-        measured_acc             % updated inside the step function
-    end
-    
+        
     
     methods
         function obj = CartPole(init_state,dt,reward,varargin)

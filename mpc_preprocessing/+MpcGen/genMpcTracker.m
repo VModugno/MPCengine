@@ -1,3 +1,6 @@
+
+%% TODO add mutable constraints here
+
 classdef genMpcTracker < MpcGen.coreGenerator
     
     properties
@@ -16,7 +19,8 @@ classdef genMpcTracker < MpcGen.coreGenerator
     
     
     methods
-        function obj = genMpcTracker(A_cont,B_cont,C_cont,maxInput,maxOutput,delta,N,state_gain,control_cost,type,solver,generate_functions)
+        function obj = genMpcTracker(A_cont,B_cont,C_cont,maxInput,maxOutput,delta,N,state_gain,control_cost,...
+                                     type,solver,generate_functions,discretized,mutable_constr)
                     
             % call super class constructor
             obj = obj@MpcGen.coreGenerator(type,solver,generate_functions);
@@ -27,11 +31,11 @@ classdef genMpcTracker < MpcGen.coreGenerator
             obj.problemClass = 'tracker';
             
             % problem dimension
-            obj.orig_n      = size(A_cont,1); % state dim
-            obj.m           = size(B_cont,2); % control dim
-            obj.q           = size(C_cont,1); % output dim
-            obj.N           = N;
-            obj.delta       = delta;
+            obj.orig_n       = size(A_cont,1); % state dim
+            obj.m            = size(B_cont,2); % control dim
+            obj.q            = size(C_cont,1); % output dim
+            obj.N            = N;
+            obj.delta        = delta;
             % symbolic parameters
             obj.x_0     = sym('x_0',[obj.orig_n,1],'real');
             obj.u_0     = sym('u_0',[obj.m,1],'real');
@@ -58,24 +62,49 @@ classdef genMpcTracker < MpcGen.coreGenerator
             else
                 obj.maxOutput = maxOutput;    
             end
-            %% extended system
-            A = [eye(obj.orig_n)+obj.delta*A_cont delta*B_cont;zeros(obj.m,obj.orig_n) eye(obj.m,obj.m)];
-            B = [obj.delta*B_cont;eye(obj.m,obj.m)];
-            C = [C_cont zeros(obj.q,obj.m)];
-            obj.n = size(A,1); % extended state dim
+            %% extended system and discretize when necessary
+            if(~discretized)
+                % discretization and exstension
+                A = [eye(obj.orig_n)+obj.delta*A_cont delta*B_cont;zeros(obj.m,obj.orig_n) eye(obj.m,obj.m)];
+                B = [obj.delta*B_cont;eye(obj.m,obj.m)];
+                C = [C_cont zeros(obj.q,obj.m)];
+                obj.n = size(A,1); % extended state dim
+            else
+                % only exstension
+                A = [A_cont B_cont;zeros(obj.m,obj.orig_n) eye(obj.m,obj.m)];
+                B = [B_cont;eye(obj.m,obj.m)];
+                C = [C_cont zeros(obj.q,obj.m)];
+                obj.n = size(A,1); % extended state dim
+            end
 
-            %% Cost Function (for each step)
-            Q = state_gain*eye(obj.q);
-            R = control_cost*eye(obj.m);
+            %% Cost Function (here i can manage both scalar and vector cost)
+            if(length(state_gain)==1)
+                Q = state_gain*eye(obj.q);
+            else
+                if(length(state_gain) == obj.q)
+                    Q = diag(state_gain);
+                else
+                    error('diagonal state gain has the wrong size, fix it!');
+                end
+            end
+            if(length(state_gain)==1)
+                R = control_cost*eye(obj.m);
+            else
+                if(length(control_cost) == obj.m)
+                R = diag(control_cost);
+                else
+                    error('diagonal control cost has the wrong size, fix it!');
+                end
+            end
+            
+            %% managing mutable constraints
+            obj.mutable_constraints          = mutable_constr;
+            if(isempty(mutable_constr))
+                obj.mutable_constraints_flag = false;
+            else
+                obj.mutable_constraints_flag = true;
+            end
 
-            %% Create ref
-%             obj.total_ref = reshape(x_des,length(x_des)*obj.q,1);
-%             % extend ref by N to avoid the receding horizon to exceed the
-%             % final time
-%             last_ref = x_des(:,end);
-%             for i=1:N
-%                 obj.total_ref = [obj.total_ref;last_ref];
-%             end
             %% Create matrix 
             for k = 1:obj.N
                 for j = 1:k

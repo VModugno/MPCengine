@@ -16,11 +16,11 @@ logging          = false;
 %% tracking or regulator
 control_mode     = "regulator"; % tracker, regulator
 %% MPC Model
-model_name       = "cart_pole_0";
+model_name       = "twod_xy_lip";
 
 %% experiment time structure
-ft         = 20;      % 50 
-delta_t    = 0.1;     % 0.01 (to the env class)
+ft         = 150;       % 20 50 
+delta_t    = 0.05;      % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
 
 %% regulator testing
@@ -28,21 +28,34 @@ if(strcmp(control_mode,"regulator"))
     %% system -------------------------------------------------------------
     str        = "MpcModel." + model_name + ".m";
     run(str);
+    % if the system is already discretized i need to substitute the
+    % symbolical dt with its actual value
+    if(discretized)
+        A_cont = double(subs(A,delta_t));
+        B_cont = double(subs(B,delta_t));
+        C_cont = double(subs(C,delta_t));
+    end
     %% environment for regulator ------------------------------------------
     reward     = @(x,u)(norm(x));
     env_call   = "Env."+ env_name + "(init_state,delta_t,reward)";
     env        = eval(env_call);
-    %% MPC ----------------------------------------------------------------
-    % prediction windows
-    N            = 30;      
+    %% MPC ----------------------------------------------------------------    
     % cpp solver to use  
     solver       = "QPoases";
     % regulator 
-    controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,type,solver,generate_func); 
+    controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,...
+                                        type,solver,generate_func,discretized,mutable_constr); 
 elseif(strcmp(control_mode,"tracker"))
     %% system -------------------------------------------------------------
     str = "MpcModel." + model_name + ".m";
     run(str);
+    % if the system is already discretized i need to substitute the
+    % symbolical dt with its actual value
+    if(discretized)
+        A_cont = double(subs(A,delta_t));
+        B_cont = double(subs(B,delta_t));
+        C_cont = double(subs(C,delta_t));
+    end
     %% enviroment for tracker ---------------------------------------------
     reward     = @(x,u)(norm(x));  %(TODO reward class)
     env_call   = "Env."+ env_name + "(init_state,delta_t,reward)";
@@ -60,11 +73,11 @@ elseif(strcmp(control_mode,"tracker"))
     x_des    = [q1des_t;q2des_t;dq1des_t;dq2des_t];
     
     %% MPC ----------------------------------------------------------------
-    N            = 20;     % prediction window
     % cpp solver to use 
     solver       = "QPoases";
     % tracker
-    controller   = MpcGen.genMpcTracker(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,type,solver,generate_func);
+    controller   = MpcGen.genMpcTracker(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,...
+                                        type,solver,generate_func,discretized,mutable_constr);
     %% testing MPC tracking on the environment 
     
     % preparing the reference for testing
