@@ -97,12 +97,14 @@ classdef coreGenerator <  handle
                     inner_x = [obj.x_0;obj.index];
                end
                %% hessian cost function 
+               disp('generating H')
                %H_  = obj.sym_H(:);
                H_  = obj.sym_H';
                H_  = H_(:);
                obj.cCode(H_,'compute_H',{inner_x,obj.outer_x},'H');
                obj.PostProcessFunctionForqpOASES('compute_H','H')
                %% linear term cost function
+               disp('generating g')
                if(strcmp(obj.problemClass,"tracker"))
                     g_  = ([obj.ref_0;obj.x_0;obj.u_0]'*obj.F_tra)'; 
                else
@@ -111,17 +113,17 @@ classdef coreGenerator <  handle
                obj.cCode(g_,'compute_g',{inner_x,obj.outer_x},'g');
                obj.PostProcessFunctionForqpOASES('compute_g','g')
                %% linear term constraints
-               %% comment just for now
-%                A_  = obj.sym_G';
-%                A_  = A_(:);
-%                obj.cCode(A_,'compute_A',{inner_x,obj.outer_x},'A');
-%                obj.PostProcessFunctionForqpOASES('compute_A','A')
+               disp('generating A')
+               A_  = obj.sym_G';
+               A_  = A_(:);
+               obj.cCode(A_,'compute_A',{inner_x,obj.outer_x},'A');
+               obj.PostProcessFunctionForqpOASES('compute_A','A')
                %% constant term constraints
+               disp('generating ub')
                if(strcmp(obj.problemClass,"tracker"))
                    if(obj.m_c_flag)
                         % with this functions i write the function and i correct it 
-                        obj.MutableConstraits_ub(obj.sym_S,[obj.x_0;obj.u_0],inner_x);
-                        obj.PostProcessFunctionForqpOASES('compute_ub','ub')
+                        obj.MutableConstraits_ub([obj.x_0;obj.u_0],'compute_ub',{inner_x,obj.outer_x},'ub');
                    else
                         ub_ = obj.sym_W + obj.sym_S*[obj.x_0;obj.u_0];
                         % with this functions i write the function and i correct it 
@@ -131,8 +133,7 @@ classdef coreGenerator <  handle
                else
                     if(obj.m_c_flag)
                         % with this functions i write the function and i correct it 
-                        obj.MutableConstraits_ub(obj.sym_S,obj.x_0,inner_x);
-                        obj.PostProcessFunctionForqpOASES('compute_ub','ub')
+                        obj.MutableConstraits_ub(obj.x_0,'compute_ub',{inner_x,obj.outer_x},'ub');
                     else
                         ub_ = obj.sym_W + obj.sym_S*obj.x_0;
                         % with this functions i write the function and i correct it 
@@ -143,22 +144,22 @@ classdef coreGenerator <  handle
            end
        end
        
-       function PostProcessFunctionForqpOASES(obj,filename,namefunc)
+       function PostProcessFunctionForqpOASES(obj,namefunc,output)
            %% working on .c file
-           filepath            = strcat(obj.basepath,'/',filename,'.c');
+           filepath            = strcat(obj.basepath,'/',namefunc,'.c');
            str                 = fileread(char(filepath));
-           delimiter_for_split = strcat("double ",namefunc,'[]');
+           delimiter_for_split = strcat("double ",output,'[]');
            % i split at the signature of the function
            new_func1           = split(str,delimiter_for_split);
            % i split again to get the dimension of the output vector
            new_func2           = split(new_func1{2},[",",")"]);
            % here i create all the pieces fo the new function that im
            % going to stitch togheter
-           new_variable_name   = strcat(namefunc,'_out');
+           new_variable_name   = strcat(output,'_out');
            new_variable_signa  = strcat("double ",new_variable_name);
-           variable_declare    = strcat("double ",namefunc,'[1]',new_func2{1});
+           variable_declare    = strcat("double ",output,'[1]',new_func2{1});
            vector_dimension    = erase(new_func2{1},["[","]"]);
-           copy_to_out         = strcat("memcpy(",new_variable_name,",",namefunc,"[0]",",sizeof(double)*",vector_dimension,");");
+           copy_to_out         = strcat("memcpy(",new_variable_name,",",output,"[0]",",sizeof(double)*",vector_dimension,");");
            % last split 
            new_func3           = split(new_func1{2},["{","}"]);
 
@@ -167,7 +168,7 @@ classdef coreGenerator <  handle
                         + newline + copy_to_out  + newline + "}";
 
            % save the new func as .cpp
-           new_name_file = strcat(obj.basepath,'/',filename,'.cpp');
+           new_name_file = strcat(obj.basepath,'/',namefunc,'.cpp');
            fid = fopen(new_name_file,'w');
            fprintf(fid,'%s',new_string);
            fclose(fid);
@@ -178,9 +179,9 @@ classdef coreGenerator <  handle
            delete(char(filepath));
 
            %% working on .h file
-           filepath            = strcat(obj.basepath,'/',filename,'.h');
+           filepath            = strcat(obj.basepath,'/',namefunc,'.h');
            str                 = fileread(char(filepath));
-           delimiter_for_split = strcat("double ",namefunc,'[]',new_func2{1});
+           delimiter_for_split = strcat("double ",output,'[]',new_func2{1});
            new_variable_signa  = strcat("double ",new_variable_name,new_func2{1});
            new_func1           = split(str,delimiter_for_split);
            % change the signature of the function in the header file
@@ -276,52 +277,8 @@ classdef coreGenerator <  handle
             end
             
        end
-       %% mtuable constraints maanagement for code generation
-       % this function substitute cCode for the mutable constraints case 
-       function MutableConstraits_ub(obj,sym_S,var,inner_x)
-           % i compute all the W inside the prediction window
-           all_W = zeros(2*(obj.N*obj.q) + 2*(obj.N*obj.m),obj.N);
-           for i=1:obj.N      
-               all_W(:,i) = obj.MutableConstraints_W();
-               obj.UpdateConstrPattern();
-           end
-           % i compute all the function ub_ to stitch togheter 
-           all_ub = cell(obj.N,1);
-           for i=1:obj.N
-               all_ub{i} = all_W(:,i) + sym_S*var;
-           end
-           
-           % delimiter for the second split (on the body) to separate the
-           % declaration of variables from the actual value assignement
-           W_length = 2*(obj.N*obj.q) + 2*(obj.N*obj.m);
-           delimiter = "ub[0][" + num2string(W_length-1) + "]=0;";
-           %% with the first ccode initilialize the function structure
-           [funstr, hstring] = ccodefunctionstring(all_ub{1},'funname','compute_ub','vars',{inner_x,obj.outer_x},'output','ub');
-           % here i remove the bracket parethensis and i split signature
-           % from the body of the function
-           first_split       = strsplit(funstr,{'{','}'});
-           signature         = first_split{1};
-           body              = first_split{2};
-           
-           %% with the second split i separate between varaibles declaration and assignement 
-           second_split       = strsplit(body,{delimiter});
-           var_declaration    = second_split{1};
-           var_assignement    = second_split{2};
-           
-           cpp_final_func     = signature + "{" + newline + var_declaration + newline + delimiter + "if(ind1 = 0){" + newline + var_assignement...
-                                + newline + '}';
-           % i start to collect the structure for each variables 
-           for i = 2:obj.N
-               [funstr_cur]   = ccodefunctionstring(all_ub{i},'funname','compute_ub','vars',{inner_x,obj.outer_x},'output','ub');
-               first_split    = strsplit(funstr_cur,{'{','}'});
-               second_split   = strsplit(first_split{2},{delimiter});       
-               cpp_final_func = cpp_final_func + "else if(ind1="+ num2string(i-1) + "){" + newline + second_split{2} + newlline + "}";
-               
-           end
-           % adding closing bracket
-           cpp_final_func = cpp_final_func + newlline + "}";
-           
-       end
+       %% mtuable constraints management for code generation
+       
        
        
        
