@@ -27,7 +27,6 @@ class MPCtracker : public MPCproblem {
 public:
 	trajectories    traj;
 	Eigen::VectorXd delta_action;
-	Eigen::VectorXd inner_x;           // here I store full mpc tracker state [cur_state,cur_action,ref]
 	Eigen::VectorXd ref;               // vector to store the current ref
 	double          dt;                // time step;
 	int             current_step;

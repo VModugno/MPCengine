@@ -1,17 +1,29 @@
+%% or i can keep the coefficient of the dyamic matrix equal to one and then set the 
+%% the ref values using the initial state 
+
+%% here we go for the first option
+
+
 %% 2dxylip (this system is already discretized)
 %% Model 
 % name of the enviroment which the current model represents
 env_name ="XYLip";
-% Parameters
+% delta is sym here because the system is already discretized
 syms delta; 
-omega          = sqrt(9.8/0.8);
+% Parameters
+h              = 0.8;
 infinity       = 10e6;
 footSize_x     = 0.05;
 footSize_y     = 0.03;
-foot_to_foot   = 1;
-ref_vel        = 1;
+foot_to_foot_x = 0;          % desired foot to foot distance along x
+foot_to_foot_y = -0.2;       % desired foot to foot distance along x
+ref_vel_x      = 0.1;        % desired com velocity
+ref_vel_y      = 0;
+max_f_to_f     = 0.05;       % bounds  
 
 % LIP model
+omega = sqrt(9.8/h);
+
 ch    = cosh(omega*delta);
 sh    = sinh(omega*delta);
 A_lip = [ch, sh/omega, 1-ch; omega*sh, ch, -omega*sh; 0, 0, 1];
@@ -22,14 +34,14 @@ A_foot = eye(2) + delta*[0, 1; 0, 0];
 B_foot = delta*[0; 1];
 
 % Dummy states for foot-to-foot distance and reference velocity
-A_distance = foot_to_foot;
-A_vref     = ref_vel;
+A_dummy = 1;
 
 % Full system
-A = blkdiag(A_lip, A_foot, A_foot, A_distance, A_vref);
+A_x = blkdiag(A_lip, A_foot, A_foot, A_dummy, A_dummy);
+A_y = blkdiag(A_lip, A_foot, A_foot, A_dummy, A_dummy);
 B = blkdiag(B_lip, B_foot, B_foot);
 B(end+2,end) = 0; % additional empty inputs for the dummy states
-A = blkdiag(A, A);
+A = blkdiag(A_x, A_y);
 B = blkdiag(B, B);
 
 % System outputs
@@ -47,17 +59,17 @@ discretized = true;
 init_state = [ 0; 0; 0;   % com position, com velocity and zmp position
                0; 0;      % left foot position and velocity
                0; 0;      % right foot position and velocity
-               0; 0.1;    % foot-to-foot distance and vRef
+               foot_to_foot_x; ref_vel_x;    % foot-to-foot distance and vRef 
                0; 0; 0;   % com position, com velocity and zmp position
                0; 0;      % left foot position and velocity
              -0.2; 0;    % right foot position and velocity
-             -0.2; 0]; % foot-to-foot distance and vRef 
- 
+              foot_to_foot_y; ref_vel_y]; % foot-to-foot distance and vRef   
+          
 %% Bounds (here the state bounds change for each walking phase)
-maxOutputL = [infinity; 0; infinity; footSize_x; infinity; 0.05;
-              infinity; 0; infinity; footSize_y; infinity; 0.05];
-maxOutputR = [infinity; infinity; 0; infinity; footSize_x; 0.05;
-              infinity; infinity; 0; infinity; footSize_y; 0.05];
+maxOutputL = [infinity; 0; infinity; footSize_x; infinity; max_f_to_f;
+              infinity; 0; infinity; footSize_y; infinity; max_f_to_f];
+maxOutputR = [infinity; infinity; 0; infinity; footSize_x; max_f_to_f;
+              infinity; infinity; 0; infinity; footSize_y; max_f_to_f];
 bounds     = [maxOutputL,maxOutputR];
 % here max_output is empty because here we are going to use mutable bounds
 maxOutput  = [];

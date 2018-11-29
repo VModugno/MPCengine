@@ -52,7 +52,8 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & tra
     //DEBUG
     //std::cout<<"solver->getStateDim() = "<<solver->getStateDim() << ",solver->getControlDim() = "<< solver->getControlDim() << ",solver->getPredictionDim()*solver->getOutputDim()= "<<solver->getPredictionDim()*solver->getOutputDim()<<std::endl;
     this->delta_action = Eigen::VectorXd::Zero(solver->getControlDim());
-    this->inner_x      = Eigen::VectorXd::Zero(solver->getStateDim() + solver->getPredictionDim()*solver->getOutputDim());
+    //[cur_state,cur_action,ref,index]
+    this->inner_x      = Eigen::VectorXd::Zero(solver->getStateDim() + solver->getPredictionDim()*solver->getOutputDim() + 1);
     this->ref          = Eigen::VectorXd::Zero(solver->getPredictionDim()*solver->getOutputDim());
     // initialize time step
     this->dt                 =traj.GetDt();
@@ -82,7 +83,7 @@ Eigen::VectorXd MPCtracker::Init(Eigen::VectorXd state_0_in){
 	//std::cout << "this->inner_x.size() = "<< this->inner_x.size() << std::endl;
 
 	// DONT CHANGE! the right order is set inside the code generator class in matlab with the inner_x variables
-	this->inner_x << state_0_in,this->action,ref;
+	this->inner_x << state_0_in,this->action,ref,inner_step;
 
 	//DEBUG
 	//std::cout << "this->inner_x = "<<this->inner_x<<std::endl;
@@ -99,13 +100,16 @@ Eigen::VectorXd MPCtracker::Init(Eigen::VectorXd state_0_in){
 	this->current_step = this->current_step + 1;
 	// update time step
     this->current_time_step = this->current_time_step + this->dt;
+    innerStepUpdate();
 
     return this->action;
 }
 
 Eigen::VectorXd MPCtracker::ComputeControl(Eigen::VectorXd state_i_in){
+
 	ref = traj.ComputeTraj(current_time_step,current_step);
-	this->inner_x << state_i_in,this->action,ref;
+	this->inner_x << state_i_in,this->action,ref,inner_step;
+
 	this->delta_action = solver->solveQP(this->inner_x,this->external_variables,this->pd);
 	// update of last_action
     this->action  = this->action + this->delta_action;
@@ -113,6 +117,7 @@ Eigen::VectorXd MPCtracker::ComputeControl(Eigen::VectorXd state_i_in){
     this->current_step = this->current_step + 1;
     // update time step
     this->current_time_step = this->current_time_step + this->dt;
+    innerStepUpdate();
 
 	return this->action;
 }

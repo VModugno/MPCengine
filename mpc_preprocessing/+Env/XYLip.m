@@ -42,24 +42,22 @@ classdef XYLip < Env.AbstractEnv
                 end
             end
             %% model setting
-            ch = cosh(obj.prm.omega*obj.dt);
-            sh = sinh(obj.prm.omega*obj.dt);
-            A_lip = [ch, sh/obj.prm.omega, 1-ch; obj.prm.omega*sh, ch, -obj.prm.omega*sh; 0, 0, 1];
-            B_lip = [obj.dt-sh/obj.prm.omega; 1-ch; obj.dt];
+            omega = sqrt(9.8/obj.prm.h);
+            ch    = cosh(omega*obj.dt);
+            sh    = sinh(omega*obj.dt);
+            A_lip = [ch, sh/omega, 1-ch; omega*sh, ch, -omega*sh; 0, 0, 1];
+            B_lip = [obj.dt-sh/omega; 1-ch; obj.dt];
 
             % Foot model
             A_foot = eye(2) + obj.dt*[0, 1; 0, 0];
             B_foot = obj.dt*[0; 1];
 
-            % Dummy states for foot-to-foot distance and reference velocity
-            A_distance = obj.prm.foot_to_foot;
-            A_vref     = obj.prm.vref;
-
             % Full system
-            A = blkdiag(A_lip, A_foot, A_foot, A_distance, A_vref);
+            A_x = blkdiag(A_lip, A_foot, A_foot, 1,1);
+            A_y = blkdiag(A_lip, A_foot, A_foot, 1,1);
             B = blkdiag(B_lip, B_foot, B_foot);
             B(end+2,end) = 0; % additional empty inputs for the dummy states
-            obj.A = blkdiag(A, A);
+            obj.A = blkdiag(A_x, A_y);
             obj.B = blkdiag(B, B);
             % i need to set it to true because in this way i will go
             % directly with euler and the discretized system
@@ -124,18 +122,22 @@ classdef XYLip < Env.AbstractEnv
         
         function Load_parameters(obj)
             %%  "actual" dynamic parameters
-            obj.prm.omega        = sqrt(9.8/0.8);
-            obj.prm.foot_to_foot = 1;
-            obj.prm.vref         = 1;
-            obj.prm.footSize_x   = 0.05;
-            obj.prm.footSize_y   = 0.03;
+            obj.prm.h              = 0.8;
+            obj.prm.footSize_x     = 0.05;
+            obj.prm.footSize_y     = 0.03;
+            % dummy states (references)
+            obj.prm.foot_to_foot_x = 0;
+            obj.prm.foot_to_foot_y = -0.2;
+            obj.prm.vref_x         = 0.1;
+            obj.prm.vref_y         = 0;
+            
         end
         
         
         function LocalGenEnvParametersFile(obj,pNode,entry_node)
             
-           name_node = pNode.createElement('omega');
-           name_text = pNode.createTextNode(num2str(obj.prm.omega));
+           name_node = pNode.createElement('h');
+           name_text = pNode.createTextNode(num2str(obj.prm.h));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
@@ -146,6 +148,26 @@ classdef XYLip < Env.AbstractEnv
            
            name_node = pNode.createElement('footSize_y');
            name_text = pNode.createTextNode(num2str(obj.prm.footSize_y));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('foot_to_foot_x');
+           name_text = pNode.createTextNode(num2str(obj.prm.foot_to_foot_x));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('foot_to_foot_y');
+           name_text = pNode.createTextNode(num2str(obj.prm.foot_to_foot_y));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('vref_x');
+           name_text = pNode.createTextNode(num2str( obj.prm.vref_x));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('vref_y');
+           name_text = pNode.createTextNode(num2str( obj.prm.vref_y));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            

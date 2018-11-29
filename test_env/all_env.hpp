@@ -10,6 +10,7 @@
 
 #include "cart_pole.hpp"
 #include "twoRRobot.hpp"
+#include "2Dxy_lip.hpp"
 
 
 #endif /* TEST_ENV_ALL_ENV_HPP_ */

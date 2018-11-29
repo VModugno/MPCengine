@@ -16,9 +16,11 @@ public:
 
 	P_solv           solver;               // all the dimension of the problem are stored in the abstract solver
 	ProblemDetails   pd;
+	Eigen::VectorXd  inner_x;              // here I store full mpc tracker state
 	Eigen::VectorXd  external_variables;   // here i store the external variables for the current experiment
-	int              ex_var_dim;           // dimension of the exeternal variables vector (0 if there is no external variable vector)
+	int              ex_var_dim;           // dimension of the external variables vector (0 if there is no external variable vector)
 	Eigen::VectorXd  action;               // here i define the action vectors
+	int              inner_step;           // this counter specify at which point of the prediction window we are
 
 	// GET function
 	int getStateDim()     {return solver->getStateDim();};
@@ -28,11 +30,19 @@ public:
     void SetExtVariables(Eigen::VectorXd cur_ext_var){
     	this->external_variables = cur_ext_var;
     };
+    // this function update inner step and reset it to zero when the new prediction window is reached
+    void innerStepUpdate(){
+    	inner_step++;
+    	if(inner_step > (this->getPredictionDim() - 1)){
+    		inner_step=0;
+    	}
+
+    }
+
     // virtual function
 	// initialize the solver if necessary
 	virtual Eigen::VectorXd Init(Eigen::VectorXd state_0_in) = 0;
 	virtual Eigen::VectorXd ComputeControl(Eigen::VectorXd state_i_in) = 0;
-
     virtual                 ~MPCproblem(){};
 
 };

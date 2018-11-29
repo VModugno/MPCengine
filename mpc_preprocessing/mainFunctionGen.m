@@ -3,13 +3,13 @@ close all
 clc
 
 %% activate or deactivate function generation
-generate_func    = true;
+generate_func    = false;
 %%
 %% simulate the mpc 
-start_simulation = false;
+start_simulation = true;
 %%
 %% activate or deactivate visualization
-visualization    = false;
+visualization    = true;
 %%
 %% logging data for comparison with results obtained with c++
 logging          = false;
@@ -19,7 +19,7 @@ control_mode     = "regulator"; % tracker, regulator
 model_name       = "twod_xy_lip";
 
 %% experiment time structure
-ft         = 150;       % 20 50 
+ft         = 15;       % 20 50 
 delta_t    = 0.05;      % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
 

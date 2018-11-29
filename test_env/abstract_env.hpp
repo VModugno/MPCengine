@@ -53,35 +53,43 @@ public:
 	std::vector<Eigen::VectorXd> states;
 	std::vector<Eigen::VectorXd> actions;
 	P_DynComp                    comps;
+	bool                         already_discretized=false;
     // integrating dynamics with runge-kutta 4
 	double Step(Eigen::VectorXd action, Eigen::VectorXd & new_state, Eigen::VectorXd & mes_acc)
 	{
 		double reward = 0;
-		Eigen::VectorXd k1(dim_state),k2(dim_state),k3(dim_state),k4(dim_state);
 
-		// to fix
-		int substeps = 1;
-		//runge-kutta 4
-		for (int i=0;i<substeps;i++)
-		{
-			k1 = this->Dynamics(this->state,action,this->mes_acc);
-			//DEBUG
-			//std::cout << "k1  = " << k1 << std::endl;
-			k2 = this->Dynamics(this->state+this->dt/2*k1,action);
-			//DEBUG
-			//std::cout << "k2  = " << k2 << std::endl;
-			k3 = this->Dynamics(this->state+this->dt/2*k2,action);
-			//DEBUG
-			//std::cout << "k3  = " << k3 << std::endl;
-			k4 = this->Dynamics(this->state+this->dt*k3,action);
-			//DEBUG
-			//std::cout << "k4  = " << k4 << std::endl;
 
-			new_state = this->state + this->dt/6*(k1 + 2*k2 + 2*k3 + k4);
-			//All states wrapped to 2pi (when necessary)
+		if(!already_discretized){
+			Eigen::VectorXd k1(dim_state),k2(dim_state),k3(dim_state),k4(dim_state);
+			// to fix
+			int substeps = 1;
+			//runge-kutta 4
+			for (int i=0;i<substeps;i++)
+			{
+				k1 = this->Dynamics(this->state,action,this->mes_acc);
+				//DEBUG
+				//std::cout << "k1  = " << k1 << std::endl;
+				k2 = this->Dynamics(this->state+this->dt/2*k1,action);
+				//DEBUG
+				//std::cout << "k2  = " << k2 << std::endl;
+				k3 = this->Dynamics(this->state+this->dt/2*k2,action);
+				//DEBUG
+				//std::cout << "k3  = " << k3 << std::endl;
+				k4 = this->Dynamics(this->state+this->dt*k3,action);
+				//DEBUG
+				//std::cout << "k4  = " << k4 << std::endl;
+
+				new_state = this->state + this->dt/6*(k1 + 2*k2 + 2*k3 + k4);
+				//All states wrapped to 2pi (when necessary)
+				this->Wrapping(new_state);
+				//DEBUG
+				//std::cout << "new_state = " << new_state << std::endl;
+			}
+		}
+		else{
+			new_state = this->Dynamics(this->state,action);
 			this->Wrapping(new_state);
-			//DEBUG
-			//std::cout << "new_state = " << new_state << std::endl;
 		}
 
 		this->state = new_state; // Old state = new state
