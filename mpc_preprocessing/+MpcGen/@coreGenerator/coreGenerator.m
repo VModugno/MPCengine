@@ -251,37 +251,21 @@ classdef coreGenerator <  handle
            xmlwrite(char(filepath),pNode);   
        end 
        
-       %% TODO: this is different between tracker and regulator 
-       %%       this one is for regulator only
-       function W = MutableConstraints_W(obj)
-            part_W = zeros(obj.N*obj.q,1);
-            for jj = 1:obj.m_c.N_state
-                part_W  = part_W + kron(obj.m_c.const_pattern(:,jj), obj.m_c.bounds(:,jj));
-            end
-            W = [part_W;part_W];
-
-
-            % adding constraints about input
-            W =[W;
-               kron(ones(obj.N,1), obj.maxInput);
-               kron(ones(obj.N,1), obj.maxInput)]; 
-       end
-
        % each time i call this function i get one step update of
-       % constraints
-       % i update m_c inside
+       % constraints.
+       % I update m_c inside
        function UpdateConstrPattern(obj)
             for i = 1:obj.m_c.N_state
                 % circular buffer (each pattern with this update behave as a circular buffer)
                 obj.m_c.const_pattern(:,i) = [ obj.m_c.const_pattern(2:end,i);obj.m_c.const_pattern(1,i)];
             end
             
-       end
-       %% mtuable constraints management for code generation
+       end  
        
-       
-       
-       
+    end
+    
+    methods(Abstract)
+        W = MutableConstraints_W(obj,u_cur);
     end
     
     

@@ -16,11 +16,11 @@ logging          = false;
 %% tracking or regulator
 control_mode     = "regulator"; % tracker, regulator
 %% MPC Model
-model_name       = "twod_xy_lip";
+model_name       = "twod_xy_lip_1";
 
 %% experiment time structure
-ft         = 15;       % 20 50 
-delta_t    = 0.05;      % 0.1 0.01 (to the env class)
+ft         = 10;       % 20 50 
+delta_t    = 0.05;    % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
 
 %% regulator testing
@@ -62,15 +62,27 @@ elseif(strcmp(control_mode,"tracker"))
     env        = eval(env_call);
     %% reference (TODO reference class)------------------------------------
     % sin traj
-    q1des_t  = pi/2*sin(t);
-    q2des_t  = pi/3*cos(t);
-    dq1des_t = pi/2*cos(t);
-    dq2des_t = -pi/3*sin(t);
-    %dq1des_t = diff(q1des_t)/delta_t;
-    %dq1des_t = [dq1des_t , dq1des_t(end)];
-    %dq2des_t = diff(q2des_t)/delta_t;
-    %dq2des_t = [dq2des_t , dq2des_t(end)];
-    x_des    = [q1des_t;q2des_t;dq1des_t;dq2des_t];
+    %q1des_t  = pi/2*sin(t);
+    %q2des_t  = pi/3*cos(t);
+    %dq1des_t = pi/2*cos(t);
+    %dq2des_t = -pi/3*sin(t);
+    
+    v_com_x_ref   = 0.1*ones(size(t));
+    v_foot_x_L    = 0*ones(size(t));
+    v_foot_x_R    = 0*ones(size(t));
+    zmp_foot_x_L  = 0*ones(size(t));
+    zmp_foot_x_R  = 0*ones(size(t));
+    f_to_f_x      = 0*ones(size(t));
+    
+    v_com_y_ref   = 0*ones(size(t));
+    v_foot_y_L    = 0*ones(size(t));
+    v_foot_y_R    = 0*ones(size(t));
+    zmp_foot_y_L  = 0*ones(size(t));
+    zmp_foot_y_R  = 0*ones(size(t));
+    f_to_f_y      = -0.2*ones(size(t));
+   
+    x_des    = [v_com_x_ref;v_foot_x_L;v_foot_x_R;zmp_foot_x_L;zmp_foot_x_R;f_to_f_x;...
+                v_com_y_ref;v_foot_y_L;v_foot_y_R;zmp_foot_y_L;zmp_foot_y_R;f_to_f_x];
     
     %% MPC ----------------------------------------------------------------
     % cpp solver to use 

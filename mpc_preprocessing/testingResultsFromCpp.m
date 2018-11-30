@@ -7,7 +7,7 @@ clc
 %% tracking or regulator
 control_mode     = "regulator"; % tracker, regulator
 %% activate or deactivate visualization
-visualization    = true;
+visualization    = false;
 %% activate or deactivate state plot againist desired trajectory or state trajectories from matlab mpc
 plot_flag        = false;
 

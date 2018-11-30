@@ -123,9 +123,13 @@ classdef genMpcTracker < MpcGen.coreGenerator
 
             %% Constraint matrices
             obj.G     = [ S_bar_C;-S_bar_C; tril(ones(obj.N*obj.m)); -tril(ones(obj.N*obj.m))];
-            obj.W     = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput);...
-                        -kron(ones(obj.N,1),obj.u_0)+kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.u_0) + kron(ones(obj.N,1),obj.maxInput)];
-            obj.W     = matlabFunction(obj.W,'vars', {obj.u_0});
+            if (obj.m_c_flag)
+                obj.W     = obj.MutableConstraints_W(obj.u_cur);
+            else
+                obj.W     = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput);...
+                            -kron(ones(obj.N,1),obj.u_0)+kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.u_0) + kron(ones(obj.N,1),obj.maxInput)];
+                obj.W     = matlabFunction(obj.W,'vars', {obj.u_0});
+            end
             obj.S     = [-T_bar_C; T_bar_C; zeros(obj.N*obj.m,obj.n); zeros(obj.N*obj.m,obj.n)];
            
             %% i need it for the computation of the controller          
@@ -144,25 +148,31 @@ classdef genMpcTracker < MpcGen.coreGenerator
         end
         
         function tau = ComputeControl(obj,x_cur,cur_ref)
-            %obj.W     = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput);...
-            %            -kron(ones(obj.N,1),obj.u_cur)+kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.u_cur) + kron(ones(obj.N,1),obj.maxInput)];
-            W             = obj.W(obj.u_cur);
-            % MPC
-            %new_F_tra    = [obj.total_ref((it-1)*obj.q + 1:(it-1)*obj.q + obj.N*obj.q) ; x_cur;obj.u_cur]'*obj.F_tra;
+            % i do not update here the W the W for mutable constraints case
+            if (~obj.m_c_flag)
+                W         = obj.W(obj.u_cur);
+            end
             new_F_tra     = [cur_ref; x_cur;obj.u_cur]'*obj.F_tra;
             
             %% debug
-            inner_x = [cur_ref; x_cur;obj.u_cur];
-            A_      = obj.G';
-            A_      = A_(:);
-            g_      = ([cur_ref; x_cur;obj.u_cur]'*obj.F_tra)';
-            H_      = obj.H';
-            H_      = H_(:);
-            ub_     = W + obj.S*[x_cur;obj.u_cur];
+            %inner_x = [cur_ref; x_cur;obj.u_cur];
+            %A_      = obj.G';
+            %A_      = A_(:);
+            %g_      = ([cur_ref; x_cur;obj.u_cur]'*obj.F_tra)';
+            %H_      = obj.H';
+            %H_      = H_(:);
+            %ub_     = W + obj.S*[x_cur;obj.u_cur];
             
             [u_star,fval] = quadprog(obj.H, new_F_tra, obj.G,W + obj.S*[x_cur;obj.u_cur]);
-            
+            % new control
             obj.u_cur     = obj.u_cur + u_star(1: obj.m);
+            % after updating u_cur i can update W for the next iteration 
+            % when we have mutabl constraints
+            if (obj.m_c_flag)
+                obj.UpdateConstrPattern();
+                obj.W   = obj.MutableConstraints_W(obj.u_cur);
+            end
+            
             
             % for debugging
             obj.Ustar{obj.it}        = reshape(u_star,[obj.m,obj.N]);
@@ -172,6 +182,17 @@ classdef genMpcTracker < MpcGen.coreGenerator
             %
             % control action 
             tau = obj.u_cur; 
+        end
+        function W = MutableConstraints_W(obj,u_cur)
+            part_W = zeros(obj.N*obj.q,1);
+            for jj = 1:obj.m_c.N_state
+                part_W  = part_W + kron(obj.m_c.const_pattern(:,jj), obj.m_c.bounds(:,jj));
+            end
+            W = [part_W;part_W];
+            % adding constraints about input
+            W =[W;
+               -kron(ones(obj.N,1),u_cur)+kron(ones(obj.N,1),obj.maxInput);
+                kron(ones(obj.N,1),u_cur) + kron(ones(obj.N,1),obj.maxInput)]; 
         end
         
 %         function PlotGraph(obj)

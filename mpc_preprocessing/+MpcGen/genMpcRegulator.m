@@ -127,12 +127,13 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.G    = [S_bar; -S_bar; eye(obj.N*obj.m); -eye(obj.N*obj.m)];
             % if mutable_constr_flag is true i need to build the W matrix
             % according to the foot_patter
-            if (obj.m_c_flag)      
-               obj.W     = obj.MutableConstraints_W();
+            if (obj.m_c_flag)    
+               dummy_var = 0; 
+               obj.W     = obj.MutableConstraints_W(dummy_var);
             else
                obj.W     = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.maxInput)];
             end
-            obj.S    = [-T_bar; T_bar; zeros(obj.N*obj.m,obj.n); zeros(obj.N*obj.m,obj.n)];
+            obj.S        = [-T_bar; T_bar; zeros(obj.N*obj.m,obj.n); zeros(obj.N*obj.m,obj.n)];
              
             obj.sym_H      = sym(obj.H);                   
             obj.sym_F_tra  = sym(obj.F_tra); 
@@ -147,17 +148,31 @@ classdef genMpcRegulator < MpcGen.coreGenerator
         end
         
         
-         function tau = ComputeControl(obj,x_cur)
+        function tau = ComputeControl(obj,x_cur)
              %options = optimset('Algorithm','interior-point-convex','Display','off');
              u_star = quadprog(obj.H, x_cur'*obj.F_tra, obj.G, obj.W+obj.S*x_cur);%,[],[],[],[],[],options);
              tau = u_star(1:obj.m);
              % W has to be update after each new control signal has been computed if i have mutable 
              if (obj.m_c_flag)
+                 dummy_var = 0;
                  obj.UpdateConstrPattern();
-                 obj.W   = obj.MutableConstraints_W();
+                 obj.W   = obj.MutableConstraints_W(dummy_var);
              end
-         end
+        end
         
+        function W = MutableConstraints_W(obj,dummy_var)
+            part_W = zeros(obj.N*obj.q,1);
+            for jj = 1:obj.m_c.N_state
+                part_W  = part_W + kron(obj.m_c.const_pattern(:,jj), obj.m_c.bounds(:,jj));
+            end
+            W = [part_W;part_W];
+
+
+            % adding constraints about input
+            W =[W;
+               kron(ones(obj.N,1), obj.maxInput);
+               kron(ones(obj.N,1), obj.maxInput)]; 
+        end
         
         function GenFunctions(obj) 
              GenFunctions@MpcGen.coreGenerator(obj)  

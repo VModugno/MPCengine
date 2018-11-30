@@ -1,4 +1,4 @@
-classdef XYLip < Env.AbstractEnv
+classdef XYLip_0 < Env.AbstractEnv
     
     properties
         A % dynamics matrix
@@ -8,7 +8,7 @@ classdef XYLip < Env.AbstractEnv
     end
     
     methods
-        function obj = XYLip(init_state,dt,reward,varargin)
+        function obj = XYLip_0(init_state,dt,reward,varargin)
             obj.num_state            = 18;
             obj.state_bounds(1,:)    = [-100,100];
             obj.state_bounds(2,:)    = [-100,100];

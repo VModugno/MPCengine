@@ -7,7 +7,7 @@ function MutableConstraits_ub(obj,var_for_ub,namefunc,vars,output)
     % i compute all the W inside the prediction window
     all_W = zeros(2*(obj.N*obj.q) + 2*(obj.N*obj.m),obj.N);
     for i=1:obj.N      
-       all_W(:,i) = obj.MutableConstraints_W();
+       all_W(:,i) = obj.MutableConstraints_W(obj.u_0);
        obj.UpdateConstrPattern();
     end
     % i compute all the function ub_ to stitch togheter 

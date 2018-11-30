@@ -189,8 +189,19 @@ private:
        	      Eigen::MatrixXd A_dummy = Eigen::MatrixXd::Ones(1,1);
        	      // Full system
        	      Eigen::MatrixXd B_block = Eigen::MatrixXd::Zero(dim_state/2, dim_state/2);
-       	      // in order to keep the last two rows zero i need to update the first 7 rows and 3 colums (for this specific problem)
-       	      B_block.block(0, 0,6,2) = blkdiag(std::vector<Eigen::MatrixXd>( {B_lip, B_foot, B_foot} ));
+       	      Eigen::VectorXd zero_l = Eigen::VectorXd::Zero(3);
+       	      B_block = blkdiag(std::vector<Eigen::MatrixXd>( {B_lip, B_foot, B_foot} ));
+       	      B_block.conservativeResize(B_block.rows()+2,Eigen::NoChange);
+       	      B_block.row(B_block.rows()-2) = zero_l;
+       	      B_block.row(B_block.rows()-1) = zero_l;
+       	      //DEBUG
+       	      //Eigen::MatrixXd test   = Eigen::MatrixXd::Zero(dim_state/2, dim_state/2);
+       	      //test = blkdiag(std::vector<Eigen::MatrixXd>( {B_lip, B_foot, B_foot} ));
+       	      //test.conservativeResize(test.rows()+2,Eigen::NoChange);
+       	      //test.row(test.rows()-2) = zero_l;
+       	      //test.row(test.rows()-1) = zero_l;
+       	      //std::cout <<" test = "<< test << std::endl;
+       	      std::cout <<"B_block = " <<B_block << std::endl;
 
        	      _A = blkdiag(std::vector<Eigen::MatrixXd>( {A_lip, A_foot, A_foot, A_dummy, A_dummy,
        	    					                          A_lip, A_foot, A_foot, A_dummy, A_dummy} ));
