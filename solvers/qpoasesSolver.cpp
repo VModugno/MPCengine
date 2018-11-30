@@ -90,8 +90,7 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 	// solution
 	qpOASES::real_t xOpt[nVariables_batch];
 	Eigen::VectorXd decisionVariables(this->m);
-
-    // compute components (TO UPDATE IN ORDER TO TAKE INTO ACCOUNT DIFFERENT WAY TO COMPUTE THEM GIVEN THE DIFFERENT PROBLEM TO SOLVE)
+    // compute matrix batch problem
 	computeMatrix(H,g,A,ubA,x0,x0_e,pd);
 	// solve optimization problem
 	qpOASES::returnValue ret;
@@ -171,12 +170,21 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi
 	// compute solutions
 	qpOASES::int_t new_nWSR = 30000;
 	qpOASES::returnValue ret;
-	ret       = qp.hotstart(H,g,A,NULL,NULL,NULL,ubA,new_nWSR,NULL);
-	bool pass = this->GetVerySimpleStatus(ret,true);
+
+	//DEBUG
+	//std::cout << "this->nWSR = "<<this->nWSR<<std::endl;
+    // restore nWSR
+	this->nWSR = 30000;
+	ret        = qp.hotstart(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+	bool pass  = this->GetVerySimpleStatus(ret,true);
 	if(!pass){
-		// resetting QP and restarting it
+		//DEBUG
+	    //std::cout << "this->nWSR = "<<this->nWSR<<std::endl;
+		// restore nWSR
+	    this->nWSR = 30000;
+	    // resetting QP and restarting it
 		qp.reset();
-		qp.init(H,g,A,NULL,NULL,NULL,ubA,new_nWSR,NULL);
+		qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
 	}
     // compute
 	qp.getPrimalSolution(xOpt);
@@ -207,14 +215,16 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetai
 	// compute components
 	computeMatrix(H,g,A,ubA,xi_in,xi_ext,pd);
 	// compute solutions
-	qpOASES::int_t new_nWSR = 30000;
+	//qpOASES::int_t new_nWSR = 30000;
+	this->nWSR = 30000;
 	qpOASES::returnValue ret;
-	ret       = qp.hotstart(H,g,A,NULL,NULL,NULL,ubA,new_nWSR,NULL);
+	ret       = qp.hotstart(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
 	bool pass = this->GetVerySimpleStatus(ret,true);
 	if(!pass){
+		this->nWSR = 30000;
 		// resetting QP and restarting it
 		qp.reset();
-		qp.init(H,g,A,NULL,NULL,NULL,ubA,new_nWSR,NULL);
+		qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
 	}
 	//std::cout << "this->nWSR" << this->nWSR << std::endl;
     // compute

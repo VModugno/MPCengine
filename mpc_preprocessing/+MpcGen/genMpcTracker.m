@@ -15,6 +15,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
         Ustar
         Ustar_used
         all_fval
+        W_numeric  % i need this variable becasue for tracker i have defined function to compute W (obj.W cannot be used in the same way of regulator)
     end
     
     
@@ -53,12 +54,16 @@ classdef genMpcTracker < MpcGen.coreGenerator
             obj.it    = 1;
             
             if(length(maxInput)~= obj.m)
-                error('the maxInput has to be a vector with q elements wehre q is the number of output')
+                if(isempty(mutable_constr))
+                    error('the maxInput has to be a vector with q elements wehre q is the number of output')
+                end
             else
                 obj.maxInput = maxInput;
             end
             if(length(maxOutput)~= obj.q)
-                error('the maxOutput has to be a vector with m elements wehre m is the number of input')
+                if(isempty(mutable_constr))
+                    error('the maxOutput has to be a vector with m elements wehre m is the number of input')
+                end
             else
                 obj.maxOutput = maxOutput;    
             end
@@ -98,11 +103,11 @@ classdef genMpcTracker < MpcGen.coreGenerator
             end
             
             %% managing mutable constraints
-            obj.mutable_constraints          = mutable_constr;
+            obj.m_c                          = mutable_constr;
             if(isempty(mutable_constr))
-                obj.mutable_constraints_flag = false;
+                obj.m_c_flag = false;
             else
-                obj.mutable_constraints_flag = true;
+                obj.m_c_flag = true;
             end
 
             %% Create matrix 
@@ -124,15 +129,15 @@ classdef genMpcTracker < MpcGen.coreGenerator
             %% Constraint matrices
             obj.G     = [ S_bar_C;-S_bar_C; tril(ones(obj.N*obj.m)); -tril(ones(obj.N*obj.m))];
             if (obj.m_c_flag)
-                obj.W     = obj.MutableConstraints_W(obj.u_cur);
+                obj.W_numeric = obj.MutableConstraints_W(obj.u_cur);
             else
-                obj.W     = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput);...
+                obj.W_    = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput);...
                             -kron(ones(obj.N,1),obj.u_0)+kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.u_0) + kron(ones(obj.N,1),obj.maxInput)];
                 obj.W     = matlabFunction(obj.W,'vars', {obj.u_0});
             end
             obj.S     = [-T_bar_C; T_bar_C; zeros(obj.N*obj.m,obj.n); zeros(obj.N*obj.m,obj.n)];
            
-            %% i need it for the computation of the controller          
+            %% i need it for the computation of the cpp controller function      
             obj.sym_H      = sym(obj.H);                   
             obj.sym_F_tra  = sym(obj.F_tra); 
             obj.sym_G      = sym(obj.G);      
@@ -150,9 +155,9 @@ classdef genMpcTracker < MpcGen.coreGenerator
         function tau = ComputeControl(obj,x_cur,cur_ref)
             % i do not update here the W the W for mutable constraints case
             if (~obj.m_c_flag)
-                W         = obj.W(obj.u_cur);
+                obj.W_numeric = obj.W(obj.u_cur);
             end
-            new_F_tra     = [cur_ref; x_cur;obj.u_cur]'*obj.F_tra;
+            new_F_tra = [cur_ref; x_cur;obj.u_cur]'*obj.F_tra;
             
             %% debug
             %inner_x = [cur_ref; x_cur;obj.u_cur];
@@ -163,14 +168,14 @@ classdef genMpcTracker < MpcGen.coreGenerator
             %H_      = H_(:);
             %ub_     = W + obj.S*[x_cur;obj.u_cur];
             
-            [u_star,fval] = quadprog(obj.H, new_F_tra, obj.G,W + obj.S*[x_cur;obj.u_cur]);
+            [u_star,fval] = quadprog(obj.H, new_F_tra, obj.G,obj.W_numeric + obj.S*[x_cur;obj.u_cur]);
             % new control
             obj.u_cur     = obj.u_cur + u_star(1: obj.m);
             % after updating u_cur i can update W for the next iteration 
             % when we have mutabl constraints
             if (obj.m_c_flag)
                 obj.UpdateConstrPattern();
-                obj.W   = obj.MutableConstraints_W(obj.u_cur);
+                obj.W_numeric = obj.MutableConstraints_W(obj.u_cur);
             end
             
             

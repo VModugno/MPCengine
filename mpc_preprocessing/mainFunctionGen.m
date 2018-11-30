@@ -3,23 +3,23 @@ close all
 clc
 
 %% activate or deactivate function generation
-generate_func    = false;
+generate_func    = true;
 %%
 %% simulate the mpc 
-start_simulation = true;
+start_simulation = false;
 %%
 %% activate or deactivate visualization
-visualization    = true;
+visualization    = false;
 %%
 %% logging data for comparison with results obtained with c++
-logging          = false;
+logging          = true;
 %% tracking or regulator
 control_mode     = "regulator"; % tracker, regulator
 %% MPC Model
-model_name       = "twod_xy_lip_1";
+model_name       = "twod_xy_lip_0";
 
 %% experiment time structure
-ft         = 10;       % 20 50 
+ft         = 5;       % 20 50 
 delta_t    = 0.05;    % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
 
@@ -140,7 +140,7 @@ if(generate_func)
     controller.GenParametersFile();
     env.GenEnvParametersFile(controller.basepath,ft);
 end
-if(logging)
+if(logging && start_simulation)
     str           = which('readme_log_mpc.txt');
     path          = fileparts(str);
     full_path     = strcat(path,'/trajectories_from_matlab.mat');

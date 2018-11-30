@@ -28,13 +28,15 @@ ch    = cosh(omega*delta);
 sh    = sinh(omega*delta);
 A_lip = [ch, sh/omega, 1-ch; omega*sh, ch, -omega*sh; 0, 0, 1];
 B_lip = [delta-sh/omega; 1-ch; delta];
+%A_lip = [0 1; omega^2 0];
+%B_lip = [0; omega^2];
+
+%A_lip = eye(2) + delta*A_lip;
+%B_lip = delta*B_lip;
 
 % Foot model
 A_foot = eye(2) + delta*[0, 1; 0, 0];
 B_foot = delta*[0; 1];
-
-% Dummy states for foot-to-foot distance and reference velocity
-A_dummy = 1;
 
 % Full system
 A_x = blkdiag(A_lip, A_foot, A_foot);

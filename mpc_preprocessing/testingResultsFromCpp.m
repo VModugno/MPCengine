@@ -52,10 +52,22 @@ action_average_error = sum(sum((action_cpp- all_action_gt).^2,2))/length(all_act
 if(visualization)
     state = state_cpp;
     % plot using the enviroment 
-    delta_t    = 0.1;
-    init_state = [0; 0; pi/10; 0];
+    delta_t    = 0.05;
+    foot_to_foot_x = 0.0;        % desired foot to foot distance along x
+    foot_to_foot_y = -0.2;       % desired foot to foot distance along x
+    ref_vel_x      = 0.1;        % desired com velocity
+    ref_vel_y      = 0;
+    %init_state = [0; 0; pi/10; 0];
+    init_state = [ 0; 0; 0;   % com position, com velocity and zmp position
+               0; 0;      % left foot position and velocity
+               0; 0;      % right foot position and velocity
+               foot_to_foot_x; ref_vel_x;    % foot-to-foot distance and vRef 
+               0; 0; 0;   % com position, com velocity and zmp position
+               0; 0;      % left foot position and velocity
+             -0.2; 0;    % right foot position and velocity
+              foot_to_foot_y; ref_vel_y]; % foot-to-foot distance and vRef 
     reward     = @(x,u)(norm(x)); % dummy reward
-    env        = Env.CartPole(init_state,delta_t,reward);
+    env        = Env.XYLip_0(init_state,delta_t,reward);
     
     env.Render();
     
