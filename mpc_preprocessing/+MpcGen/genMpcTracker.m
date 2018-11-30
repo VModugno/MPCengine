@@ -103,7 +103,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
             end
             
             %% managing mutable constraints
-            obj.m_c                          = mutable_constr;
+            obj.m_c = mutable_constr;
             if(isempty(mutable_constr))
                 obj.m_c_flag = false;
             else
@@ -131,7 +131,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
             if (obj.m_c_flag)
                 obj.W_numeric = obj.MutableConstraints_W(obj.u_cur);
             else
-                obj.W_    = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput);...
+                obj.W     = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput);...
                             -kron(ones(obj.N,1),obj.u_0)+kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.u_0) + kron(ones(obj.N,1),obj.maxInput)];
                 obj.W     = matlabFunction(obj.W,'vars', {obj.u_0});
             end
@@ -167,8 +167,8 @@ classdef genMpcTracker < MpcGen.coreGenerator
             %H_      = obj.H';
             %H_      = H_(:);
             %ub_     = W + obj.S*[x_cur;obj.u_cur];
-            
-            [u_star,fval] = quadprog(obj.H, new_F_tra, obj.G,obj.W_numeric + obj.S*[x_cur;obj.u_cur]);
+           
+            [u_star,fval,exitflag,output,lambda] = quadprog(obj.H, new_F_tra, obj.G,obj.W_numeric + obj.S*[x_cur;obj.u_cur]);
             % new control
             obj.u_cur     = obj.u_cur + u_star(1: obj.m);
             % after updating u_cur i can update W for the next iteration 

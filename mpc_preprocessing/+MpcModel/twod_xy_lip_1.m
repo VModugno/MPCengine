@@ -19,7 +19,7 @@ footSize_y     = 0.03;
 %foot_to_foot_y = -0.2;       % desired foot to foot distance along x
 %ref_vel_x      = 0.2;        % desired com velocity
 %ref_vel_y      = 0;
-max_f_to_f     = 0.05;        % bounds  
+max_f_to_f     = 0.21;        % bounds  
 
 % LIP model
 omega = sqrt(9.8/h);
@@ -46,7 +46,7 @@ A = blkdiag(A_x, A_y);
 B = blkdiag(B, B);
 
 % System outputs
-C  = [0, 1, 0, 0, 0, 0, 0;  % com velocity to vref 
+C  = [0, 1, 0, 0, 0, 0, 0;  % com velocity 
       0, 0, 0, 0, 1, 0, 0;  % left foot velocity
       0, 0, 0, 0, 0, 0, 1;  % right foot velocity
       0, 0, 1,-1, 0, 0, 0;  % zmp from left foot
@@ -62,7 +62,7 @@ init_state = [ 0; 0; 0;   % com position, com velocity and zmp position
                0; 0;      % right foot position and velocity
                0; 0; 0;   % com position, com velocity and zmp position
                0; 0;      % left foot position and velocity
-             -0.2; 0];    % right foot position and velocity
+            -0.2; 0];     % right foot position and velocity
          
           
 %% Bounds (here the state bounds change for each walking phase)
@@ -75,7 +75,7 @@ bounds     = [maxOutputL,maxOutputR];
 maxOutput  = [];
 maxInput   = [infinity; infinity; infinity;
               infinity; infinity; infinity];         
-%% 2 r robot gains
+%%gains
 state_gain   = [100, 0, 0, 0, 0, 0,100, 0, 0, 0, 0, 0];    % penalty error on the state
 control_cost = [1,1,1,1,1,1]; 
 %% predictive windows (it is useful for mutable constraints)

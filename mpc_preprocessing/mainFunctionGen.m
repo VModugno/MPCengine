@@ -3,20 +3,20 @@ close all
 clc
 
 %% activate or deactivate function generation
-generate_func    = true;
+generate_func    = false;
 %%
 %% simulate the mpc 
-start_simulation = false;
+start_simulation = true;
 %%
 %% activate or deactivate visualization
-visualization    = false;
+visualization    = true;
 %%
 %% logging data for comparison with results obtained with c++
-logging          = true;
+logging          = false;
 %% tracking or regulator
-control_mode     = "regulator"; % tracker, regulator
+control_mode     = "tracker"; % tracker, regulator
 %% MPC Model
-model_name       = "twod_xy_lip_0";
+model_name       = "twod_xy_lip_1";
 
 %% experiment time structure
 ft         = 5;       % 20 50 
@@ -79,10 +79,10 @@ elseif(strcmp(control_mode,"tracker"))
     v_foot_y_R    = 0*ones(size(t));
     zmp_foot_y_L  = 0*ones(size(t));
     zmp_foot_y_R  = 0*ones(size(t));
-    f_to_f_y      = -0.2*ones(size(t));
+    f_to_f_y      = -0.3*ones(size(t));
    
     x_des    = [v_com_x_ref;v_foot_x_L;v_foot_x_R;zmp_foot_x_L;zmp_foot_x_R;f_to_f_x;...
-                v_com_y_ref;v_foot_y_L;v_foot_y_R;zmp_foot_y_L;zmp_foot_y_R;f_to_f_x];
+                v_com_y_ref;v_foot_y_L;v_foot_y_R;zmp_foot_y_L;zmp_foot_y_R;f_to_f_y];
     
     %% MPC ----------------------------------------------------------------
     % cpp solver to use 
@@ -106,20 +106,23 @@ if(visualization)
     env.Render();
 end
 if(start_simulation)
-    cur_x = init_state;
+    cur_x           = init_state;
     all_states(:,1) = cur_x;
     for i=1:length(t)-1
         if(visualization)   
             env.UpdateRender(cur_x);  
         end
-        % mpc controller  
+        %% mpc controller  
         if(strcmp(control_mode,"regulator"))
             tau = controller.ComputeControl(cur_x);          
         elseif(strcmp(control_mode,"tracker"))
-            u          = controller.ComputeControl(cur_x,total_ref((i-1)*controller.q + 1:(i-1)*controller.q + controller.N*controller.q));
-            %% only for test with MPC tracking with 2r robot (for this test the reference model for control is the same as the real system)
+            tau = controller.ComputeControl(cur_x,total_ref((i-1)*controller.q + 1:(i-1)*controller.q + controller.N*controller.q));
+        end
+        %% feedback linearization when required
+        if(env.feedback_lin)
+        %% only for test with MPC tracking with 2r robot for now
             dyn_comp   = env.GetDynamicalComponents(cur_x);
-            tau        = dyn_comp.M*u + dyn_comp.S*cur_x(3:4,1) + dyn_comp.g;
+            tau        = dyn_comp.M*tau + dyn_comp.S*cur_x(3:4,1) + dyn_comp.g;
         end
          
         % update env

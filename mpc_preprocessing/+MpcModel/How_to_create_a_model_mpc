@@ -14,6 +14,7 @@ for discretized system
 	C           = tre matrix of the linearized/linear system
 
 discretized   = a flag that specify if the system is discretized or not
+feedback_lin  = 
 
 init_state    = initial state of the system 
 maxOutput
