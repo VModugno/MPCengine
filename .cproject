@@ -25,6 +25,7 @@
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.352349417" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.423312759" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/dependencies/qpOASES-lib/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}&quot;"/>
 									<listOptionValue builtIn="false" value="/usr/include/eigen3"/>
 								</option>
@@ -51,7 +52,7 @@
 								<option id="gnu.cpp.link.option.paths.1955706404" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/dependencies/qpOASES-lib/bin}&quot;"/>
 								</option>
-								<option id="gnu.cpp.link.option.other.650988428" name="Other options (-Xlinker [option])" superClass="gnu.cpp.link.option.other" useByScannerDiscovery="false" valueType="stringList"/>
+								<option id="gnu.cpp.link.option.other.650988428" name="Other options (-Xlinker [option])" superClass="gnu.cpp.link.option.other" useByScannerDiscovery="false"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.878582646" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -62,8 +63,18 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.766405760.937869261" name="/" resourcePath="apps/mpc_preprocessing">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.exe.debug.1648654474" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.debug" unusedChildren="">
+							<tool id="cdt.managedbuild.tool.gnu.archiver.base.2018021064" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base.1888589513"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.421762160" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.707466951"/>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1592235821" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.2071629006"/>
+							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1746134050" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug.446547068"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1671284299" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.331238198"/>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.223853022" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug.1454171529"/>
+						</toolChain>
+					</folderInfo>
 					<sourceEntries>
-						<entry excluding="osqp-master|blaze-3.4|qpOASES-lib/interfaces|qpOASES-lib/src|qpOASES-lib/testing|qpOASES-lib/examples|qpOASES-lib/doc|mpc_preprocessing/generated_function" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="apps/mpc_preprocessing|osqp-master|blaze-3.4|qpOASES-lib/interfaces|qpOASES-lib/src|qpOASES-lib/testing|qpOASES-lib/examples|qpOASES-lib/doc|mpc_preprocessing/generated_function" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

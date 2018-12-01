@@ -18,7 +18,7 @@
 
 
 #include "MPCproblem.hpp"
-#include "trajectories.hpp"
+#include "trajectories/trajectories.hpp"
 
 // here the state dim represents the extended state (original state plus control) due to the extension
 

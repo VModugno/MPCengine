@@ -45,7 +45,7 @@ public:
 			// convert to a string
 			std::string path = pathfs.string();
 			// concat string
-			ss << path <<  "/solvers/current_functions/" << filename;
+			ss << path <<  "/configuration_file/" << filename;
 			// get the final path
 			std::string full_path = ss.str();
 			// Create empty property tree object

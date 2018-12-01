@@ -13,7 +13,7 @@
  *      Author: vale
  */
 
-#include "MPCtracker.hpp"
+#include "api/MPCtracker.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/filesystem.hpp>
@@ -30,7 +30,7 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & tra
 	// convert to a string
 	std::string path = pathfs.string();
 	// concat string
-	ss << path << "/solvers/current_functions/" << filename;
+	ss << path << "/configuration_file/" << filename;
 	// get the final path
 	std::string full_path = ss.str();
 	// Create empty property tree object

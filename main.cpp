@@ -1,7 +1,4 @@
-#include "test_env/all_env.hpp"
-#include "solvers/all_solvers.hpp"
-#include "MPCregulator.hpp"
-#include "MPCtracker.hpp"
+#include "mpc_engine.h"
 #include <iostream>
 
 
@@ -18,16 +15,15 @@ int main(){
     // problem selector
     std::string  switch_problem("regulator");
     // switch behaviour
-	bool visualization       = false;
-    bool log                 = true;
+	bool visualization = false;
+    bool log           = true;
     // construction of the environment
     //DEBUG
     std::cout << "creating environment" << std::endl;
     P_unique_env env;
-    if(switch_env.compare("cart_pole") == 0){
+    if(switch_env.compare("cart_pole") == 0)  {
     	env.reset(new cartPole(filename_env,visualization,log));
-    }
-    else if(switch_env.compare("2RR") == 0) {
+    }else if(switch_env.compare("2RR") == 0)  {
     	env.reset(new twoRRobot(filename_env,visualization,log));
     }else if(switch_env.compare("xyLip") == 0){
     	env.reset(new TwoDxyLip(filename_env,visualization,log));
@@ -38,13 +34,13 @@ int main(){
 	P_solv qp;
 	if(switch_solver.compare("qpoases") == 0){
 		qp.reset(new qpoasesSolver(filename));
-	}else if(switch_solver.compare("") == 0){
+	}else if(switch_solver.compare("") == 0) {
 
 	}
 	qp->plotInfoQP();
 	// constructing MPC problem
 	P_unique_MPCinstance mpc;
-	if(switch_problem.compare("regulator") == 0){
+	if(switch_problem.compare("regulator") == 0)    {
 		mpc.reset(new MPCregulator(filename,qp));
 	}else if(switch_problem.compare("tracker") == 0){
 		bool online_comp = true;
@@ -60,9 +56,7 @@ int main(){
 		param.push_back(std::vector<double>{M_PI/3,1.0,env->dt});  // d_q2
 		trajectories traj = trajectories(env->dt,env->ft,qp->getPredictionDim(),refs,param,online_comp);
 		mpc.reset(new MPCtracker(filename,qp,traj));
-
 	}
-
 	// simulation loop
 	Eigen::VectorXd action(mpc->getControlDim());
 	Eigen::VectorXd mes_acc(2);
@@ -76,7 +70,6 @@ int main(){
 		//DEBUG
 	    //env->DysplayComp();
 		std::cout << "action before feedback lin = "<<action <<std::endl;
-
 		// the choice of cur_state.tail(2) is tailored for the 2R robot it has to be extended
 		action         = comp->M*action + comp->S*(env->init_state.tail(2)) + comp->g;
 	}

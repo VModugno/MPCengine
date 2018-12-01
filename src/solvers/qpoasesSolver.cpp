@@ -1,4 +1,4 @@
-#include "qpoasesSolver.hpp"
+#include "solvers/qpoasesSolver.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/filesystem.hpp>
@@ -31,9 +31,12 @@ qpoasesSolver::qpoasesSolver(const std::string filename){
 	// convert to a string
 	std::string path = pathfs.string();
 	// concat string
-	ss << path << "/solvers/current_functions/" << filename;
+	ss << path << "/configuration_file/" << filename;
 	// get the final path
 	std::string full_path = ss.str();
+
+	//DEBUG
+	std::cout << full_path << std::endl;
 
 
 	// Create empty property tree object

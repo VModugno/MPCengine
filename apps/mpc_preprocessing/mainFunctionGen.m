@@ -12,11 +12,11 @@ start_simulation = true;
 visualization    = true;
 %%
 %% logging data for comparison with results obtained with c++
-logging          = false;
+logging          = true;
 %% tracking or regulator
-control_mode     = "tracker"; % tracker, regulator
+control_mode     = "regulator"; % tracker, regulator
 %% MPC Model
-model_name       = "twod_xy_lip_1";
+model_name       = "twod_xy_lip_0";
 
 %% experiment time structure
 ft         = 5;       % 20 50 

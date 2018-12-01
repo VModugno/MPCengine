@@ -5,7 +5,7 @@
  *      Author: vale
  */
 
-#include "MPCregulator.hpp"
+#include "api/MPCregulator.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/filesystem.hpp>
@@ -22,7 +22,7 @@ MPCregulator::MPCregulator(const std::string filename,P_solv solv)
 	// convert to a string
 	std::string path = pathfs.string();
 	// concat string
-	ss << path << "/solvers/current_functions/" << filename;
+	ss << path << "/configuration_file/" << filename;
 	// get the final path
 	std::string full_path = ss.str();
 	// Create empty property tree object

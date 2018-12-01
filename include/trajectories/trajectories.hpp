@@ -17,7 +17,7 @@
 #include <sstream>
 #include <fstream>
 #include <functional>
-#include "trajectories/all_traj.hpp"
+#include "all_traj.hpp"
 
 typedef std::function< double(double, int, std::vector<double> )> traj;
 typedef std::vector<std::vector<double> >  param_vec;
