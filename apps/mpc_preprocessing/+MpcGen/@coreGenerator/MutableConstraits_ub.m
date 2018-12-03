@@ -18,7 +18,7 @@ function MutableConstraits_ub(obj,var_for_ub,namefunc,vars,output)
 
     
     %% with the first ccode initilialize the function structure
-    [funstr, hstring] = ccodefunctionstring(all_ub{1},'funname',namefunc,'vars',vars,'output',output);
+    [funstr, hstring] = obj.ccodefunctionstring(all_ub{1},'funname',namefunc,'vars',vars,'output',output);
     % delimiter for the second split (on the body) to separate the
     % declaration of variables from the actual value assignement
     
@@ -50,7 +50,7 @@ function MutableConstraits_ub(obj,var_for_ub,namefunc,vars,output)
                         + newline + '}';
     % i start to collect the structure for each variables 
     for i = 2:obj.N
-       [funstr_cur]   = ccodefunctionstring(all_ub{i},'funname',namefunc,'vars',vars,'output',output);
+       [funstr_cur]   = obj.ccodefunctionstring(all_ub{i},'funname',namefunc,'vars',vars,'output',output);
        first_split    = strsplit(funstr_cur,{'{','}'});
        second_split   = strsplit(first_split{2},{char(delimiter)});       
        cpp_final_func = cpp_final_func + "else if(ind1=="+ num2str(i-1) + "){" + newline + second_split{2} + newline + "}";
