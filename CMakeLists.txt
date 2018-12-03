@@ -36,8 +36,8 @@ set ( EIGEN3_INCLUDE_DIRS  "/usr/include/eigen3" )
 include_directories ( ${EIGEN3_INCLUDE_DIRS} )
 
 # qpoases include directories and link directories
-include_directories(${CMAKE_SOURCE_DIR}/dependencies/qpOASES/include)
-link_directories(${CMAKE_SOURCE_DIR}/dependencies/qpOASES/bin)
+include_directories(${CMAKE_SOURCE_DIR}/dependencies/qpOASES-lib/include)
+link_directories(${CMAKE_SOURCE_DIR}/dependencies/qpOASES-lib/bin)
 
 include_directories(./include)
 
