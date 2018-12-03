@@ -3,16 +3,16 @@ close all
 clc
 
 %% activate or deactivate function generation
-generate_func    = false;
+generate_func    = true;
 %%
 %% simulate the mpc 
-start_simulation = true;
+start_simulation = false;
 %%
 %% activate or deactivate visualization
-visualization    = true;
+visualization    = false;
 %%
 %% logging data for comparison with results obtained with c++
-logging          = true;
+logging          = false;
 %% tracking or regulator
 control_mode     = "regulator"; % tracker, regulator
 %% MPC Model

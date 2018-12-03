@@ -77,7 +77,7 @@
 %
 % http://www.petercorke.com
 
-function [funstr hdrstr] = ccodefunctionstring(f,varargin)
+function [funstr hdrstr] = ccodefunctionstring(obj,f,varargin)
 
 
 % option defaults
@@ -95,11 +95,11 @@ opt.vars = {};
 % since handling cell inputs and extracting input variable names is
 % required.
 % Thus, scan varargin manually:
-if mod(nargin,2)==0
-    error('CodeGenerator:codefunctionstring:wrongArgumentList',...
-        'Wrong number of elements in the argument list.');
-end
-for iArg = 1:2:nargin-1
+%if mod(nargin,2)==0
+%    error('CodeGenerator:codefunctionstring:wrongArgumentList',...
+%        'Wrong number of elements in the argument list.');
+%end
+for iArg = 1:2:nargin-2
     switch lower(varargin{iArg})
         case 'funname'
             opt.funname = varargin{iArg+1};
