@@ -88,6 +88,7 @@ set(MPCEngine_TestEnv_HDR
   ${CMAKE_SOURCE_DIR}/include/test_env/all_env.hpp
   ${CMAKE_SOURCE_DIR}/include/test_env/cart_pole.hpp
   ${CMAKE_SOURCE_DIR}/include/test_env/twoRRobot.hpp
+  ${CMAKE_SOURCE_DIR}/include/test_env/2Dxy_lip.hpp
 )
 
 install(FILES ${MPCEngine_TestEnv_HDR} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/MPCEngine/test_env/)
@@ -127,6 +128,7 @@ set(MPCEngine_HDR
   ${CMAKE_SOURCE_DIR}/include/test_env/all_env.hpp
   ${CMAKE_SOURCE_DIR}/include/test_env/cart_pole.hpp
   ${CMAKE_SOURCE_DIR}/include/test_env/twoRRobot.hpp
+  ${CMAKE_SOURCE_DIR}/include/test_env/2Dxy_lip.hpp
 )
 
 add_library(MPCEngine SHARED ${MPCEngine_SRC} ${MPCEngine_HDR})
