@@ -92,7 +92,7 @@ set(MPCEngine_TestEnv_HDR
 
 install(FILES ${MPCEngine_TestEnv_HDR} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/MPCEngine/test_env/)
 
-install(FILES ${CMAKE_SOURCE_DIR}/include/mpc_engine
+install(FILES ${CMAKE_SOURCE_DIR}/include/mpc_engine.h
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include/MPCEngine/
 )
 
