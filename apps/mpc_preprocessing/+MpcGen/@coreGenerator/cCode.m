@@ -6,7 +6,7 @@ function cCode(obj,sym,fun_name,variables,output)
     hfilename   = [fun_name,'.h'];
     
     % Convert symbolic expression into C-code
-    [funstr, hstring] = ccodefunctionstring(sym,'funname',fun_name,'vars',variables,'output',output);
+    [funstr, hstring] = obj.ccodefunctionstring(sym,'funname',fun_name,'vars',variables,'output',output);
 
     % Create the function description header
     hStruct = obj.createHeaderStruct(fun_name); % create header
