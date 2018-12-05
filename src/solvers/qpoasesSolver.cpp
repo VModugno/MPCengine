@@ -72,13 +72,13 @@ qpoasesSolver::qpoasesSolver(const std::string filename,bool direct_solution){
     }else{
     	this->sqp  = qpOASES::SQProblem(nVariables,nConstraints);
     }
-    this->nWSR     = 30000;
+    this->nWSR     = 100;
     // set qpoases option
 	//options.setToReliable();
 	options.setToMPC();
 	options.printLevel           = qpOASES::PL_NONE;//qpOASES::PL_HIGH;
-	options.enableNZCTests       = qpOASES::BT_TRUE;
-	options.enableFlippingBounds = qpOASES::BT_TRUE;
+	//options.enableNZCTests       = qpOASES::BT_TRUE;
+	//options.enableFlippingBounds = qpOASES::BT_TRUE;
 
 }
 
@@ -205,7 +205,7 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi
 	//DEBUG
 	//std::cout << "this->nWSR = "<<this->nWSR<<std::endl;
     // restore nWSR
-	this->nWSR = 30000;
+	this->nWSR = 100;
 	if(direct_solution){
 		qp.reset();
 		this->qp.setOptions(options);
@@ -218,7 +218,7 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi
 			//DEBUG
 			//std::cout << "this->nWSR = "<<this->nWSR<<std::endl;
 			// restore nWSR
-			this->nWSR = 30000;
+			this->nWSR = 100;
 			// resetting QP and restarting it
 			sqp.reset();
 			this->sqp.setOptions(options);
@@ -256,7 +256,7 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetai
 	computeMatrix(H,g,A,ubA,xi_in,xi_ext,pd);
 	// compute solutions
 	//qpOASES::int_t new_nWSR = 30000;
-	this->nWSR = 30000;
+	this->nWSR = 100;
 	qpOASES::returnValue ret;
 	if(direct_solution){
 		qp.reset();
@@ -267,7 +267,7 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetai
 		ret       = sqp.hotstart(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
 		bool pass = this->GetVerySimpleStatus(ret,false);
 		if(!pass){
-			this->nWSR = 30000;
+			this->nWSR = 100;
 			// resetting QP and restarting it
 			sqp.reset();
 			this->sqp.setOptions(options);
