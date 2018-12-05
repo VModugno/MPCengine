@@ -10,7 +10,7 @@
 namespace pt = boost::property_tree;
 namespace fs = boost::filesystem;
 
-qpoasesSolver::qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver){
+qpoasesSolver::qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver,bool direct_solution){
 	// Set up parameters
 	this->n           = n;
 	this->m           = m;
@@ -19,12 +19,28 @@ qpoasesSolver::qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string t
     this->N_constr    = N_constr;
     int nVariables    = this->N * this->m;
     int nConstraints  = this->N * this->N_constr;
-    this->qp          = qpOASES::SQProblem(nVariables,nConstraints);
-    this->nWSR        = 3000;
+    this->nWSR        = 300;
+    this->direct_solution = direct_solution;
+    if(direct_solution){
+		this->qp   = qpOASES::QProblem(nVariables,nConstraints);
+	}else{
+		this->sqp  = qpOASES::SQProblem(nVariables,nConstraints);
+	}
+	this->nWSR     = 300;
+	// set qpoases option
+	//options.setToReliable();
+	options.setToMPC();
+	options.printLevel           = qpOASES::PL_NONE;//qpOASES::PL_HIGH;
+	options.enableNZCTests       = qpOASES::BT_TRUE;
+	options.enableFlippingBounds = qpOASES::BT_TRUE;
+
 }
 
-qpoasesSolver::qpoasesSolver(const std::string filename){
-    // i create a string stream for concatenating strings
+qpoasesSolver::qpoasesSolver(const std::string filename,bool direct_solution){
+
+
+	this->direct_solution = direct_solution;
+	// i create a string stream for concatenating strings
 	std::stringstream ss;
     // i get the current working directory
 	fs::path pathfs = fs::current_path();
@@ -51,8 +67,19 @@ qpoasesSolver::qpoasesSolver(const std::string filename){
     this->N_constr    = tree.get<int>("parameters.Entry.N_constr");
     int nVariables    = this->N * this->m;
     int nConstraints  = this->N * this->N_constr;
-    this->qp          = qpOASES::SQProblem(nVariables,nConstraints);
-    this->nWSR        = 5000000;
+    if(direct_solution){
+    	this->qp   = qpOASES::QProblem(nVariables,nConstraints);
+    }else{
+    	this->sqp  = qpOASES::SQProblem(nVariables,nConstraints);
+    }
+    this->nWSR     = 30000;
+    // set qpoases option
+	//options.setToReliable();
+	options.setToMPC();
+	options.printLevel           = qpOASES::PL_NONE;//qpOASES::PL_HIGH;
+	options.enableNZCTests       = qpOASES::BT_TRUE;
+	options.enableFlippingBounds = qpOASES::BT_TRUE;
+
 }
 
 
@@ -72,18 +99,8 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 	//for(int ii = 0; ii<4; ii++)
 	//	std::cout << x0[ii] << " ";
 	//std::cout << std::endl;
-
-
 	int nVariables_batch   = this->N * this->m;
 	int nConstraints_batch = this->N * this->N_constr;
-	// qpoases option
-	qpOASES::Options options;
-    //options.setToReliable();
-	options.setToMPC();
-    options.printLevel           = qpOASES::PL_NONE;//qpOASES::PL_HIGH;
-    options.enableNZCTests       = qpOASES::BT_TRUE;
-    options.enableFlippingBounds = qpOASES::BT_TRUE;
-    this->qp.setOptions(options);
     // fitness matrices
 	qpOASES::real_t H[nVariables_batch*nVariables_batch];
 	qpOASES::real_t g[nVariables_batch];
@@ -97,10 +114,19 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 	computeMatrix(H,g,A,ubA,x0,x0_e,pd);
 	// solve optimization problem
 	qpOASES::returnValue ret;
-	ret = qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
-	this->GetVerySimpleStatus(ret,false);
-    // get results
-	qp.getPrimalSolution(xOpt);
+	if(direct_solution){
+		this->qp.setOptions(options);
+		ret = qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+		this->GetVerySimpleStatus(ret,false);
+		// get results
+		qp.getPrimalSolution(xOpt);
+	}else{
+		this->sqp.setOptions(options);
+		ret = sqp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+		this->GetVerySimpleStatus(ret,false);
+		// get results
+		sqp.getPrimalSolution(xOpt);
+	}
 
 	for(int i=0;i<this->m;++i){
 		decisionVariables(i) = xOpt[i];
@@ -117,11 +143,6 @@ Eigen::VectorXd qpoasesSolver::initSolver(double * x0_in,double * x0_ext,Problem
 {
 	int nVariables   = this->N * this->m;
 	int nConstraints = this->N * this->N_constr;
-	// qpoases option
-	qpOASES::Options options;
-    options.setToMPC();
-    options.printLevel=qpOASES::PL_NONE;
-    this->qp.setOptions(options);
     // fitness matrices
 	qpOASES::real_t H[nVariables*nVariables];
 	qpOASES::real_t g[nVariables];
@@ -136,10 +157,19 @@ Eigen::VectorXd qpoasesSolver::initSolver(double * x0_in,double * x0_ext,Problem
 	computeMatrix(H,g,A,ubA,x0_in,x0_ext,pd);
 	// solve optimization problem
 	qpOASES::returnValue ret;
-	ret = qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
-	this->GetVerySimpleStatus(ret,false);
-    // get results
-	qp.getPrimalSolution(xOpt);
+	if(direct_solution){
+		this->qp.setOptions(options);
+		ret = qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+		this->GetVerySimpleStatus(ret,false);
+		// get results
+		qp.getPrimalSolution(xOpt);
+	}else{
+		this->sqp.setOptions(options);
+		ret = sqp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+		this->GetVerySimpleStatus(ret,false);
+		// get results
+		sqp.getPrimalSolution(xOpt);
+	}
 
 	for(int i=0;i<this->m;++i){
 		decisionVariables(i) = xOpt[i];
@@ -171,26 +201,33 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi
 	// compute components
 	computeMatrix(H,g,A,ubA,xi,xi_e,pd);
 	// compute solutions
-	qpOASES::int_t new_nWSR = 30000;
 	qpOASES::returnValue ret;
-
 	//DEBUG
 	//std::cout << "this->nWSR = "<<this->nWSR<<std::endl;
     // restore nWSR
 	this->nWSR = 30000;
-	ret        = qp.hotstart(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
-	bool pass  = this->GetVerySimpleStatus(ret,false);
-	if(!pass){
-		//DEBUG
-	    //std::cout << "this->nWSR = "<<this->nWSR<<std::endl;
-		// restore nWSR
-	    this->nWSR = 30000;
-	    // resetting QP and restarting it
+	if(direct_solution){
 		qp.reset();
-		qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+		this->qp.setOptions(options);
+		ret        = qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+		qp.getPrimalSolution(xOpt);
+	}else{
+		ret        = sqp.hotstart(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+		bool pass  = this->GetVerySimpleStatus(ret,false);
+		if(!pass){
+			//DEBUG
+			//std::cout << "this->nWSR = "<<this->nWSR<<std::endl;
+			// restore nWSR
+			this->nWSR = 30000;
+			// resetting QP and restarting it
+			sqp.reset();
+			this->sqp.setOptions(options);
+			sqp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+		}
+		// compute
+		sqp.getPrimalSolution(xOpt);
 	}
-    // compute
-	qp.getPrimalSolution(xOpt);
+	// collecting first action
 	for(int i=0;i<m;++i){
 		decisionVariables(i) = xOpt[i];
 	}
@@ -221,17 +258,26 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetai
 	//qpOASES::int_t new_nWSR = 30000;
 	this->nWSR = 30000;
 	qpOASES::returnValue ret;
-	ret       = qp.hotstart(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
-	bool pass = this->GetVerySimpleStatus(ret,false);
-	if(!pass){
-		this->nWSR = 30000;
-		// resetting QP and restarting it
+	if(direct_solution){
 		qp.reset();
-		qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+		this->qp.setOptions(options);
+		ret        = qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+		qp.getPrimalSolution(xOpt);
+	}else{
+		ret       = sqp.hotstart(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+		bool pass = this->GetVerySimpleStatus(ret,false);
+		if(!pass){
+			this->nWSR = 30000;
+			// resetting QP and restarting it
+			sqp.reset();
+			this->sqp.setOptions(options);
+			sqp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
+		}
+		//DEBUG
+		//std::cout << "this->nWSR" << this->nWSR << std::endl;
+		// compute
+		sqp.getPrimalSolution(xOpt);
 	}
-	//std::cout << "this->nWSR" << this->nWSR << std::endl;
-    // compute
-	qp.getPrimalSolution(xOpt);
 	for(int i=0;i<m;++i){
 		decisionVariables(i) = xOpt[i];
 	}

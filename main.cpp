@@ -5,7 +5,6 @@
 
 
 int main(){
-
 	std::string filename_env = "env_parameters.xml";
 	std::string filename     = "parameters.xml";
 	// env selector
@@ -33,7 +32,7 @@ int main(){
 	// constructing solver
 	P_solv qp;
 	if(switch_solver.compare("qpoases") == 0){
-		qp.reset(new qpoasesSolver(filename));
+		qp.reset(new qpoasesSolver(filename,true));
 	}else if(switch_solver.compare("") == 0) {
 
 	}
