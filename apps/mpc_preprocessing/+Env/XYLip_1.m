@@ -82,7 +82,7 @@ classdef XYLip_1 < Env.AbstractEnv
             hold on;
             plot(obj.init_state([1,3,4,6],:)', obj.init_state(obj.num_state/2+[1,3,4,6],:)')
             obj.visualization.footRect = [-obj.prm.footSize_x,  obj.prm.footSize_x, obj.prm.footSize_x, -obj.prm.footSize_x;
-                                          -obj.prm.footSize_x, -obj.prm.footSize_x, obj.prm.footSize_x,  obj.prm.footSize_x];
+                                          -obj.prm.footSize_y, -obj.prm.footSize_y, obj.prm.footSize_y,  obj.prm.footSize_y];
             p1 = patch(obj.init_state(4,end)+obj.visualization.footRect(1,:), obj.init_state(obj.num_state/2+4,end)+obj.visualization.footRect(2,:), 'r');
             p2 = patch(obj.init_state(6,end)+obj.visualization.footRect(1,:), obj.init_state(obj.num_state/2+6,end)+obj.visualization.footRect(2,:), 'r');
             set(p1,'FaceAlpha',0.1,'EdgeColor','k','LineWidth',1,'LineStyle','-');

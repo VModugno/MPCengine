@@ -1,5 +1,5 @@
 % this function substitute cCode for the mutable constraints case 
-function MutableConstraits_ub(obj,var_for_ub,namefunc,vars,output)
+function MutableConstraits_ub(obj,var_for_ub,namefunc,path_to_folder,vars,output)
     % file of c name and header
     funfilename = [namefunc,'.cpp'];
     hfilename   = [namefunc,'.h'];
@@ -80,7 +80,7 @@ function MutableConstraits_ub(obj,var_for_ub,namefunc,vars,output)
 
     % Includes
     fprintf(fid,'%s\n\n',...
-        ['#include "', hfilename,'"']);
+        ['#include "',path_to_folder,'/',hfilename,'"']);
 
     % Function
     fprintf(fid,'%s\n\n',cpp_final_func);

@@ -101,7 +101,7 @@ classdef coreGenerator <  handle
                %H_  = obj.sym_H(:);
                H_  = obj.sym_H';
                H_  = H_(:);
-               obj.cCode(H_,'compute_H',{inner_x,obj.outer_x},'H');
+               obj.cCode(H_,'compute_H','current_func',{inner_x,obj.outer_x},'H');
                obj.PostProcessFunctionForqpOASES('compute_H','H')
                %% linear term cost function
                disp('generating g')
@@ -110,34 +110,34 @@ classdef coreGenerator <  handle
                else
                     g_  = (obj.x_0'*obj.sym_F_tra)';
                end
-               obj.cCode(g_,'compute_g',{inner_x,obj.outer_x},'g');
+               obj.cCode(g_,'compute_g','current_func',{inner_x,obj.outer_x},'g');
                obj.PostProcessFunctionForqpOASES('compute_g','g')
                %% linear term constraints
                disp('generating A')
                A_  = obj.sym_G';
                A_  = A_(:);
-               obj.cCode(A_,'compute_A',{inner_x,obj.outer_x},'A');
+               obj.cCode(A_,'compute_A','current_func',{inner_x,obj.outer_x},'A');
                obj.PostProcessFunctionForqpOASES('compute_A','A')
                %% constant term constraints
                disp('generating ub')
                if(strcmp(obj.problemClass,"tracker"))
                    if(obj.m_c_flag)
                         % with this functions i write the function and i correct it 
-                        obj.MutableConstraits_ub([obj.x_0;obj.u_0],'compute_ub',{inner_x,obj.outer_x},'ub');
+                        obj.MutableConstraits_ub([obj.x_0;obj.u_0],'compute_ub','current_func',{inner_x,obj.outer_x},'ub');
                    else
                         ub_ = obj.sym_W + obj.sym_S*[obj.x_0;obj.u_0];
                         % with this functions i write the function and i correct it 
-                        obj.cCode(ub_,'compute_ub',{inner_x,obj.outer_x},'ub');
+                        obj.cCode(ub_,'compute_ub','current_func',{inner_x,obj.outer_x},'ub');
                         obj.PostProcessFunctionForqpOASES('compute_ub','ub') 
                    end
                else
                     if(obj.m_c_flag)
                         % with this functions i write the function and i correct it 
-                        obj.MutableConstraits_ub(obj.x_0,'compute_ub',{inner_x,obj.outer_x},'ub');
+                        obj.MutableConstraits_ub(obj.x_0,'compute_ub','current_func',{inner_x,obj.outer_x},'ub');
                     else
                         ub_ = obj.sym_W + obj.sym_S*obj.x_0;
                         % with this functions i write the function and i correct it 
-                        obj.cCode(ub_,'compute_ub',{inner_x,obj.outer_x},'ub');
+                        obj.cCode(ub_,'compute_ub','current_func',{inner_x,obj.outer_x},'ub');
                         obj.PostProcessFunctionForqpOASES('compute_ub','ub') 
                     end
                end

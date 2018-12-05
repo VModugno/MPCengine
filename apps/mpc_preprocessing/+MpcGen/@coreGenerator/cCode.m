@@ -1,5 +1,5 @@
 
-function cCode(obj,sym,fun_name,variables,output)
+function cCode(obj,sym,fun_name,path_to_folder,variables,output)
     
     % file of c name and header
     funfilename = [fun_name,'.c'];
@@ -18,7 +18,7 @@ function cCode(obj,sym,fun_name,variables,output)
 
     % Includes
     fprintf(fid,'%s\n\n',...
-        ['#include "', hfilename,'"']);
+        ['#include "',path_to_folder,'/',hfilename,'"']);
 
     % Function
     fprintf(fid,'%s\n\n',funstr);
