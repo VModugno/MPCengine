@@ -80,7 +80,7 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 	qpOASES::Options options;
     //options.setToReliable();
 	options.setToMPC();
-    options.printLevel           = qpOASES::PL_HIGH;
+    options.printLevel           = qpOASES::PL_NONE;//qpOASES::PL_HIGH;
     options.enableNZCTests       = qpOASES::BT_TRUE;
     options.enableFlippingBounds = qpOASES::BT_TRUE;
     this->qp.setOptions(options);
@@ -98,7 +98,7 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 	// solve optimization problem
 	qpOASES::returnValue ret;
 	ret = qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
-	this->GetVerySimpleStatus(ret,true);
+	this->GetVerySimpleStatus(ret,false);
     // get results
 	qp.getPrimalSolution(xOpt);
 
@@ -120,7 +120,7 @@ Eigen::VectorXd qpoasesSolver::initSolver(double * x0_in,double * x0_ext,Problem
 	// qpoases option
 	qpOASES::Options options;
     options.setToMPC();
-    options.printLevel=qpOASES::PL_HIGH;
+    options.printLevel=qpOASES::PL_NONE;
     this->qp.setOptions(options);
     // fitness matrices
 	qpOASES::real_t H[nVariables*nVariables];
@@ -137,7 +137,7 @@ Eigen::VectorXd qpoasesSolver::initSolver(double * x0_in,double * x0_ext,Problem
 	// solve optimization problem
 	qpOASES::returnValue ret;
 	ret = qp.init(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
-	this->GetVerySimpleStatus(ret,true);
+	this->GetVerySimpleStatus(ret,false);
     // get results
 	qp.getPrimalSolution(xOpt);
 
@@ -179,7 +179,7 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi
     // restore nWSR
 	this->nWSR = 30000;
 	ret        = qp.hotstart(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
-	bool pass  = this->GetVerySimpleStatus(ret,true);
+	bool pass  = this->GetVerySimpleStatus(ret,false);
 	if(!pass){
 		//DEBUG
 	    //std::cout << "this->nWSR = "<<this->nWSR<<std::endl;
@@ -222,7 +222,7 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetai
 	this->nWSR = 30000;
 	qpOASES::returnValue ret;
 	ret       = qp.hotstart(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
-	bool pass = this->GetVerySimpleStatus(ret,true);
+	bool pass = this->GetVerySimpleStatus(ret,false);
 	if(!pass){
 		this->nWSR = 30000;
 		// resetting QP and restarting it

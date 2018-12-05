@@ -10,12 +10,12 @@ env_name ="XYLip_0";
 % delta is sym here because the system is already discretized
 syms delta; 
 % Parameters
-h              = 0.8;
+h              = 0.4845;%0.8;
 infinity       = 10e6;
 footSize_x     = 0.05;
 footSize_y     = 0.03;
 foot_to_foot_x = 0.0;        % desired foot to foot distance along x
-foot_to_foot_y = -0.2;       % desired foot to foot distance along x
+foot_to_foot_y = -0.17;%-0.2 % desired foot to foot distance along x
 ref_vel_x      = 0.1;        % desired com velocity
 ref_vel_y      = 0;
 max_f_to_f     = 0.05;       % bounds  

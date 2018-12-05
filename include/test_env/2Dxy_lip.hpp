@@ -138,7 +138,7 @@ public:
             //DEBUG
 	    	//std::cout << "A = "        <<A        <<std::endl;
 	    	//std::cout << "B = "        <<B        <<std::endl;
-	    	std::cout << "cur_state = "<<cur_state<<std::endl;
+	    	//std::cout << "cur_state = "<<cur_state<<std::endl;
 	    	//std::cout << "action = "   << action  <<std::endl;
 
 	    	Eigen::VectorXd new_state(this->dim_state);
