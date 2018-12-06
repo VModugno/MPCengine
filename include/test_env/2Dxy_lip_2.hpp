@@ -185,7 +185,7 @@ private:
        	      A_lip << ch, sh/omega, 1-ch, omega*sh, ch, -omega*sh, 0, 0, 1;
        	      B_lip << dt-sh/omega, 1-ch, dt;
 
-			  A_lip <<  0, 1, 0, pow(omega,2), 0, pow(omega,2), 0, 0, 0;
+			  A_lip <<  0, 1, 0, pow(omega,2), 0, -pow(omega,2), 0, 0, 0;
 			  B_lip <<  0, 0, 1;
 
 			  // discretization
