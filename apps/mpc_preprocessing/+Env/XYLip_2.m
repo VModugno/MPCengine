@@ -47,8 +47,8 @@ classdef XYLip_2 < Env.AbstractEnv
             B_lip = [0; 0; 1];
 
             % discretization
-            A_lip = eye(3) + delta*A_lip;
-            B_lip = delta*B_lip;
+            A_lip = eye(3) + obj.dt*A_lip;
+            B_lip = obj.dt*B_lip;
 
             % Foot model
             A_foot = eye(2) + obj.dt*[0, 1; 0, 0];
