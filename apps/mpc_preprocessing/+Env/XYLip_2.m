@@ -43,7 +43,7 @@ classdef XYLip_2 < Env.AbstractEnv
             end
             %% model setting
             omega = sqrt(9.8/obj.prm.h);
-            A_lip = [0 1 0; omega^2 0 omega^2;0 0 0];
+            A_lip = [0 1 0; omega^2 0 -omega^2;0 0 0];
             B_lip = [0; 0; 1];
 
             % discretization
@@ -124,7 +124,7 @@ classdef XYLip_2 < Env.AbstractEnv
         
         function Load_parameters(obj)
             %%  "actual" dynamic parameters
-            obj.prm.h              = 0.8;
+            obj.prm.h              = 0.4845;
             obj.prm.footSize_x     = 0.05;
             obj.prm.footSize_y     = 0.03;
             % dummy states (references)

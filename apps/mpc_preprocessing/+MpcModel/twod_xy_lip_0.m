@@ -10,7 +10,7 @@ env_name ="XYLip_0";
 % delta is sym here because the system is already discretized
 syms delta; 
 % Parameters
-h              = 0.4845;%0.8;
+h              = 0.8;%0.8;
 infinity       = 10e6;
 footSize_x     = 0.05;
 footSize_y     = 0.03;
