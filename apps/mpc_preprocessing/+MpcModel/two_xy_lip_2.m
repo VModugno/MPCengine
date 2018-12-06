@@ -6,7 +6,7 @@
 %% 2dxylip (this system is already discretized)
 %% Model 
 % name of the enviroment which the current model represents
-env_name ="XYLip_0";
+env_name ="XYLip_2";
 % delta is sym here because the system is already discretized
 syms delta; 
 % Parameters
