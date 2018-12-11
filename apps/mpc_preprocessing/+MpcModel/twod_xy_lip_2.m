@@ -1,14 +1,15 @@
-%% i can keep the coefficient of the dyamic matrix equal to one and then set the 
-%% the ref values using the initial state 
-
-%% this lip 2d has been designed to be used only with a regulator
+%% model short description
+% 2d lip with both x and y direction plus the simple model for the feet
+% movement both in x and y.
+% in this model we employ the classic discretization (euler) for the lip model 
+% and it is built in a way that we need to employ a regulator MPC
 
 %% 2dxylip (this system is already discretized)
 %% Model 
 % name of the enviroment which the current model represents
 env_name ="XYLip_2";
 % delta is sym here because the system is already discretized
-syms delta; 
+internal_dt = 0.05;
 % Parameters
 h              = 0.4845;%0.8;
 infinity       = 10e6;
@@ -28,13 +29,13 @@ A_lip = [0 1 0; omega^2 0 -omega^2;0 0 0];
 B_lip = [0; 0; 1];
 
 % discretization
-A_lip = eye(3) + delta*A_lip;
-B_lip = delta*B_lip;
+A_lip = eye(3) + internal_dt*A_lip;
+B_lip = internal_dt*B_lip;
 
 
 % Foot model
-A_foot = eye(2) + delta*[0, 1; 0, 0];
-B_foot = delta*[0; 1];
+A_foot = eye(2) + internal_dt*[0, 1; 0, 0];
+B_foot = internal_dt*[0; 1];
 
 % Dummy states for foot-to-foot distance and reference velocity
 A_dummy = 1;

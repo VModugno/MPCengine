@@ -13,15 +13,19 @@ visualization    = true;
 %%
 %% logging data for comparison with results obtained with c++
 logging          = true;
-%% tracking or regulator
-control_mode     = "regulator"; % tracker, regulator
 %% MPC Model
-model_name       = "twod_xy_lip_0"; %twod_xy_lip_0
+model_name       = "two_r_robot_0"; %twod_xy_lip_0
 
-%% experiment time structure
+%% experiment time structure (for the environment)
 ft         = 5;       % 20 50 
-delta_t    = 0.05;    % 0.1 0.01 (to the env class)
+delta_t    = 0.01;    % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
+
+%% MPC parameters
+% cpp solver to use 
+solver       = "QPoases";
+% tracker or regulator
+control_mode = "tracker"; 
 
 %% regulator testing
 if(strcmp(control_mode,"regulator")) 
@@ -30,20 +34,18 @@ if(strcmp(control_mode,"regulator"))
     run(str);
     % if the system is already discretized i need to substitute the
     % symbolical dt with its actual value
-    if(discretized)
-        A_cont = double(subs(A,delta_t));
-        B_cont = double(subs(B,delta_t));
-        C_cont = double(subs(C,delta_t));
-    end
+%     if(discretized)
+%         A_cont = double(subs(A,delta_t));
+%         B_cont = double(subs(B,delta_t));
+%         C_cont = double(subs(C,delta_t));
+%     end
     %% environment for regulator ------------------------------------------
     reward     = @(x,u)(norm(x));
     env_call   = "Env."+ env_name + "(init_state,delta_t,reward)";
     env        = eval(env_call);
     %% MPC ----------------------------------------------------------------    
-    % cpp solver to use  
-    solver       = "QPoases";
     % regulator 
-    controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,...
+    controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,internal_dt,N,state_gain,control_cost,...
                                         type,solver,generate_func,discretized,mutable_constr); 
 elseif(strcmp(control_mode,"tracker"))
     %% system -------------------------------------------------------------
@@ -60,35 +62,13 @@ elseif(strcmp(control_mode,"tracker"))
     reward     = @(x,u)(norm(x));  %(TODO reward class)
     env_call   = "Env."+ env_name + "(init_state,delta_t,reward)";
     env        = eval(env_call);
-    %% reference (TODO reference class)------------------------------------
-    % sin traj
-    %q1des_t  = pi/2*sin(t);
-    %q2des_t  = pi/3*cos(t);
-    %dq1des_t = pi/2*cos(t);
-    %dq2des_t = -pi/3*sin(t);
-    
-    v_com_x_ref   = 0.1*ones(size(t));
-    v_foot_x_L    = 0*ones(size(t));
-    v_foot_x_R    = 0*ones(size(t));
-    zmp_foot_x_L  = 0*ones(size(t));
-    zmp_foot_x_R  = 0*ones(size(t));
-    f_to_f_x      = 0*ones(size(t));
-    
-    v_com_y_ref   = 0*ones(size(t));
-    v_foot_y_L    = 0*ones(size(t));
-    v_foot_y_R    = 0*ones(size(t));
-    zmp_foot_y_L  = 0*ones(size(t));
-    zmp_foot_y_R  = 0*ones(size(t));
-    f_to_f_y      = -0.3*ones(size(t));
-   
-    x_des    = [v_com_x_ref;v_foot_x_L;v_foot_x_R;zmp_foot_x_L;zmp_foot_x_R;f_to_f_x;...
-                v_com_y_ref;v_foot_y_L;v_foot_y_R;zmp_foot_y_L;zmp_foot_y_R;f_to_f_y];
+    %% reference ----------------------------------------------------------
+    % x_model shoudl be define in the mpcMdel file
+    x_des = x_des_model;
     
     %% MPC ----------------------------------------------------------------
-    % cpp solver to use 
-    solver       = "QPoases";
     % tracker
-    controller   = MpcGen.genMpcTracker(A_cont,B_cont,C_cont,maxInput,maxOutput,delta_t,N,state_gain,control_cost,...
+    controller   = MpcGen.genMpcTracker(A_cont,B_cont,C_cont,maxInput,maxOutput,internal_dt,N,state_gain,control_cost,...
                                         type,solver,generate_func,discretized,mutable_constr);
     %% testing MPC tracking on the environment 
     
@@ -119,7 +99,7 @@ if(start_simulation)
             tau = controller.ComputeControl(cur_x,total_ref((i-1)*controller.q + 1:(i-1)*controller.q + controller.N*controller.q));
         end
         %% feedback linearization when required
-        if(env.feedback_lin)
+        if(feedback_lin)
         %% only for test with MPC tracking with 2r robot for now
             dyn_comp   = env.GetDynamicalComponents(cur_x);
             tau        = dyn_comp.M*tau + dyn_comp.S*cur_x(3:4,1) + dyn_comp.g;

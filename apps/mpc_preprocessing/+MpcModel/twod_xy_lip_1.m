@@ -1,15 +1,16 @@
-%% or i can keep the coefficient of the dyamic matrix equal to one and then set the 
-%% the ref values using the initial state 
-
-%% here we go for the first option
+%% model short description
+% 2d lip with both x and y direction plus the simple model for the feet
+% movement both in x and y.
+% in this model we employ a specific discretization for the lip model 
+% and it is built in a way that we need to employ a tracking MPC
 
 
 %% 2dxylip (this system is already discretized)
 %% Model 
 % name of the enviroment which the current model represents
 env_name ="XYLip_1";
-% delta is sym here because the system is already discretized
-syms delta; 
+% control step used inside the controller in general different from time step for integration 
+internal_dt = 0.05; 
 % Parameters
 h              = 0.8;
 infinity       = 10e6;
@@ -24,10 +25,10 @@ max_f_to_f     = 0.21;        % bounds
 % LIP model
 omega = sqrt(9.8/h);
 
-ch    = cosh(omega*delta);
-sh    = sinh(omega*delta);
+ch    = cosh(omega*internal_dt);
+sh    = sinh(omega*internal_dt);
 A_lip = [ch, sh/omega, 1-ch; omega*sh, ch, -omega*sh; 0, 0, 1];
-B_lip = [delta-sh/omega; 1-ch; delta];
+B_lip = [delta-sh/omega; 1-ch; internal_dt];
 %A_lip = [0 1; omega^2 0];
 %B_lip = [0; omega^2];
 
@@ -35,8 +36,8 @@ B_lip = [delta-sh/omega; 1-ch; delta];
 %B_lip = delta*B_lip;
 
 % Foot model
-A_foot = eye(2) + delta*[0, 1; 0, 0];
-B_foot = delta*[0; 1];
+A_foot = eye(2) + internal_dt*[0, 1; 0, 0];
+B_foot = internal_dt*[0; 1];
 
 % Full system
 A_x = blkdiag(A_lip, A_foot, A_foot);
@@ -93,3 +94,22 @@ foot_pattern = [pattern_1,pattern_2];
 mutable_constr.N_state           = 2;
 mutable_constr.const_pattern     = foot_pattern;
 mutable_constr.bounds            = bounds;
+
+%% here i define the trjecotory for 
+v_com_x_ref   = 0.1*ones(size(t));
+v_foot_x_L    = 0*ones(size(t));
+v_foot_x_R    = 0*ones(size(t));
+zmp_foot_x_L  = 0*ones(size(t));
+zmp_foot_x_R  = 0*ones(size(t));
+f_to_f_x      = 0*ones(size(t));
+
+v_com_y_ref   = 0*ones(size(t));
+v_foot_y_L    = 0*ones(size(t));
+v_foot_y_R    = 0*ones(size(t));
+zmp_foot_y_L  = 0*ones(size(t));
+zmp_foot_y_R  = 0*ones(size(t));
+f_to_f_y      = -0.3*ones(size(t));
+% you have to specify a x_des_model otherwise it is going to fail   
+x_des_model    = [v_com_x_ref;v_foot_x_L;v_foot_x_R;zmp_foot_x_L;zmp_foot_x_R;f_to_f_x;...
+                  v_com_y_ref;v_foot_y_L;v_foot_y_R;zmp_foot_y_L;zmp_foot_y_R;f_to_f_y];
+

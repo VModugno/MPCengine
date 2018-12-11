@@ -1,6 +1,17 @@
+%% model short description
+
+% this model represent a simple cart pole problem linearized around the up
+% up position. it is mainly used for testing the mpc controller for
+% regulation problem. it can be used without feedback lin if the initial
+% position is around a up up position. we do not ahve implemented andy
+% fucntion for feedback linearization so far
+
+
 %% cart pole model 
 % name of the enviroment which the current model represents
 env_name ="CartPole";
+% control step used inside the controller in general different from time step for integration 
+internal_dt = 0.05; 
 %cart pole parameters (to the env class) (TODO add read parameters from file)
 mCart    = 0.1;
 mPend    = 0.1;

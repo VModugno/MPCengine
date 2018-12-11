@@ -17,7 +17,7 @@ classdef coreGenerator <  handle
         n           % state space dim
         m           % control space dim 
         q           % output space dim 
-        delta       % sampling time
+        delta       % sampling time of the controller (in general different from the sampling time of the enviroment) in the model is called internal dt
         N           % widht of prediction window
         N_constr    % number of constraints
         

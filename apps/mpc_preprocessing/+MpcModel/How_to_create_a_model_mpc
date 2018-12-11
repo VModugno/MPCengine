@@ -2,7 +2,7 @@ Mandatory elements that has to be defined inside the a mpc model
 
 env_name    = specify the name of the corresponding env (use class name)
 
-syms delta  = this sym variables has to be declared only for already discretized system
+internal_dt  = this variables specify the controller time step (that can be different from the environment time step)
 
 for continuos system
 	A_cont
@@ -35,3 +35,5 @@ mutable_const.const_pattern     = size(N,N_state), here i define the pattern for
                                   the 1 and zero of each pattern are not overlapping
 
 mutable_const.bounds            = size(q,N_state), this contains the mutable constraints one for each state 
+
+x_des_model                     = define the sequence of desired input (for tracking mpc only)
