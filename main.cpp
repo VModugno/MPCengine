@@ -1,5 +1,6 @@
 #include "mpc_engine.h"
 #include <iostream>
+#include <chrono>
 
 
 
@@ -32,7 +33,7 @@ int main(){
 	// constructing solver
 	P_solv qp;
 	if(switch_solver.compare("qpoases") == 0){
-		qp.reset(new qpoasesSolver(filename,true));
+		qp.reset(new qpoasesSolver(filename));
 	}else if(switch_solver.compare("") == 0) {
 
 	}

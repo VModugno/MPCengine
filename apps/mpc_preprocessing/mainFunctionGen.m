@@ -16,7 +16,7 @@ logging          = true;
 %% tracking or regulator
 control_mode     = "regulator"; % tracker, regulator
 %% MPC Model
-model_name       = "twod_xy_lip_2"; %twod_xy_lip_0
+model_name       = "twod_xy_lip_0"; %twod_xy_lip_0
 
 %% experiment time structure
 ft         = 5;       % 20 50 

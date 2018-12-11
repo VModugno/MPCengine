@@ -150,7 +150,9 @@ classdef genMpcRegulator < MpcGen.coreGenerator
         
         function tau = ComputeControl(obj,x_cur)
              %options = optimset('Algorithm','interior-point-convex','Display','off');
+             tic
              u_star = quadprog(obj.H, x_cur'*obj.F_tra, obj.G, obj.W+obj.S*x_cur);%,[],[],[],[],[],options);
+             toc
              tau = u_star(1:obj.m);
              % W has to be update after each new control signal has been computed if i have mutable 
              if (obj.m_c_flag)
