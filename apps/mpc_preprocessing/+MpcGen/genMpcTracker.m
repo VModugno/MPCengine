@@ -172,7 +172,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
             % new control
             obj.u_cur     = obj.u_cur + u_star(1: obj.m);
             % after updating u_cur i can update W for the next iteration 
-            % when we have mutabl constraints
+            % when we have mutable constraints
             if (obj.m_c_flag)
                 obj.UpdateConstrPattern();
                 obj.W_numeric = obj.MutableConstraints_W(obj.u_cur);

@@ -14,7 +14,7 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
         measured_acc             % updated inside the step function
         use_euler    = false     % when the system dynamics is already discretized we can directly go for euler method
         all_states               % here i can store all the states when it is necessary (not mandatory)
-        feedback_lin = false     % with this flag for each environment i require a feedback linearization or not
+        %feedback_lin = false     % with this flag for each environment i require a feedback linearization or not
     end
     
     methods

@@ -17,8 +17,8 @@ maxInput      = [20;20];
 %% 2 r robot gains
 state_gain    = 100;    % penalty error on the state
 control_cost  = 1;  
-%% predictive windows (it is useful for mutable constraints)
-N             = 30;
+%% predictive windows 
+N             = 20;
 %% here i define if the model is fixed or ltv
 type          = "fixed"; 
 %% here i define is the model is with mutable constraints or not

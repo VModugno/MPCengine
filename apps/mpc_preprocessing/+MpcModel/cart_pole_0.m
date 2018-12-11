@@ -15,6 +15,8 @@ C_cont = [1 0 0 0;
           0 0 0 1];
 % with this flag i tell the MPC constructor if the matrix has already been discretized or not      
 discretized = false;
+% with this i require to do the feedback linearization (by default is false)
+feedback_lin  = false;
 %% init state
 init_state = [0; 0; pi/8; 0];
 %% cart pole state and control bounds  

@@ -105,7 +105,7 @@ classdef TwoRRobot < Env.AbstractEnv
         end
         
         function S = get_dyn_S_2R_Coriolismatrix(obj,state,prm)
-            S = zeros(2,2);state
+            S = zeros(2,2);
 
             S(1,1) = -state(4)*prm.l1*prm.m2*(prm.c2y*cos(state(2)) + prm.c2x*sin(state(2)) + prm.l2*sin(state(2)));
             S(1,2) = -prm.l1*prm.m2*(state(3) + state(4))*(prm.c2y*cos(state(2)) + prm.c2x*sin(state(2)) + prm.l2*sin(state(2)));

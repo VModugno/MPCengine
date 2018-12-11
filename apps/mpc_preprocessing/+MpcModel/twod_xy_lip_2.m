@@ -58,6 +58,8 @@ C  = [0, 1, 0, 0, 0, 0, 0, 0,-1;  % com velocity to vref
 
 % with this flag i tell the MPC constructor if the matrix has already been discretized or not      
 discretized = true;
+% with this i require to do the feedback linearization (by default is false)
+feedback_lin  = false;
 %% Initial state
 init_state = [ 0; 0; 0;   % com position, com velocity and zmp position
                0; 0;      % left foot position and velocity
