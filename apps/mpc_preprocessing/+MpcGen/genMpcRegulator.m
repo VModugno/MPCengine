@@ -6,6 +6,17 @@ classdef genMpcRegulator < MpcGen.coreGenerator
         maxInput    
         maxOutput 
         inner_x_ext
+        propagationModel 
+        costFunc
+        constrW
+        constrG
+        constrS
+        MutableConstraints_W   % function handle to the mutable constraints W
+        MutableConstraints_G   % function handle to the mutable constraints G
+        MutableConstraints_S   % function handle to the mutable constraints S
+        cur_W                  % auxiliary variable introduce as a unique entry both for 
+        cur_G
+        cur_S
         
        
         
@@ -90,145 +101,121 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                 end
             end
 
-            %% managing mutable constraints
+            %% managing mutable constraints (this structure will be used inside funcgenerator)
             obj.m_c = mutable_constr;
             if(isempty(mutable_constr))
                 obj.m_c_flag = false;
             else
                 obj.m_c_flag = true;
+                if(obj.m_c.g)
+                    obj.m_c.g = "pattern";
+                else
+                    obj.m_c.g ="";
+                end
+                if(obj.m_c.w)
+                    obj.m_c.w = "pattern";
+                else
+                    obj.m_c.w ="";
+                end
+                if(obj.m_c.s)
+                    obj.m_c.s = "pattern";
+                else
+                    obj.m_c.s ="";
+                end
             end
             
-            %% Construct matrices
-            %% fixed
-            if(strcmp(obj.type,"fixed"))
-                for k = 1:obj.N
-                    for j = 1:k
-                        S_bar(obj.q*(k-1)+(1:obj.q),obj.m*(k-j)+(1:obj.m)) = C*A^(j-1)*B;
-                    end
-
-                    T_bar(obj.q*(k-1)+(1:obj.q),1:obj.n) = C*A^k;
-
-                    Q_bar(obj.q*(k-1)+(1:obj.q),obj.q*(k-1)+(1:obj.q)) = Q;
-                    R_bar(obj.m*(k-1)+(1:obj.m),obj.m*(k-1)+(1:obj.m)) = R;
-                end
-            %% LTV    
-            elseif(strcmp(obj.type,"ltv"))
-                
-                % here i build all the A and B matrix with their
-                % dependancy (u_k,x_k) and the vector of variables
-                % x_inner_extended
-                obj.inner_x_ext = [];
-                all_A           = cell(obj.N,1);
-                all_B           = cell(obj.N,1);
-                % i have always to use the same variables name inside mpcModel 
-                x               = sym('x',[obj.n,1],'real');
-                u               = sym('u',[obj.m,1],'real');
-                for kk = 1:obj.N
-                    % here i create the symbolic variables
-                    cur_x_name = "x_" + num2str(kk-1);
-                    cur_u_name = "u_" + num2str(kk-1);
-                    cur_x = sym(cur_x_name,[obj.n,1],'real');
-                    cur_u = sym(cur_u_name,[obj.m,1],'real');
-                    % substitute the variables in A and B with cur_u and
-                    % cur_x
-                    cur_A = A;
-                    cur_B = B;
-                    
-                    cur_A = subs(cur_A,[x],[cur_x]);
-                    cur_A = subs(cur_A,[u],[cur_u]);
-                    
-                    cur_B = subs(cur_B,[x],[cur_x]);
-                    cur_B = subs(cur_B,[u],[cur_u]);
-                    
-                    % i store the resulting value inside all A and all B
-                    all_A{kk} = cur_A;
-                    all_B{kk} = cur_B;
-                    % i store the current variables inside inner_x_ext
-                    if(kk==1)
-                         obj.inner_x_ext = [obj.inner_x_ext;cur_u];
-                    else
-                         % the order which i store this variables is gonna
-                         % be the orders that i have to observe when i pass
-                         % the variables to the function
-                         obj.inner_x_ext = [obj.inner_x_ext;cur_x;cur_u];
-                    end
-                    
-                end
-                % constructing matrices
-                
-%                 % only for debugging with cart pole model!
-%                 syms a0 a1 a2 a3 a4 a5 a6 a7 a8 a9
-%                 A0 = diag(a0*ones(obj.n,1)); A1 = diag(a1*ones(obj.n,1)); A2 = diag(a2*ones(obj.n,1)); 
-%                 A3 = diag(a3*ones(obj.n,1));A4 = diag(a4*ones(obj.n,1)); 
-%                 A5 = diag(a5*ones(obj.n,1));A6 = diag(a6*ones(obj.n,1)); A7 = diag(a7*ones(obj.n,1)); 
-%                 A8 = diag(a8*ones(obj.n,1));A9 = diag(a9*ones(obj.n,1));
-%                 all_A = {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9};
-%                 
-%                 syms b0 b1 b2 b3 b4 b5 b6 b7 b8 b9
-%                 B0 = b0*ones(obj.n,1);B1 = b1*ones(obj.n,1);B2 = b2*ones(obj.n,1);B3 = b3*ones(obj.n,1);B4 = b4*ones(obj.n,1); B5 = b5*ones(obj.n,1);
-%                 B6 = b6*ones(obj.n,1);B7 = b7*ones(obj.n,1);B8 = b8*ones(obj.n,1);B9 = b9*ones(obj.n,1);
-%                 all_B = {B0 B1 B2 B3 B4 B5 B6 B7 B8 B9};
-%                 % only for debugging
-                
-                ca = eye(obj.n);
-                
-                for k = 1:obj.N          
-                   
-                    % building the matrix that contains the system
-                    % evolution (look Bemporad slides)
-                    A_prod = eye(obj.n);
-                    for j = 1:k
-                        if(j>1)
-                            A_prod = A_prod*all_A{k + 2 - j};
-                        end
-                        S_bar(obj.q*(k-1)+(1:obj.q),obj.m*(k-j)+(1:obj.m)) = C*A_prod*all_B{k+1-j};
-                    end
-                    % building the term that multiply the x0 (look Bemporad slides)
-                    ca = all_A{k}*ca;
-                    T_bar(obj.q*(k-1)+(1:obj.q),1:obj.n) = C*ca;
-                    
-
-                    Q_bar(obj.q*(k-1)+(1:obj.q),obj.q*(k-1)+(1:obj.q)) = Q;
-                    R_bar(obj.m*(k-1)+(1:obj.m),obj.m*(k-1)+(1:obj.m)) = R;
-                end
-                
-            end
+            %% Construct matrices (it automatically detects fixed or ltv)
+            propModelCall             = "CostFunc.propagationModel_regulator_"+ type + "_" + obj.propagationModel + "(obj,A,B,C)";
+            [S_bar,T_bar,Q_bar,R_bar] = eval(propModelCall);
 
             %% Cost function matrices
-            obj.H = 2*(R_bar + S_bar'*Q_bar*S_bar);
-            obj.F_tra = 2*T_bar'*Q_bar*S_bar;
-
-            %% Constraint matrices
-            obj.G    = [S_bar; -S_bar; eye(obj.N*obj.m); -eye(obj.N*obj.m)];
-            % if mutable_constr_flag is true i need to build the W matrix
-            % according to the foot_pattern
-            if (obj.m_c_flag)    
-               dummy_var = 0; 
-               obj.W     = obj.MutableConstraints_W(dummy_var);
-            else
-               obj.W     = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.maxInput)];
+            costFuncCall      = "CostFunc.regulator_" + obj.costFunc + "(S_bar,T_bar,Q_bar,R_bar)";
+            [obj.H,obj.F_tra] = eval(costFuncCall);
+            %% Constraints matrices
+            
+            % g function
+            % through obj.m_c.g we now if g is mutable or not 
+            constrFuncG_Call = "Constraint.regulator_G_" +obj.m_c.g + "_" + obj.constrG + "(obj,S_bar)";
+            obj.G            = eval(constrFuncG_Call);
+             % if G is mutable i need to store the current function inside
+             % a function handle of the class (needded both for func gen and compute control)
+             % and i need to store the variables that G is depending upon
+            if(strcmp(obj.m_c.g,"pattern"))
+                obj.MutableConstraints_G = str2func(constrFuncG_Call);
+                obj.m_c.S_bar = S_bar;
             end
-            obj.S        = [-T_bar; T_bar; zeros(obj.N*obj.m,obj.n); zeros(obj.N*obj.m,obj.n)];
-             
+            % S function
+            % through obj.m_c.s we now if g is mutable or not 
+            constrFuncS_Call = "Constraint.regulator_S_" +obj.m_c.s + "_" + obj.constrS + "(obj,T_bar)";
+            obj.S            = eval(constrFuncS_Call);
+            % if S is mutable i need to store the current function inside
+            % a function handle of the class (needded both for func gen and compute control)
+            % and i need to store the variables that G is depending upon
+            if(strcmp(obj.m_c.s,"pattern"))
+                obj.MutableConstraints_S = str2func(constrFuncS_Call);
+                obj.m_c.T_bar = T_bar;
+            end
+             % w function
+             % through obj.m_c.w we now if g is mutable or not 
+            constrFuncW_Call = "Constraint.regulator_W_" +obj.m_c.w + "_" + obj.constrW + "(obj)";
+            obj.W            = eval(constrFuncW_Call);
+            % if W is mutable i need to store the current function inside
+            % a function handle of the class (needded both for func gen and compute control)
+            % and i need to store the variables that G is depending upon
+            if(strcmp(obj.m_c.w,"pattern"))
+                obj.MutableConstraints_W = str2func(constrFuncW_Call);
+            end
+            
+            % i copy all the matrix in the sym_* variables in order to pass them to  the function generation method 
             obj.sym_H      = sym(obj.H);                   
             obj.sym_F_tra  = sym(obj.F_tra); 
-            obj.sym_G      = sym(obj.G);      
-            obj.sym_W      = sym(obj.W);
-            obj.sym_S      = sym(obj.S);
+            obj.sym_G      = sym(obj.G);      % for the function generation it works only if G is not mutable (it works right away both fixed and ltv)
+            obj.sym_W      = sym(obj.W);      % for the function generation it works only if W is not mutable (it works right away both fixed and ltv)
+            obj.sym_S      = sym(obj.S);      % for the function generation it works only if W is not mutable (it works right away both fixed and ltv)
             
-            % if the matrix as been computed for LTV i need to transform
+            %% TODO here before continuing i need to set the value of the outer parameters by calling the update function
+            
+            
+            %% cost function post processing
+            % if the matrix has been computed for LTV i need to transform
             % them into matlab function to use them inside matlab for
             % compute control 
             if(strcmp(obj.type,"ltv"))
                 obj.H     = matlabFunction(obj.H,'vars', {obj.x_0,obj.inner_x_ext});
                 obj.F_tra = matlabFunction(obj.F_tra,'vars', {obj.x_0,obj.inner_x_ext});
-                obj.G     = matlabFunction(obj.G,'vars', {obj.x_0,obj.inner_x_ext});
-                obj.S     = matlabFunction(obj.S,'vars', {obj.x_0,obj.inner_x_ext});
+            end
+                
+            
+            %% constraints function post processing
+            % if some of the constraints matrix are mutable i need to store
+            % them inside the 
+            % G post-processing
+            if(strcmp(obj.m_c.g,"pattern"))
+                if(strcmp(obj.type,"ltv"))
+                    obj.m_c.S_bar_func       = matlabFunction(obj.m_c.S_bar,'vars', {obj.x_0,obj.inner_x_ext});
+                end      
+            else
+                if(strcmp(obj.type,"ltv"))
+                    obj.G = matlabFunction(obj.G,'vars', {obj.x_0,obj.inner_x_ext});
+                end
+            end
+            % S post-processing
+            if(strcmp(obj.m_c.s,"pattern"))
+                if(strcmp(obj.type,"ltv"))
+                    obj.m_c.T_bar_func       = matlabFunction(obj.m_c.T_bar,'vars', {obj.x_0,obj.inner_x_ext});
+                end 
+
+            else
+                if strcmp(obj.type,"ltv")
+                    obj.S = matlabFunction(obj.S,'vars', {obj.x_0,obj.inner_x_ext});
+                end
             end
             
-             % here i compute the number of constraints for each step it is
-             % very immportant for the Cpp version of mpc
-             obj.N_constr  = size(obj.S,1)/obj.N;
+            
+            %% store number of constraints
+            % here i compute the number of constraints for each step it is
+            % very immportant for the Cpp version of mpc
+            obj.N_constr  = size(obj.S,1)/obj.N;
             
         end
         
@@ -238,46 +225,61 @@ classdef genMpcRegulator < MpcGen.coreGenerator
              if(strcmp(obj.type,"ltv"))
                  H     = obj.H(xu_oracle_trajectory);
                  F_tra = obj.F_tra(xu_oracle_trajectory);
-                 G     = obj.G(xu_oracle_trajectory);
-                 S     = obj.S(xu_oracle_trajectory);
+                 if(strcmp(obj.m_c.g,"pattern"))
+                    S_bar     = obj.m_c.S_bar(xu_oracle_trajectory);
+                 else
+                    obj.cur_G = obj.G(xu_oracle_trajectory);
+                 end
+                 if(strcmp(obj.m_c.s,"pattern"))
+                    T_bar     = obj.m_c.T_bar(xu_oracle_trajectory);
+                 else
+                    obj.cur_S = obj.S(xu_oracle_trajectory);
+                 end
              elseif(strcmp(obj.type,"fixed"))
-                 H     = obj.H;
-                 F_tra = obj.F_tra;
-                 G     = obj.G;
-                 S     = obj.S;    
+                 H          = obj.H;
+                 F_tra      = obj.F_tra;
+                 if(strcmp(obj.m_c.g,"pattern"))
+                    S_bar      = obj.m_c.S_bar;
+                 else
+                     obj.cur_G = obj.G;
+                 end
+                 if(strcmp(obj.m_c.s,"pattern"))
+                    T_bar      = obj.m_c.T_bar;
+                 else
+                    obj.cur_S  = obj.S;
+                 end
+                 if(~strcmp(obj.m_w.g,"pattern"))
+                    obj.cur_W  = obj.W;
+                 end
              end
-            
              tic
-             u_star = quadprog(H, x_cur'*F_tra, G, obj.W+S*x_cur);%,[],[],[],[],[],options);
+             u_star = quadprog(H, x_cur'*F_tra, obj.cur_G, obj.cur_W+obj.cur_S*x_cur);%,[],[],[],[],[],options);
              toc
              tau = u_star(1:obj.m);
-             % W has to be update after each new control signal has been computed if i have mutable 
+             % after each iteration we need to update the mutable constraints 
              if (obj.m_c_flag)
-                 dummy_var = 0;
+                 % i assume that the pattern are the same for every
+                 %  matrix constraint
                  obj.UpdateConstrPattern();
-                 obj.W   = obj.MutableConstraints_W(dummy_var);
+                 if(strcmp(obj.m_w.g,"pattern"))
+                    obj.cur_G   = obj.MutableConstraints_G(obj,S_bar);
+                 end
+                 if(strcmp(obj.m_w.S,"pattern"))
+                     obj.cur_S   = obj.MutableConstraints_S(obj,T_bar);
+                 end
+                 if(strcmp(obj.m_w.w,"pattern"))
+                    obj.cur_W   = obj.MutableConstraints_W(obj);
+                 end
+                 
              end
         end
         
-        function W = MutableConstraints_W(obj,dummy_var)
-            part_W = zeros(obj.N*obj.q,1);
-            for jj = 1:obj.m_c.N_state
-                part_W  = part_W + kron(obj.m_c.const_pattern(:,jj), obj.m_c.bounds(:,jj));
-            end
-            W = [part_W;part_W];
-
-
-            % adding constraints about input
-            W =[W;
-               kron(ones(obj.N,1), obj.maxInput);
-               kron(ones(obj.N,1), obj.maxInput)]; 
-        end
         
         function GenFunctions(obj) 
              GenFunctions@MpcGen.coreGenerator(obj)  
         end
        
-        function GenEnvParametersFile()
+        function GenEnvParametersFile(obj)
             [pNode]=GenEnvParametersFile@MpcGen.coreGenerator(obj);
         end
         
