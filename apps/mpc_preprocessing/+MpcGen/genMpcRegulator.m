@@ -99,6 +99,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             end
             
             %% Construct matrices
+            %% fixed
             if(strcmp(obj.type,"fixed"))
                 for k = 1:obj.N
                     for j = 1:k
@@ -110,6 +111,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                     Q_bar(obj.q*(k-1)+(1:obj.q),obj.q*(k-1)+(1:obj.q)) = Q;
                     R_bar(obj.m*(k-1)+(1:obj.m),obj.m*(k-1)+(1:obj.m)) = R;
                 end
+            %% LTV    
             elseif(strcmp(obj.type,"ltv"))
                 
                 % here i build all the A and B matrix with their
@@ -152,13 +154,33 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                     end
                     
                 end
+                % constructing matrices
                 
-                for k = 1:obj.N
+                % only for debbugging with cart pole model!
+                syms a0 a1 a2 a3 a4 a5 a6 a7 a8 a9
+                A0 = diag(a0*ones(obj.n,1)); A1 = diag(a1*ones(obj.n,1)); A2 = diag(a2*ones(obj.n,1)); 
+                A3 = diag(a3*ones(obj.n,1));A4 = diag(a4*ones(obj.n,1)); 
+                A5 = diag(a5*ones(obj.n,1));A6 = diag(a6*ones(obj.n,1)); A7 = diag(a7*ones(obj.n,1)); 
+                A8 = diag(a8*ones(obj.n,1));A9 = diag(a9*ones(obj.n,1));
+                all_A = {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9};
+                
+                syms b0 b1 b2 b3 b4 b5 b6 b7 b8 b9
+                B0 = b0*ones(obj.n);B1 = b1*ones(obj.n);B2 = b2*ones(obj.n);B3 = b3*ones(obj.n);B4 = b4*ones(obj.n); B5 = b5*ones(obj.n);
+                B6 = b6*ones(obj.n);B7 = b7*ones(obj.n);B8 = b8*ones(obj.n);B9 = b9*ones(obj.n);
+                all_B = {B0 B1 B2 B3 B4 B5 B6 B7 B8 B9};
+               
+                
+                
+                for k = 1:obj.N          
+                   
+                    ca  = eye(obj.n);
                     for j = 1:k
+                        
                         S_bar(obj.q*(k-1)+(1:obj.q),obj.m*(k-j)+(1:obj.m)) = C*A^(j-1)*B;
+                        ca = all_A{j}*ca;
                     end
-
-                    T_bar(obj.q*(k-1)+(1:obj.q),1:obj.n) = C*A^k;
+                        T_bar(obj.q*(k-1)+(1:obj.q),1:obj.n)               = ca;
+                    
 
                     Q_bar(obj.q*(k-1)+(1:obj.q),obj.q*(k-1)+(1:obj.q)) = Q;
                     R_bar(obj.m*(k-1)+(1:obj.m),obj.m*(k-1)+(1:obj.m)) = R;
