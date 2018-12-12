@@ -4,7 +4,8 @@
 % up position. it is mainly used for testing the mpc controller for
 % regulation problem. it can be used without feedback lin if the initial
 % position is around a up up position. we do not ahve implemented andy
-% fucntion for feedback linearization so far
+% fucntion for feedback linearization so far, this version is conceived for
+% an ltv MPC implementation
 
 
 %% cart pole model 
@@ -13,14 +14,31 @@ env_name ="CartPole";
 % control step used inside the controller in general different from time step for integration 
 internal_dt = 0.05; 
 %cart pole parameters (to the env class) (TODO add read parameters from file)
-mCart    = 0.1;
-mPend    = 0.1;
-L        = 0.5;
-g        = 9.8;
-xCartMax = 5;
-% Double integrator
-A_cont = [0 1 0 0; 0 0 -mPend*g/mCart 0; 0 0 0 1; 0 0 (mCart+mPend)*g/(L*mCart) 0];
-B_cont = [0; 1/mCart; 0; -1/(L*mCart)];
+prm.mCart    = 0.1;
+prm.mPend    = 0.1;
+prm.L        = 0.5;
+g            = 9.8;
+xCartMax     = 5;
+
+% for ltv I need to define the parametrized linearized model using the
+% symbolic toolbox
+
+n = 4;
+m = 1;
+
+x = sym('x',[n,1],'real');
+u = sym('u',[m,1],'real');
+
+mes_acc   = [(u + prm.mPend*sin(x(3))*(prm.L*x(4)^2-g*cos(x(3))))/(prm.mCart+prm.mPend*sin(x(3))^2);...
+            (-u*cos(x(3)) - prm.mPend*prm.L*x(4)^2*sin(x(3))*cos(x(3)) + (prm.mPend+prm.mCart)*g*sin(x(3)))/(prm.L*(prm.mCart+prm.mPend*sin(x(3))^2))];
+
+f         = [x(2); ...
+            mes_acc(1);...
+            x(4);...
+            mes_acc(2)];
+
+A_cont = jacobian(f, x);
+B_cont = jacobian(f, u);
 C_cont = [1 0 0 0;
           0 0 1 0;
           0 0 0 1];
@@ -39,6 +57,6 @@ control_cost = 1;
 %% predictive windows (it is useful for mutable constraints)
 N            = 30;  
 %% here i define if the model is fixed or ltv
-type         = "fixed"; % if the model is type ltv i need to specify the system matrix already using symbolic varialbes
+type         = "ltv"; % if the model is type ltv i need to specify the system matrix already using symbolic varialbes
 %% here i define if the model is with variable constraints or not
 mutable_constr = [];

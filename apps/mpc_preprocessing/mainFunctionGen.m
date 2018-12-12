@@ -14,7 +14,7 @@ visualization    = true;
 %% logging data for comparison with results obtained with c++
 logging          = true;
 %% MPC Model
-model_name       = "two_r_robot_0"; %twod_xy_lip_0
+model_name       = "cart_pole_1"; %twod_xy_lip_0
 
 %% experiment time structure (for the environment)
 ft         = 5;       % 20 50 
@@ -25,7 +25,7 @@ t          = 0:delta_t:ft;
 % cpp solver to use 
 solver       = "QPoases";
 % tracker or regulator
-control_mode = "tracker"; 
+control_mode = "regulator"; 
 
 %% regulator testing
 if(strcmp(control_mode,"regulator")) 

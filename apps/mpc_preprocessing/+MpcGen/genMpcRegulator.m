@@ -5,17 +5,9 @@ classdef genMpcRegulator < MpcGen.coreGenerator
           
         maxInput    
         maxOutput 
+        inner_x_ext
         
-        
-        % they are in the  superclass
-        %type        % ltv or fixed 
-        %solver      % solver target
-        %sym_H       %              
-        %sym_F_tra   %
-        %sym_G       %
-        %Sym_W       %
-        %sym_S       %
-        %x_0         % sym vector to update current state
+       
         
     end
 
@@ -40,7 +32,6 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.N     = N;
             obj.delta = delta;
             
-            %obj.x_0   = sym('x_0',[obj.n,1],'real');
             % when we do not have external varialbes to optimize we assign a dimension of one just to allow
             % matlab to provide the right functions signature
             % i need to set a dimension of 2 here in order to force the
@@ -108,15 +99,71 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             end
             
             %% Construct matrices
-            for k = 1:obj.N
-                for j = 1:k
-                    S_bar(obj.q*(k-1)+(1:obj.q),obj.m*(k-j)+(1:obj.m)) = C*A^(j-1)*B;
+            if(strcmp(obj.type,"fixed"))
+                for k = 1:obj.N
+                    for j = 1:k
+                        S_bar(obj.q*(k-1)+(1:obj.q),obj.m*(k-j)+(1:obj.m)) = C*A^(j-1)*B;
+                    end
+
+                    T_bar(obj.q*(k-1)+(1:obj.q),1:obj.n) = C*A^k;
+
+                    Q_bar(obj.q*(k-1)+(1:obj.q),obj.q*(k-1)+(1:obj.q)) = Q;
+                    R_bar(obj.m*(k-1)+(1:obj.m),obj.m*(k-1)+(1:obj.m)) = R;
                 end
+            elseif(strcmp(obj.type,"ltv"))
+                
+                % here i build all the A and B matrix with their
+                % dependancy (u_k,x_k) and the vector of variables
+                % x_inner_extended
+                obj.inner_x_ext = [];
+                all_A           = cell(obj.N,1);
+                all_B           = cell(obj.N,1);
+                % i have always to use the same variables name inside mpcModel 
+                x               = sym('x',[obj.n,1],'real');
+                u               = sym('u',[obj.m,1],'real');
+                for kk = 1:obj.N
+                    % here i create the symbolic variables
+                    cur_x_name = "x_" + num2str(kk-1);
+                    cur_u_name = "u_" + num2str(kk-1);
+                    cur_x = sym(cur_x_name,[obj.n,1],'real');
+                    cur_u = sym(cur_u_name,[obj.m,1],'real');
+                    % substitute the variables in A and B with cur_u and
+                    % cur_x
+                    cur_A = A;
+                    cur_B = B;
+                    
+                    cur_A = subs(cur_A,[x],[cur_x]);
+                    cur_A = subs(cur_A,[u],[cur_u]);
+                    
+                    cur_B = subs(cur_B,[x],[cur_x]);
+                    cur_B = subs(cur_B,[u],[cur_u]);
+                    
+                    % i store the resulting value inside all A and all B
+                    all_A{kk} = cur_A;
+                    all_B{kk} = cur_B;
+                    % i store the current variables inside inner_x_ext
+                    if(kk==1)
+                         obj.inner_x_ext = [obj.inner_x_ext;cur_u];
+                    else
+                         % the order which i store this variables is gonna
+                         % be the orders that i have to observe when i pass
+                         % the variables to the function
+                         obj.inner_x_ext = [obj.inner_x_ext;cur_x;cur_u];
+                    end
+                    
+                end
+                
+                for k = 1:obj.N
+                    for j = 1:k
+                        S_bar(obj.q*(k-1)+(1:obj.q),obj.m*(k-j)+(1:obj.m)) = C*A^(j-1)*B;
+                    end
 
-                T_bar(obj.q*(k-1)+(1:obj.q),1:obj.n) = C*A^k;
+                    T_bar(obj.q*(k-1)+(1:obj.q),1:obj.n) = C*A^k;
 
-                Q_bar(obj.q*(k-1)+(1:obj.q),obj.q*(k-1)+(1:obj.q)) = Q;
-                R_bar(obj.m*(k-1)+(1:obj.m),obj.m*(k-1)+(1:obj.m)) = R;
+                    Q_bar(obj.q*(k-1)+(1:obj.q),obj.q*(k-1)+(1:obj.q)) = Q;
+                    R_bar(obj.m*(k-1)+(1:obj.m),obj.m*(k-1)+(1:obj.m)) = R;
+                end
+                
             end
 
             %% Cost function matrices
