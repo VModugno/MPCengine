@@ -60,3 +60,9 @@ N            = 10;
 type         = "ltv"; % if the model is type ltv i need to specify the system matrix already using symbolic varialbes
 %% here i define if the model is with variable constraints or not
 mutable_constr = [];
+%% function list
+function_list.propagationModel = "std";
+function_list.costFunc         = "std";      
+function_list.constrW          = "std";      
+function_list.constrG          = "std";    
+function_list.constrS          = "std";      

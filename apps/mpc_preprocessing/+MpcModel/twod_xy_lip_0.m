@@ -95,4 +95,16 @@ mutable_constr.N_state           = 2;
 mutable_constr.const_pattern     = foot_pattern;
 mutable_constr.bounds            = bounds;
 
+obj.m_c.g    = false;
+obj.m_c.w    = true;
+obj.m_c.s    = false;
+
+%% function list
+function_list.propagationModel = "std";
+function_list.costFunc         = "std";      
+function_list.constrW          = "walking";      
+function_list.constrG          = "std";    
+function_list.constrS          = "std";  
+
+
 

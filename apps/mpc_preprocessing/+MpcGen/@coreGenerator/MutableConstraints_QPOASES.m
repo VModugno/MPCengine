@@ -1,24 +1,47 @@
 % this function substitute cCode for the mutable constraints case 
-function MutableConstraits_ub(obj,var_for_ub,namefunc,path_to_folder,vars,output)
+function MutableConstraints_QPOASES(obj,var_for_ub,namefunc,path_to_folder,vars,output,selector)
     % file of c name and header
     funfilename = [namefunc,'.cpp'];
     hfilename   = [namefunc,'.h'];
 
-    % i compute all the W inside the prediction window
-    all_W = zeros(2*(obj.N*obj.q) + 2*(obj.N*obj.m),obj.N);
-    for i=1:obj.N      
-       all_W(:,i) = obj.MutableConstraints_W(obj.u_0);
-       obj.UpdateConstrPattern();
-    end
-    % i compute all the function ub_ to stitch togheter 
-    all_ub = cell(obj.N,1);
-    for i=1:obj.N
-       all_ub{i} = all_W(:,i) + obj.sym_S*var_for_ub;
+    
+    all_rep = cell(obj.N,1);
+    
+    if(strcmp(selector,"A"))
+        for i=1:obj.N 
+            A_        = MutableConstraints_G(obj,obj.m_c.S_bar)';
+           all_rep{i} = A_(:);
+           obj.UpdateConstrPattern();
+        end   
+    elseif(strcmp(selector,"ub"))
+        % i compute all the posible W combination inside the prediction window
+        all_W = zeros(2*(obj.N*obj.q) + 2*(obj.N*obj.m),obj.N);
+        all_S = "something";
+        
+        for i=1:obj.N 
+           if(strcmp(obj.m_c.w,"pattern")) 
+                all_W(:,i) = MutableConstraints_W(obj);
+           else
+                all_W(:,i) = obj.sym_W;
+           end
+           
+           if(strcmp(obj.m_c.s,"pattern")) 
+                all_S(:,i) = MutableConstraints_S(obj,obj.m_c.T_bar);
+           else
+                all_S(:,i) = obj.sym_S;
+           end
+           
+           obj.UpdateConstrPattern();
+        end
+        % i compute all the function ub_ to stitch togheter 
+        for i=1:obj.N
+           all_rep{i} = all_W(:,i) + obj.sym_S*var_for_ub;
+        end
     end
 
     
     %% with the first ccode initilialize the function structure
-    [funstr, hstring] = obj.ccodefunctionstring(all_ub{1},'funname',namefunc,'vars',vars,'output',output);
+    [funstr, hstring] = obj.ccodefunctionstring(all_rep{1},'funname',namefunc,'vars',vars,'output',output);
     % delimiter for the second split (on the body) to separate the
     % declaration of variables from the actual value assignement
     
@@ -50,7 +73,7 @@ function MutableConstraits_ub(obj,var_for_ub,namefunc,path_to_folder,vars,output
                         + newline + '}';
     % i start to collect the structure for each variables 
     for i = 2:obj.N
-       [funstr_cur]   = obj.ccodefunctionstring(all_ub{i},'funname',namefunc,'vars',vars,'output',output);
+       [funstr_cur]   = obj.ccodefunctionstring(all_rep{i},'funname',namefunc,'vars',vars,'output',output);
        first_split    = strsplit(funstr_cur,{'{','}'});
        second_split   = strsplit(first_split{2},{char(delimiter)});       
        cpp_final_func = cpp_final_func + "else if(ind1=="+ num2str(i-1) + "){" + newline + second_split{2} + newline + "}";

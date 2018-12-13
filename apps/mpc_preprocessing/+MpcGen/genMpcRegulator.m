@@ -5,15 +5,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
           
         maxInput    
         maxOutput 
-        inner_x_ext
-        propagationModel 
-        costFunc
-        constrW
-        constrG
-        constrS
-        MutableConstraints_W   % function handle to the mutable constraints W
-        MutableConstraints_G   % function handle to the mutable constraints G
-        MutableConstraints_S   % function handle to the mutable constraints S
+        
         cur_W                  % auxiliary variable introduce as a unique entry both for 
         cur_G
         cur_S
@@ -26,10 +18,10 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
     methods
         function obj = genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta,N,state_gain,control_cost,...
-                                       type,solver,generate_functions,discretized,mutable_constr)
+                                       type,solver,generate_functions,discretized,mutable_constr,function_list)
             
             % call super class constructor
-            obj = obj@MpcGen.coreGenerator(type,solver,generate_functions,size(A_cont,1),size(B_cont,2),size(C_cont,1),N);
+            obj = obj@MpcGen.coreGenerator(type,solver,generate_functions,size(A_cont,1),size(B_cont,2),size(C_cont,1),N,function_list);
             
             % problem structure
             obj.type         = type; 
@@ -105,27 +97,36 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.m_c = mutable_constr;
             if(isempty(mutable_constr))
                 obj.m_c_flag = false;
+                obj.m_c.g    = "nonMut";
+                obj.m_c.w    = "nonMut";
+                obj.m_c.s    = "nonMut";
             else
                 obj.m_c_flag = true;
                 if(obj.m_c.g)
                     obj.m_c.g = "pattern";
                 else
-                    obj.m_c.g ="";
+                    obj.m_c.g ="nonMut";
                 end
                 if(obj.m_c.w)
                     obj.m_c.w = "pattern";
                 else
-                    obj.m_c.w ="";
+                    obj.m_c.w ="nonMut";
                 end
                 if(obj.m_c.s)
                     obj.m_c.s = "pattern";
                 else
-                    obj.m_c.s ="";
+                    obj.m_c.s ="nonMut";
                 end
             end
             
+            %% overWrite A and B if the system is LTV and i Initialize inner_x_ext
+            if(strcmp(obj.type,"ltv"))
+                [A,B]=ComputeMatricesLTV(obj,A,B,C);
+            else
+                obj.inner_x_ext = []; % empty vector
+            end
             %% Construct matrices (it automatically detects fixed or ltv)
-            propModelCall             = "CostFunc.propagationModel_regulator_"+ type + "_" + obj.propagationModel + "(obj,A,B,C)";
+            propModelCall             = "CostFunc.propagationModel_regulator_"+ type + "_" + obj.propagationModel + "(obj,A,B,C,Q,R)";
             [S_bar,T_bar,Q_bar,R_bar] = eval(propModelCall);
 
             %% Cost function matrices
@@ -220,7 +221,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
         end
         
         % xu_oracle_traj has to contain all the trajectory from the current
-        % state to the future one
+        % state to the future one (for now we keep the oracle otside the MPC controller as a separated object)
         function tau = ComputeControl(obj,x_cur,xu_oracle_trajectory)
              if(strcmp(obj.type,"ltv"))
                  H     = obj.H(xu_oracle_trajectory);
@@ -274,6 +275,45 @@ classdef genMpcRegulator < MpcGen.coreGenerator
              end
         end
         
+        function [all_A,all_B]=ComputeMatricesLTV(obj,A,B,C)
+            obj.inner_x_ext = [];
+            all_A           = cell(obj.N,1);
+            all_B           = cell(obj.N,1);
+            % i have always to use the same variables name inside mpcModel 
+            x               = sym('x',[obj.n,1],'real');
+            u               = sym('u',[obj.m,1],'real');
+            for kk = 1:obj.N
+                % here i create the symbolic variables
+                cur_x_name = "x_" + num2str(kk-1);
+                cur_u_name = "u_" + num2str(kk-1);
+                cur_x = sym(cur_x_name,[obj.n,1],'real');
+                cur_u = sym(cur_u_name,[obj.m,1],'real');
+                % substitute the variables in A and B with cur_u and
+                % cur_x
+                cur_A = A;
+                cur_B = B;
+
+                cur_A = subs(cur_A,[x],[cur_x]);
+                cur_A = subs(cur_A,[u],[cur_u]);
+
+                cur_B = subs(cur_B,[x],[cur_x]);
+                cur_B = subs(cur_B,[u],[cur_u]);
+
+                % i store the resulting value inside all A and all B
+                all_A{kk} = cur_A;
+                all_B{kk} = cur_B;
+                % i store the current variables inside inner_x_ext
+                if(kk==1)
+                     obj.inner_x_ext = [obj.inner_x_ext;cur_u];
+                else
+                     % the order which i store this variables is gonna
+                     % be the orders that i have to observe when i pass
+                     % the variables to the function
+                     obj.inner_x_ext = [obj.inner_x_ext;cur_x;cur_u];
+                end
+
+            end
+        end
         
         function GenFunctions(obj) 
              GenFunctions@MpcGen.coreGenerator(obj)  

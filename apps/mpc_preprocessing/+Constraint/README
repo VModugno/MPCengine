@@ -1,0 +1,42 @@
+in this folder we store to different kind of functions:
+
+- function to compute S
+- function to compute G
+- function to comptue W
+
+
+each of this three functions compute a different part of the constraints matrices of our batch mpc.
+trough this function we could specify special method in order to manage mutable constraints of any kind (for an example look at Regulator_W_pattern_walking.m)
+
+
+
+ the three set of functions has a specific signature that has to be satisfied in order to make them works with if you want to build one by 
+yourself
+
+compute S
+
+[S]     =    regulator/tracker   _S_         nonMut/pattern          _actual_name_of_the_method            (obj,T_bar)
+
+mandatory        mpc kind      mandatory      mutable or not            authors choice                 mandatory
+
+compute G
+
+[G]         =   regulator/tracker    _G_      nonMut/pattern       _actual_name_of_the_method    (obj,S_bar)
+mandatory         mpc kind        mandatory     mutable or not            authors choice             mandatory
+
+compute W
+
+[W]          =          regulator/tracker    _W_            nonMut/pattern         _actual_name_of_the_method     (obj)
+mandatory                  mpc kind       mandatory            mutable or not         authors choice            mandatory
+
+
+for constraints all the "std" represents the classic methods that are not mutable all the other method thas has a different name require that
+mutable_constr has to be properly configured to work 
+for this methods it is not necessary to specify fixed or ltv because they work seaminglessly in both cases 
+
+
+inside the mpcModel configuration file in order to select the desired function it is only necessary to specify the actual_name_of_the_method the rest of the signature is automatically composed by the mpcGen constructor
+
+
+
+

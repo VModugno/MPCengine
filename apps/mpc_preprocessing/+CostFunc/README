@@ -1,0 +1,31 @@
+in this folder we store to different kind of function:
+
+- propagation model 
+- cost function
+
+
+the propagation model are responsible of proapating the linear model to get the batch rapresentation of our mpc problem
+
+the cost function computes the matrices H and g (for qpoases) using the results from the propagation models
+
+
+both the two set of function has a specific signature that has to be satisfied in order to make them works with if you want to build one by 
+yourself
+
+propagation model signature
+
+[S_bar, T_bar,Q_bar,R_bar] = propagationModel_regulator/tracker_fixed/ltv_actual_name_of_the_method(obj,A,B,C,Q,R)
+
+    mandatory                     mandatory       mpc kind       ltv or not     authors choice           mandatory
+
+for ltv method A and B are cell array (look at propagationModel_regulator_ltv_std.m for an example)
+
+
+ const function signature
+
+[H,F_tra]=regulator/tracker_actual_name_of_the_method(S_bar,T_bar,Q_bar,R_bar)
+mandatory     mpc kind             authors choice             mandatory
+
+
+
+inside the mpcModel configuration file in order to select the desired function it is only necessary to specify the actual_name_of_the_method the rest of the signature is automatically composed by the mpcGen constructor

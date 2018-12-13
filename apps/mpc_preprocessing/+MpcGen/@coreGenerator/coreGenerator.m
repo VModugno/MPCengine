@@ -40,6 +40,16 @@ classdef coreGenerator <  handle
         G
         W
         S
+        
+        inner_x_ext            % variable used to get the trajectories from the oracle (for LTV propagation) 
+        propagationModel       % (str) name of the function that we will use 
+        costFunc               % (str) name of the function that we will use 
+        constrW                % (str) name of the function that we will use 
+        constrG                % (str) name of the function that we will use 
+        constrS                % (str) name of the function that we will use 
+        MutableConstraints_W   % function handle to the mutable constraints W
+        MutableConstraints_G   % function handle to the mutable constraints G
+        MutableConstraints_S   % function handle to the mutable constraints S
        
         
     end
@@ -50,13 +60,18 @@ classdef coreGenerator <  handle
    
     methods
        
-        function obj = coreGenerator(type,solver,generate_functions,n,m,q,N)
-            obj.index   = sym('ind',[1,1],'real');
-            obj.x_0     = sym('x_0',[n,1],'real');
-            obj.u_0     = sym('u_0',[m,1],'real');
-            obj.ref_0   = sym('ref_0',[N*q,1],'real');
-            obj.type   = type;
-            obj.solver = solver;
+        function obj = coreGenerator(type,solver,generate_functions,n,m,q,N,function_list)
+            obj.index            = sym('ind',[1,1],'real');
+            obj.x_0              = sym('x_0',[n,1],'real');
+            obj.u_0              = sym('u_0',[m,1],'real');
+            obj.ref_0            = sym('ref_0',[N*q,1],'real');
+            obj.type             = type;
+            obj.solver           = solver;
+            obj.propagationModel = function_list.propagationModel;    % (str) name of the function that we will use 
+            obj.costFunc         = function_list.costFunc;            % (str) name of the function that we will use 
+            obj.constrW          = function_list.constrW;             % (str) name of the function that we will use 
+            obj.constrG          = function_list.constrG;             % (str) name of the function that we will use 
+            obj.constrS          = function_list.constrS;             % (str) name of the function that we will use 
             obj.GetBasePath();
             if(generate_functions)
                 if ~exist(obj.basepath,'dir')
@@ -94,7 +109,9 @@ classdef coreGenerator <  handle
                if(strcmp(obj.problemClass,"tracker"))
                     inner_x = [obj.x_0;obj.u_0;obj.ref_0;obj.index];
                else
-                    inner_x = [obj.x_0;obj.index];
+                   % if the system is not LTV obj.inner_x_ext is gonna be
+                   % zero
+                    inner_x = [obj.x_0;obj.inner_x_ext;obj.index];
                end
                %% hessian cost function 
                disp('generating H')
@@ -114,16 +131,20 @@ classdef coreGenerator <  handle
                obj.PostProcessFunctionForqpOASES('compute_g','g')
                %% linear term constraints
                disp('generating A')
-               A_  = obj.sym_G';
-               A_  = A_(:);
-               obj.cCode(A_,'compute_A','current_func',{inner_x,obj.outer_x},'A');
-               obj.PostProcessFunctionForqpOASES('compute_A','A')
+               if(strcmp(obj.m_c.g,"pattern"))
+                   obj.MutableConstraints_QPOASES([],'compute_A','current_func',{inner_x,obj.outer_x},'A');
+               else
+                   A_  = obj.sym_G';
+                   A_  = A_(:);
+                   obj.cCode(A_,'compute_A','current_func',{inner_x,obj.outer_x},'A');
+                   obj.PostProcessFunctionForqpOASES('compute_A','A')
+               end
                %% constant term constraints
                disp('generating ub')
                if(strcmp(obj.problemClass,"tracker"))
-                   if(obj.m_c_flag)
+                   if(strcmp(obj.m_c.w,"pattern") || strcmp(obj.m_c.s,"pattern"))
                         % with this functions i write the function and i correct it 
-                        obj.MutableConstraits_ub([obj.x_0;obj.u_0],'compute_ub','current_func',{inner_x,obj.outer_x},'ub');
+                        obj.MutableConstraints_QPOASES([obj.x_0;obj.u_0],'compute_ub','current_func',{inner_x,obj.outer_x},'ub');
                    else
                         ub_ = obj.sym_W + obj.sym_S*[obj.x_0;obj.u_0];
                         % with this functions i write the function and i correct it 
@@ -131,9 +152,9 @@ classdef coreGenerator <  handle
                         obj.PostProcessFunctionForqpOASES('compute_ub','ub') 
                    end
                else
-                    if(obj.m_c_flag)
+                    if(strcmp(obj.m_c.w,"pattern") || strcmp(obj.m_c.s,"pattern"))
                         % with this functions i write the function and i correct it 
-                        obj.MutableConstraits_ub(obj.x_0,'compute_ub','current_func',{inner_x,obj.outer_x},'ub');
+                        obj.MutableConstraints_QPOASES(obj.x_0,'compute_ub','current_func',{inner_x,obj.outer_x},'ub');
                     else
                         ub_ = obj.sym_W + obj.sym_S*obj.x_0;
                         % with this functions i write the function and i correct it 
@@ -264,9 +285,9 @@ classdef coreGenerator <  handle
        
     end
     
-    methods(Abstract)
-        W = MutableConstraints_W(obj,u_cur);
-    end
+    %methods(Abstract)
+    %    W = MutableConstraints_W(obj,u_cur);
+    %end
     
     
 end

@@ -6,17 +6,17 @@ clc
 generate_func    = false;
 %%
 %% simulate the mpc 
-start_simulation = true;
+start_simulation = false;
 %%
 %% activate or deactivate visualization
-visualization    = true;
+visualization    = false;
 %%
 %% logging data for comparison with results obtained with c++
-logging          = true;
+logging          = false;
 %% MPC Model
 model_name       = "cart_pole_1"; %twod_xy_lip_0
 
-%% experiment time structure (for the environment)
+%% experiment time structure (for the environment different from the internal time)
 ft         = 5;       % 20 50 
 delta_t    = 0.01;    % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
@@ -46,7 +46,7 @@ if(strcmp(control_mode,"regulator"))
     %% MPC ----------------------------------------------------------------    
     % regulator 
     controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,internal_dt,N,state_gain,control_cost,...
-                                        type,solver,generate_func,discretized,mutable_constr); 
+                                        type,solver,generate_func,discretized,mutable_constr,function_list); 
 elseif(strcmp(control_mode,"tracker"))
     %% system -------------------------------------------------------------
     str = "MpcModel." + model_name + ".m";

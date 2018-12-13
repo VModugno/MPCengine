@@ -1,6 +1,6 @@
 
 
-function  [S_bar, T_bar,Q_bar,R_bar] = propagationModel_regulator_fixed_std(obj,A,B,C)
+function  [S_bar, T_bar,Q_bar,R_bar] = propagationModel_regulator_fixed_std(obj,A,B,C,Q,R)
 
     for k = 1:obj.N
         for j = 1:k

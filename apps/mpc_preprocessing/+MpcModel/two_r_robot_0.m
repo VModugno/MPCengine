@@ -33,6 +33,12 @@ N             = 20;
 type          = "fixed"; 
 %% here i define is the model is with mutable constraints or not
 mutable_constr = [];
+%% function list
+function_list.propagationModel = "std";
+function_list.costFunc         = "std";      
+function_list.constrW          = "walking";      
+function_list.constrG          = "std";    
+function_list.constrS          = "std"; 
 %% here i define the trajectory (only for tracking only)
 % sin traj
 q1des_t  = pi/2*sin(t);

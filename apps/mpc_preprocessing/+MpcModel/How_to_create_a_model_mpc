@@ -14,7 +14,7 @@ for discretized system
 	C           = tre matrix of the linearized/linear system
 
 discretized   = a flag that specify if the system is discretized or not
-feedback_lin  = 
+feedback_lin  = i speify here if i want to compute the feedback lin for the system or not
 
 init_state    = initial state of the system 
 maxOutput
@@ -34,6 +34,19 @@ mutable_const.const_pattern     = size(N,N_state), here i define the pattern for
                                   each pattern has zero and one corresponding to when the constraints are active or not 
                                   the 1 and zero of each pattern are not overlapping
 
-mutable_const.bounds            = size(q,N_state), this contains the mutable constraints one for each state 
+mutable_const.bounds            = size(q,N_state), this contains the mutable constraints one for each state
+
+obj.m_c.g    = false;           this flag tell the system wich of the constraints component is mutable  
+obj.m_c.w    = true;
+obj.m_c.s    = false;
+
+
+function_list.propagationModel = "std";      in each of this string variable i need to specify the specific name of each method i want to use
+function_list.costFunc         = "std";      the rest of the method signature is automatically computed by the class
+function_list.constrW          = "std";      
+function_list.constrG          = "std";    
+function_list.constrS          = "std";   
+
+ 
 
 x_des_model                     = define the sequence of desired input (for tracking mpc only)
