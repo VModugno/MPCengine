@@ -6,7 +6,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
         maxInput    
         maxOutput 
         
-        cur_W                  % auxiliary variable introduce as a unique entry both for 
+        cur_W                  % auxiliary variable introduce to omogenize the input to the controller
         cur_G
         cur_S
         
@@ -135,42 +135,45 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             %% Constraints matrices
             
             % g function
-            % through obj.m_c.g we now if g is mutable or not 
+            % through obj.m_c.g we know if g is mutable or not 
             constrFuncG_Call = "Constraint.regulator_G_" +obj.m_c.g + "_" + obj.constrG + "(obj,S_bar)";
             obj.G            = eval(constrFuncG_Call);
              % if G is mutable i need to store the current function inside
              % a function handle of the class (needded both for func gen and compute control)
              % and i need to store the variables that G is depending upon
             if(strcmp(obj.m_c.g,"pattern"))
-                obj.MutableConstraints_G = str2func(constrFuncG_Call);
-                obj.m_c.S_bar = S_bar;
+                str2funcCall             = "Constraint.regulator_G_" +obj.m_c.g + "_" + obj.constrG + "(obj,S_bar)";
+                obj.MutableConstraints_G = str2func(str2funcCall);
+                obj.m_c.S_bar            = S_bar;
             end
             % S function
-            % through obj.m_c.s we now if g is mutable or not 
+            % through obj.m_c.s we know if g is mutable or not 
             constrFuncS_Call = "Constraint.regulator_S_" +obj.m_c.s + "_" + obj.constrS + "(obj,T_bar)";
             obj.S            = eval(constrFuncS_Call);
             % if S is mutable i need to store the current function inside
             % a function handle of the class (needded both for func gen and compute control)
             % and i need to store the variables that G is depending upon
             if(strcmp(obj.m_c.s,"pattern"))
-                obj.MutableConstraints_S = str2func(constrFuncS_Call);
-                obj.m_c.T_bar = T_bar;
+                str2funcCall             = "Constraint.regulator_S_" +obj.m_c.s + "_" + obj.constrS;   
+                obj.MutableConstraints_S = str2func(str2funcCall);
+                obj.m_c.T_bar            = T_bar;
             end
              % w function
-             % through obj.m_c.w we now if g is mutable or not 
+             % through obj.m_c.w we know if g is mutable or not 
             constrFuncW_Call = "Constraint.regulator_W_" +obj.m_c.w + "_" + obj.constrW + "(obj)";
             obj.W            = eval(constrFuncW_Call);
             % if W is mutable i need to store the current function inside
             % a function handle of the class (needded both for func gen and compute control)
             % and i need to store the variables that G is depending upon
             if(strcmp(obj.m_c.w,"pattern"))
-                obj.MutableConstraints_W = str2func(constrFuncW_Call);
+                str2funcCall             = "Constraint.regulator_W_" +obj.m_c.w + "_" + obj.constrW;
+                obj.MutableConstraints_W = str2func(str2funcCall);
             end
             
             % i copy all the matrix in the sym_* variables in order to pass them to  the function generation method 
             obj.sym_H      = sym(obj.H);                   
             obj.sym_F_tra  = sym(obj.F_tra); 
-            obj.sym_G      = sym(obj.G);      % for the function generation it works only if G is not mutable (it works right away both fixed and ltv)
+            obj.sym_G      = sym(obj.G);      % for the function generation it works only if G is not mutable (it should works right away both fixed and ltv)
             obj.sym_W      = sym(obj.W);      % for the function generation it works only if W is not mutable (it works right away both fixed and ltv)
             obj.sym_S      = sym(obj.S);      % for the function generation it works only if W is not mutable (it works right away both fixed and ltv)
             
@@ -194,6 +197,10 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             if(strcmp(obj.m_c.g,"pattern"))
                 if(strcmp(obj.type,"ltv"))
                     obj.m_c.S_bar_func       = matlabFunction(obj.m_c.S_bar,'vars', {obj.x_0,obj.inner_x_ext});
+                elseif(strcmp(obj.type,"fixed"))
+                    % in the case of fixed pattern i need to initialize the
+                    % current matrix value with the one computed before 
+                    obj.cur_G = obj.G;     
                 end      
             else
                 if(strcmp(obj.type,"ltv"))
@@ -204,12 +211,22 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             if(strcmp(obj.m_c.s,"pattern"))
                 if(strcmp(obj.type,"ltv"))
                     obj.m_c.T_bar_func       = matlabFunction(obj.m_c.T_bar,'vars', {obj.x_0,obj.inner_x_ext});
+                elseif(strcmp(obj.type,"fixed"))
+                    % in the case of fixed pattern i need to initialize the
+                    % current matrix value with the one computed before
+                    obj.cur_S = obj.S;
                 end 
 
             else
                 if strcmp(obj.type,"ltv")
                     obj.S = matlabFunction(obj.S,'vars', {obj.x_0,obj.inner_x_ext});
                 end
+            end
+            % W post-processing
+            if(strcmp(obj.m_c.w,"pattern"))
+                % in the case of fixed pattern i need to initialize the
+                % current matrix value with the one computed before
+                obj.cur_W = obj.W;
             end
             
             
@@ -221,7 +238,8 @@ classdef genMpcRegulator < MpcGen.coreGenerator
         end
         
         % xu_oracle_traj has to contain all the trajectory from the current
-        % state to the future one (for now we keep the oracle otside the MPC controller as a separated object)
+        % state to the last one in the future inside the prediction window
+        % (for now we keep the oracle outside the MPC controller as a separated object)
         function tau = ComputeControl(obj,x_cur,xu_oracle_trajectory)
              if(strcmp(obj.type,"ltv"))
                  H     = obj.H(xu_oracle_trajectory);
@@ -249,7 +267,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                  else
                     obj.cur_S  = obj.S;
                  end
-                 if(~strcmp(obj.m_w.g,"pattern"))
+                 if(~strcmp(obj.m_c.w,"pattern"))
                     obj.cur_W  = obj.W;
                  end
              end
@@ -262,13 +280,13 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                  % i assume that the pattern are the same for every
                  %  matrix constraint
                  obj.UpdateConstrPattern();
-                 if(strcmp(obj.m_w.g,"pattern"))
+                 if(strcmp(obj.m_c.g,"pattern"))
                     obj.cur_G   = obj.MutableConstraints_G(obj,S_bar);
                  end
-                 if(strcmp(obj.m_w.S,"pattern"))
+                 if(strcmp(obj.m_c.s,"pattern"))
                      obj.cur_S   = obj.MutableConstraints_S(obj,T_bar);
                  end
-                 if(strcmp(obj.m_w.w,"pattern"))
+                 if(strcmp(obj.m_c.w,"pattern"))
                     obj.cur_W   = obj.MutableConstraints_W(obj);
                  end
                  

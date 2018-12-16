@@ -45,8 +45,8 @@ A_x = blkdiag(A_lip, A_foot, A_foot, A_dummy, A_dummy);
 A_y = blkdiag(A_lip, A_foot, A_foot, A_dummy, A_dummy);
 B = blkdiag(B_lip, B_foot, B_foot);
 B(end+2,end) = 0; % additional empty inputs for the dummy states
-A = blkdiag(A_x, A_y);
-B = blkdiag(B, B);
+A_cont = blkdiag(A_x, A_y);
+B_cont = blkdiag(B, B);
 
 % System outputs
 C  = [0, 1, 0, 0, 0, 0, 0, 0,-1;  % com velocity to vref 
@@ -55,7 +55,7 @@ C  = [0, 1, 0, 0, 0, 0, 0, 0,-1;  % com velocity to vref
       0, 0, 1,-1, 0, 0, 0, 0, 0;  % zmp from left foot
       0, 0, 1, 0, 0,-1, 0, 0, 0;  % zmp from right foot
       0, 0, 0, 1, 0,-1, 0, 1, 0]; % foot to foot
- C = blkdiag(C, C);
+ C_cont = blkdiag(C, C);
 
 % with this flag i tell the MPC constructor if the matrix has already been discretized or not      
 discretized = true;
@@ -98,9 +98,9 @@ mutable_constr.N_state           = 2;
 mutable_constr.const_pattern     = foot_pattern;
 mutable_constr.bounds            = bounds;
 
-obj.m_c.g    = false;
-obj.m_c.w    = true;
-obj.m_c.s    = false;
+mutable_constr.g    = false;
+mutable_constr.w    = true;
+mutable_constr.s    = false;
 
 %% function list
 function_list.propagationModel = "std";

@@ -120,8 +120,8 @@ public:
 		// convert to a string
 		std::string path = pathfs.string();
 		// concat string
-		ss_state  << path <<  "apps/mpc_preprocessing/@log/" << filename_state;
-		ss_action << path <<  "apps/mpc_preprocessing/@log/" << filename_action;
+		ss_state  << path <<  "/apps/mpc_preprocessing/@log/" << filename_state;
+		ss_action << path <<  "/apps/mpc_preprocessing/@log/" << filename_action;
 
 		// get the final path
 		std::string full_path_state  = ss_state.str();

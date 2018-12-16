@@ -30,6 +30,7 @@ class qpoasesSolver  : public AbsSolver {
 	    void computeMatrix(qpOASES::real_t  H[],qpOASES::real_t g[],qpOASES::real_t A[],qpOASES::real_t ubA[],double * xi_in,double * xi_ext,ProblemDetails & pd);
 	    // solver parameters
 		qpOASES::int_t nWSR;
+		qpOASES::int_t original_nWSR;   // i need this variables in order to restore the value of nwrs (that is overwritten by the method)
 		//double mpcTimeStep          = 100;
 		//double controlTimeStep      = 100;
 

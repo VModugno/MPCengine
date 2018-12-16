@@ -9,7 +9,7 @@ control_mode     = "regulator"; % tracker, regulator
 %% activate or deactivate visualization
 visualization    = false;
 %% activate or deactivate state plot againist desired trajectory or state trajectories from matlab mpc
-plot_flag        = false;
+plot_flag        = true;
 
 
 % open file inside @log
@@ -118,15 +118,13 @@ if(plot_flag)
         plot(state_cpp(:,2));
     elseif(strcmp(control_mode,"regulator"))
         
-        figure
-        plot(all_states_gt(:,1),'r')
-        hold on
-        plot(state_cpp(:,1),'b');
-
-        figure
-        plot(all_states_gt(:,3),'r')
-        hold on
-        plot(state_cpp(:,3),'b');
+        
+        for i =1:size(all_states_gt,2)
+            figure
+            plot(all_states_gt(:,i),'r')
+            hold on
+            plot(state_cpp(:,i),'b');
+        end
     end
 end
 

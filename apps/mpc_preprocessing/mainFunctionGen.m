@@ -3,7 +3,7 @@ close all
 clc
 
 %% activate or deactivate function generation
-generate_func    = false;
+generate_func    = true;
 %%
 %% simulate the mpc 
 start_simulation = false;
@@ -12,13 +12,13 @@ start_simulation = false;
 visualization    = false;
 %%
 %% logging data for comparison with results obtained with c++
-logging          = false;
+logging          = true;
 %% MPC Model
-model_name       = "cart_pole_1"; %twod_xy_lip_0
+model_name       = "twod_xy_lip_0"; 
 
 %% experiment time structure (for the environment different from the internal time)
 ft         = 5;       % 20 50 
-delta_t    = 0.01;    % 0.1 0.01 (to the env class)
+delta_t    = 0.05;    % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
 
 %% MPC parameters
@@ -32,13 +32,6 @@ if(strcmp(control_mode,"regulator"))
     %% system -------------------------------------------------------------
     str        = "MpcModel." + model_name + ".m";
     run(str);
-    % if the system is already discretized i need to substitute the
-    % symbolical dt with its actual value
-%     if(discretized)
-%         A_cont = double(subs(A,delta_t));
-%         B_cont = double(subs(B,delta_t));
-%         C_cont = double(subs(C,delta_t));
-%     end
     %% environment for regulator ------------------------------------------
     reward     = @(x,u)(norm(x));
     env_call   = "Env."+ env_name + "(init_state,delta_t,reward)";

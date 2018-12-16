@@ -80,11 +80,11 @@ int main(){
 	for(int i=0;i<steps;i++){
 		// updating environment
 		//DEBUG
-		//std::cout <<"action = "<<action << std::endl;
+	    std::cout <<"action = "<<action << std::endl;
 
 		env->Step(action,new_state,mes_acc);
 		//DEBUG
-		//std::cout <<"new_state = "<<new_state << std::endl;
+		std::cout <<"new_state = "<<new_state << std::endl;
 		// update state
 		cur_state = new_state;
 		// compute control actions

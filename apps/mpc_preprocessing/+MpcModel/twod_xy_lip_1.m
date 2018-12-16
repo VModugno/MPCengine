@@ -40,20 +40,20 @@ A_foot = eye(2) + internal_dt*[0, 1; 0, 0];
 B_foot = internal_dt*[0; 1];
 
 % Full system
-A_x = blkdiag(A_lip, A_foot, A_foot);
-A_y = blkdiag(A_lip, A_foot, A_foot);
-B = blkdiag(B_lip, B_foot, B_foot);
-A = blkdiag(A_x, A_y);
-B = blkdiag(B, B);
+A_x    = blkdiag(A_lip, A_foot, A_foot);
+A_y    = blkdiag(A_lip, A_foot, A_foot);
+B      = blkdiag(B_lip, B_foot, B_foot);
+A_cont = blkdiag(A_x, A_y);
+B_cont = blkdiag(B, B);
 
 % System outputs
-C  = [0, 1, 0, 0, 0, 0, 0;  % com velocity 
-      0, 0, 0, 0, 1, 0, 0;  % left foot velocity
-      0, 0, 0, 0, 0, 0, 1;  % right foot velocity
-      0, 0, 1,-1, 0, 0, 0;  % zmp from left foot
-      0, 0, 1, 0, 0,-1, 0;  % zmp from right foot
-      0, 0, 0, 1, 0,-1, 0]; % foot to foot
- C = blkdiag(C, C);
+C       = [0, 1, 0, 0, 0, 0, 0;  % com velocity 
+           0, 0, 0, 0, 1, 0, 0;  % left foot velocity
+           0, 0, 0, 0, 0, 0, 1;  % right foot velocity
+           0, 0, 1,-1, 0, 0, 0;  % zmp from left foot
+           0, 0, 1, 0, 0,-1, 0;  % zmp from right foot
+           0, 0, 0, 1, 0,-1, 0]; % foot to foot
+ C_cont = blkdiag(C, C);
 
 % with this flag i tell the MPC constructor if the matrix has already been discretized or not      
 discretized = true;
@@ -95,9 +95,9 @@ mutable_constr.N_state           = 2;
 mutable_constr.const_pattern     = foot_pattern;
 mutable_constr.bounds            = bounds;
 
-obj.m_c.g    = false;
-obj.m_c.w    = true;
-obj.m_c.s    = false;
+mutable_constr.g    = false;
+mutable_constr.w    = true;
+mutable_constr.s    = false;
 
 %% function list
 function_list.propagationModel = "std";

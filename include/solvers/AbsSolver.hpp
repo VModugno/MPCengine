@@ -36,11 +36,12 @@ public:
 
 protected:
     // problem parameters
-	int n;        // state   space dim
-	int m;        // control space dim
-	int p;        // output  space dim
-	int N;        // prediction window
-	int N_constr; // number of constraints
+	int n;                         // state   space dim
+	int m;                         // control space dim
+	int p;                         // output  space dim
+	int N;                         // prediction window
+	int N_constr;                  // number of constraints
+	bool time_perfomance = false;  // activate or deactivate perfomance computation
 
 };
 

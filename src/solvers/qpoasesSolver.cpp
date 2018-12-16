@@ -19,20 +19,22 @@ qpoasesSolver::qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string t
     this->N_constr    = N_constr;
     int nVariables    = this->N * this->m;
     int nConstraints  = this->N * this->N_constr;
-    this->nWSR        = 300;
     this->direct_solution = direct_solution;
     if(direct_solution){
 		this->qp   = qpOASES::QProblem(nVariables,nConstraints);
 	}else{
 		this->sqp  = qpOASES::SQProblem(nVariables,nConstraints);
 	}
-	this->nWSR     = 10;
+    original_nWSR  = 300;
+	this->nWSR     = original_nWSR;
 	// set qpoases option
 	//options.setToReliable();
 	options.setToMPC();
 	options.printLevel           = qpOASES::PL_HIGH;//qpOASES::PL_HIGH;
 	options.enableNZCTests       = qpOASES::BT_TRUE;
 	options.enableFlippingBounds = qpOASES::BT_TRUE;
+
+	time_perfomance = true;
 
 }
 
@@ -72,13 +74,16 @@ qpoasesSolver::qpoasesSolver(const std::string filename,bool direct_solution){
     }else{
     	this->sqp  = qpOASES::SQProblem(nVariables,nConstraints);
     }
-    this->nWSR     = 1;
+    original_nWSR  = 300;
+    this->nWSR     = original_nWSR;
     // set qpoases option
 	//options.setToReliable();
 	options.setToMPC();
-	options.printLevel           = qpOASES::PL_NONE;//qpOASES::PL_HIGH;
-	//options.enableNZCTests       = qpOASES::BT_TRUE;
-	//options.enableFlippingBounds = qpOASES::BT_TRUE;
+	options.printLevel           = qpOASES::PL_HIGH;//qpOASES::PL_HIGH;
+	options.enableNZCTests       = qpOASES::BT_TRUE;
+	options.enableFlippingBounds = qpOASES::BT_TRUE;
+
+	time_perfomance = true;
 
 }
 
@@ -198,19 +203,32 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi
 	qpOASES::real_t xOpt[nVariables_batch];
 	Eigen::VectorXd decisionVariables(this->m);
 
-	auto start = std::chrono::high_resolution_clock::now();
+	// DEBUGGING TIME
+	std::chrono::high_resolution_clock::time_point start;
+	std::chrono::high_resolution_clock::time_point stop;
+	std::chrono::duration<double> duration;
+	if(time_perfomance){
+		start = std::chrono::high_resolution_clock::now();
+	}
 	// compute components
 	computeMatrix(H,g,A,ubA,xi,xi_e,pd);
-	auto stop = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-	std::cout <<"compute matrices time = " <<duration.count() << std::endl;
-	// compute solutions
-	qpOASES::returnValue ret;
+	// DEBUGGING TIME
+	if(time_perfomance){
+		stop = std::chrono::high_resolution_clock::now();
+		duration = std::chrono::duration_cast<std::chrono::duration<double> >(stop - start);
+		std::cout <<"compute matrices time = " <<duration.count()<<" s" << std::endl;
+	}
+
 	//DEBUG
 	//std::cout << "this->nWSR = "<<this->nWSR<<std::endl;
     // restore nWSR
-	start = std::chrono::high_resolution_clock::now();
-	this->nWSR = 1;
+	// DEBUGGING TIME
+	if(time_perfomance){
+		start = std::chrono::high_resolution_clock::now();
+	}
+	// compute solutions
+	qpOASES::returnValue ret;
+	this->nWSR = original_nWSR;
 	if(direct_solution){
 		qp.reset();
 		this->qp.setOptions(options);
@@ -223,7 +241,7 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi
 			//DEBUG
 			//std::cout << "this->nWSR = "<<this->nWSR<<std::endl;
 			// restore nWSR
-			this->nWSR = 1;
+			this->nWSR = original_nWSR;
 			// resetting QP and restarting it
 			sqp.reset();
 			this->sqp.setOptions(options);
@@ -232,9 +250,12 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi
 		// compute
 		sqp.getPrimalSolution(xOpt);
 	}
-	stop = std::chrono::high_resolution_clock::now();
-	duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-	std::cout <<"compute qp time = " <<duration.count() << std::endl;
+	//DEBUGGING TIME
+	if(time_perfomance){
+		stop = std::chrono::high_resolution_clock::now();
+		duration = std::chrono::duration_cast<std::chrono::duration<double> >(stop - start);
+		std::cout <<"compute qp time = " <<duration.count()<<" s" << std::endl;
+	}
 	// collecting first action
 	for(int i=0;i<m;++i){
 		decisionVariables(i) = xOpt[i];
@@ -260,11 +281,27 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetai
 	qpOASES::real_t xOpt[nVariables];
 	Eigen::VectorXd decisionVariables(this->m);
 
+	// DEBUGGING TIME
+	std::chrono::high_resolution_clock::time_point start;
+	std::chrono::high_resolution_clock::time_point stop;
+	std::chrono::duration<double> duration;
+	if(time_perfomance){
+		start = std::chrono::high_resolution_clock::now();
+	}
 	// compute components
 	computeMatrix(H,g,A,ubA,xi_in,xi_ext,pd);
+	// DEBUGGING TIME
+	if(time_perfomance){
+		stop = std::chrono::high_resolution_clock::now();
+		duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+		std::cout <<"compute matrices time = " <<duration.count() << " s" << std::endl;
+	}
+	// DEBUGGING TIME
+	if(time_perfomance){
+			start = std::chrono::high_resolution_clock::now();
+	}
 	// compute solutions
-	//qpOASES::int_t new_nWSR = 30000;
-	this->nWSR = 100;
+	this->nWSR = original_nWSR;
 	qpOASES::returnValue ret;
 	if(direct_solution){
 		qp.reset();
@@ -275,7 +312,7 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetai
 		ret       = sqp.hotstart(H,g,A,NULL,NULL,NULL,ubA,this->nWSR,NULL);
 		bool pass = this->GetVerySimpleStatus(ret,false);
 		if(!pass){
-			this->nWSR = 100;
+			this->nWSR = original_nWSR;
 			// resetting QP and restarting it
 			sqp.reset();
 			this->sqp.setOptions(options);
@@ -285,6 +322,12 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetai
 		//std::cout << "this->nWSR" << this->nWSR << std::endl;
 		// compute
 		sqp.getPrimalSolution(xOpt);
+	}
+	//DEBUGGING TIME
+	if(time_perfomance){
+		stop = std::chrono::high_resolution_clock::now();
+		duration = std::chrono::duration_cast< std::chrono::duration<double> >(stop - start);
+		std::cout <<"compute qp time = " <<duration.count()<< " s" << std::endl;
 	}
 	for(int i=0;i<m;++i){
 		decisionVariables(i) = xOpt[i];
