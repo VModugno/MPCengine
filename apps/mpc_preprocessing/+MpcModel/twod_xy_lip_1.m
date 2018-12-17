@@ -12,18 +12,18 @@ env_name ="XYLip_1";
 % control step used inside the controller in general different from time step for integration 
 internal_dt = 0.05; 
 % Parameters
-h              = 0.8;
-infinity       = 10e6;
-footSize_x     = 0.05;
-footSize_y     = 0.03;
+prm.h              = 0.8;
+infinity           = 10e6;
+prm.footSize_x     = 0.05;
+footSize_y         = 0.03;
 %foot_to_foot_x = 0.0;        % desired foot to foot distance along x
 %foot_to_foot_y = -0.2;       % desired foot to foot distance along x
 %ref_vel_x      = 0.2;        % desired com velocity
 %ref_vel_y      = 0;
-max_f_to_f     = 0.21;        % bounds  
+max_f_to_f         = 0.2;        % bounds  
 
 % LIP model
-omega = sqrt(9.8/h);
+omega = sqrt(9.8/prm.h);
 
 ch    = cosh(omega*internal_dt);
 sh    = sinh(omega*internal_dt);
@@ -69,10 +69,10 @@ init_state = [ 0; 0; 0;   % com position, com velocity and zmp position
          
           
 %% Bounds (here the state bounds change for each walking phase)
-maxOutputL = [infinity; 0; infinity; footSize_x; infinity; max_f_to_f;
-              infinity; 0; infinity; footSize_y; infinity; max_f_to_f];
-maxOutputR = [infinity; infinity; 0; infinity; footSize_x; max_f_to_f;
-              infinity; infinity; 0; infinity; footSize_y; max_f_to_f];
+maxOutputL = [infinity; 0; infinity; prm.footSize_x; infinity; max_f_to_f;
+              infinity; 0; infinity; prm.footSize_y; infinity; max_f_to_f];
+maxOutputR = [infinity; infinity; 0; infinity; prm.footSize_x; max_f_to_f;
+              infinity; infinity; 0; infinity; prm.footSize_y; max_f_to_f];
 bounds     = [maxOutputL,maxOutputR];
 % here max_output is empty because here we are going to use mutable bounds
 maxOutput  = [];
@@ -106,7 +106,7 @@ function_list.constrW          = "walking";
 function_list.constrG          = "std";    
 function_list.constrS          = "std";  
 
-%% here i define the trajecotory for 
+%% here i define the trajectory to track
 v_com_x_ref   = 0.1*ones(size(t));
 v_foot_x_L    = 0*ones(size(t));
 v_foot_x_R    = 0*ones(size(t));

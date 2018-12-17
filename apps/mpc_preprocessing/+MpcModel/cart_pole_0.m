@@ -13,14 +13,14 @@ env_name ="CartPole";
 % control step used inside the controller in general different from time step for integration 
 internal_dt = 0.05; 
 %cart pole parameters (to the env class) (TODO add read parameters from file)
-mCart    = 0.1;
-mPend    = 0.1;
-L        = 0.5;
-g        = 9.8;
+prm.mCart    = 0.1;
+prm.mPend    = 0.1;
+prm.L        = 0.5;
+g            = 9.8;
 xCartMax = 5;
 % Double integrator
-A_cont = [0 1 0 0; 0 0 -mPend*g/mCart 0; 0 0 0 1; 0 0 (mCart+mPend)*g/(L*mCart) 0];
-B_cont = [0; 1/mCart; 0; -1/(L*mCart)];
+A_cont = [0 1 0 0; 0 0 -prm.mPend*g/prm.mCart 0; 0 0 0 1; 0 0 (prm.mCart+prm.mPend)*g/(prm.L*prm.mCart) 0];
+B_cont = [0; 1/prm.mCart; 0; -1/(prm.L*prm.mCart)];
 C_cont = [1 0 0 0;
           0 0 1 0;
           0 0 0 1];

@@ -8,7 +8,7 @@ classdef XYLip_1 < Env.AbstractEnv
     end
     
     methods
-        function obj = XYLip_1(init_state,dt,reward,varargin)
+        function obj = XYLip_1(init_state,dt,reward,prm,varargin)
             obj.num_state            = 14;
             obj.state_bounds(1,:)    = [-100,100];
             obj.state_bounds(2,:)    = [-100,100];
@@ -31,7 +31,8 @@ classdef XYLip_1 < Env.AbstractEnv
             obj.dt                   = dt;
             obj.reward               = reward;
             obj.active_visualization = false;
-            obj.Load_parameters()
+            obj.prm                  = prm;
+            %obj.Load_parameters()
             if(~isempty(varargin))
                 if(strcmp(varargin{1},'ConfigFile'))
                     obj.prm = Utils.CopyPrmFromFile(varargin{2},obj.prm);
@@ -120,7 +121,7 @@ classdef XYLip_1 < Env.AbstractEnv
             obj.prm.h              = 0.8;
             obj.prm.footSize_x     = 0.05;
             obj.prm.footSize_y     = 0.03;
-            % dummy states (references)
+            %(references)
             obj.prm.foot_to_foot_x = 0;
             obj.prm.foot_to_foot_y = -0.2;
             obj.prm.vref_x         = 0.1;
@@ -145,27 +146,6 @@ classdef XYLip_1 < Env.AbstractEnv
            name_text = pNode.createTextNode(num2str(obj.prm.footSize_y));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
-           
-           name_node = pNode.createElement('foot_to_foot_x');
-           name_text = pNode.createTextNode(num2str(obj.prm.foot_to_foot_x));
-           name_node.appendChild(name_text);
-           entry_node.appendChild(name_node);
-           
-           name_node = pNode.createElement('foot_to_foot_y');
-           name_text = pNode.createTextNode(num2str(obj.prm.foot_to_foot_y));
-           name_node.appendChild(name_text);
-           entry_node.appendChild(name_node);
-           
-           name_node = pNode.createElement('vref_x');
-           name_text = pNode.createTextNode(num2str( obj.prm.vref_x));
-           name_node.appendChild(name_text);
-           entry_node.appendChild(name_node);
-           
-           name_node = pNode.createElement('vref_y');
-           name_text = pNode.createTextNode(num2str( obj.prm.vref_y));
-           name_node.appendChild(name_text);
-           entry_node.appendChild(name_node);
-           
         end
         
     end

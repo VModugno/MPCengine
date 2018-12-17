@@ -11,8 +11,8 @@ start_simulation = false;
 %% activate or deactivate visualization
 visualization    = false;
 %%
-%% logging data for comparison with results obtained with c++
-logging          = true;
+%% logging data for comparison with results obtained with c++ (it works only if start_simulation = true)
+logging          = false;
 %% MPC Model
 model_name       = "twod_xy_lip_0"; 
 
@@ -34,7 +34,7 @@ if(strcmp(control_mode,"regulator"))
     run(str);
     %% environment for regulator ------------------------------------------
     reward     = @(x,u)(norm(x));
-    env_call   = "Env."+ env_name + "(init_state,delta_t,reward)";
+    env_call   = "Env."+ env_name + "(init_state,delta_t,reward,prm)";
     env        = eval(env_call);
     %% MPC ----------------------------------------------------------------    
     % regulator 
@@ -44,19 +44,12 @@ elseif(strcmp(control_mode,"tracker"))
     %% system -------------------------------------------------------------
     str = "MpcModel." + model_name + ".m";
     run(str);
-    % if the system is already discretized i need to substitute the
-    % symbolical dt with its actual value
-    if(discretized)
-        A_cont = double(subs(A,delta_t));
-        B_cont = double(subs(B,delta_t));
-        C_cont = double(subs(C,delta_t));
-    end
     %% enviroment for tracker ---------------------------------------------
     reward     = @(x,u)(norm(x));  %(TODO reward class)
-    env_call   = "Env."+ env_name + "(init_state,delta_t,reward)";
+    env_call   = "Env."+ env_name + "(init_state,delta_t,reward,prm)";
     env        = eval(env_call);
     %% reference ----------------------------------------------------------
-    % x_model shoudl be define in the mpcMdel file
+    % x_des_model shoudl be define in the mpcMdel file
     x_des = x_des_model;
     
     %% MPC ----------------------------------------------------------------

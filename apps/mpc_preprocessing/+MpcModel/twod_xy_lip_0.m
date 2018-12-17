@@ -12,18 +12,18 @@ env_name ="XYLip_0";
 % control step used inside the controller in general different from time step for integration 
 internal_dt = 0.05; 
 % Parameters
-h              = 0.8;%0.8;
-infinity       = 10e6;
-footSize_x     = 0.05;
-footSize_y     = 0.03;
-foot_to_foot_x = 0.0;        % desired foot to foot distance along x
-foot_to_foot_y = -0.2;%-0.2 % desired foot to foot distance along x
-ref_vel_x      = 0.1;        % desired com velocity
-ref_vel_y      = 0;
-max_f_to_f     = 0.05;       % bounds  
+infinity           = 10e6;
+prm.h              = 0.8;%0.8;
+prm.footSize_x     = 0.05;
+prm.footSize_y     = 0.03;
+prm.foot_to_foot_x = 0.0;        % desired foot to foot distance along x
+prm.foot_to_foot_y = -0.2;%-0.2  % desired foot to foot distance along x
+prm.vref_x         = 0.1;        % desired com velocity
+prm.vref_y         = 0;
+max_f_to_f         = 0.05;       % bounds  
 
 % LIP model
-omega = sqrt(9.8/h);
+omega = sqrt(9.8/prm.h);
 
 ch    = cosh(omega*internal_dt);
 sh    = sinh(omega*internal_dt);
@@ -62,17 +62,17 @@ feedback_lin  = false;
 init_state = [ 0; 0; 0;   % com position, com velocity and zmp position
                0; 0;      % left foot position and velocity
                0; 0;      % right foot position and velocity
-               foot_to_foot_x; ref_vel_x;    % foot-to-foot distance and vRef 
+               prm.foot_to_foot_x; prm.vref_x;    % foot-to-foot distance and vRef 
                0; 0; 0;   % com position, com velocity and zmp position
                0; 0;      % left foot position and velocity
              -0.2; 0;    % right foot position and velocity
-              foot_to_foot_y; ref_vel_y]; % foot-to-foot distance and vRef   
+              prm.foot_to_foot_y; prm.vref_x]; % foot-to-foot distance and vRef   
           
 %% Bounds (here the state bounds change for each walking phase)
-maxOutputL = [infinity; 0; infinity; footSize_x; infinity; max_f_to_f;
-              infinity; 0; infinity; footSize_y; infinity; max_f_to_f];
-maxOutputR = [infinity; infinity; 0; infinity; footSize_x; max_f_to_f;
-              infinity; infinity; 0; infinity; footSize_y; max_f_to_f];
+maxOutputL = [infinity; 0; infinity; prm.footSize_x; infinity; max_f_to_f;
+              infinity; 0; infinity; prm.footSize_y; infinity; max_f_to_f];
+maxOutputR = [infinity; infinity; 0; infinity; prm.footSize_x; max_f_to_f;
+              infinity; infinity; 0; infinity; prm.footSize_y; max_f_to_f];
 bounds     = [maxOutputL,maxOutputR];
 % here max_output is empty because here we are going to use mutable bounds
 maxOutput  = [];
@@ -105,6 +105,3 @@ function_list.costFunc         = "std";
 function_list.constrW          = "walking";      
 function_list.constrG          = "std";    
 function_list.constrS          = "std";  
-
-
-

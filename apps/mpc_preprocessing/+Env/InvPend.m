@@ -16,7 +16,7 @@ classdef InvPend < Env.AbstractEnv
     
     
     methods
-        function obj = InvPend(init_state,dt,reward,varargin)
+        function obj = InvPend(init_state,dt,reward,prm,varargin)
             obj.num_state            = 2;
             obj.state_bounds(1,:)    = [-pi,pi];
             obj.state_bounds(2,:)    = [-pi,pi];
@@ -26,7 +26,8 @@ classdef InvPend < Env.AbstractEnv
             obj.dt                   = dt;
             obj.reward               = reward;
             obj.active_visualization = false;
-            obj.Load_parameters()
+            obj.prm                  = prm;
+            %obj.Load_parameters()
             if(strcmp(varargin{1},'ConfigFile'))
                 obj.prm = Utils.CopyPrmFromFile(varargin{2},obj.prm);
             end

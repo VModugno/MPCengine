@@ -9,6 +9,20 @@
 %% two R robot
 % name of the enviroment which the current model represents
 env_name ="TwoRRobot";
+% model parameters (this parameters can be overwritten by using a configuration file)
+prm.l1 = 1;
+prm.l2 = 0.5;
+prm.m1 = 3;
+prm.m2 = 2;
+prm.c1x = -0.6;
+prm.c1y = 0.01;
+prm.c1z = 0;
+prm.c2x = -0.2;
+prm.c2y = 0.02;
+prm.c2z = 0;
+prm.J1zz = 1/12*obj.prm.m1*obj.prm.l1^2 + obj.prm.m1*obj.prm.c1x^2 + obj.prm.m1*obj.prm.c1y^2;
+prm.J2zz = 1/12*obj.prm.m2*obj.prm.l2^2 + obj.prm.m2*obj.prm.c2x^2 + obj.prm.m2*obj.prm.c2y^2;
+prm.tq_saturation = [1e10;1e10];
 % control step used inside the controller in general different from time step for integration 
 internal_dt = 0.01; 
 %two R robot model
@@ -36,7 +50,7 @@ mutable_constr = [];
 %% function list
 function_list.propagationModel = "std";
 function_list.costFunc         = "std";      
-function_list.constrW          = "walking";      
+function_list.constrW          = "std";      
 function_list.constrG          = "std";    
 function_list.constrS          = "std"; 
 %% here i define the trajectory (only for tracking only)

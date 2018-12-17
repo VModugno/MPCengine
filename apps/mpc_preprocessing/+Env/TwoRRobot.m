@@ -2,7 +2,7 @@ classdef TwoRRobot < Env.AbstractEnv
     
     
     methods
-        function obj = TwoRRobot(init_state,dt,reward,varargin)
+        function obj = TwoRRobot(init_state,dt,reward,prm,varargin)
             obj.num_state            = 4;
             obj.state_bounds(1,:)    = [-2*pi,2*pi];
             obj.state_bounds(2,:)    = [-2*pi,2*pi];
@@ -14,7 +14,8 @@ classdef TwoRRobot < Env.AbstractEnv
             obj.dt                   = dt;
             obj.reward               = reward;
             obj.active_visualization = false;
-            obj.Load_parameters();
+            obj.prm                  = prm;
+            %obj.Load_parameters();
             if(~isempty(varargin))
                 if(strcmp(varargin{1},'ConfigFile'))
                     obj.prm = Utils.CopyPrmFromFile(varargin{2},obj.prm);

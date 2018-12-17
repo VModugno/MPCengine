@@ -2,7 +2,7 @@ classdef CartPole < Env.AbstractEnv
         
     
     methods
-        function obj = CartPole(init_state,dt,reward,varargin)
+        function obj = CartPole(init_state,dt,reward,prm,varargin)
             obj.num_state            = 2;
             obj.state_bounds(1,:)    = [-100,100];
             obj.state_bounds(2,:)    = [-100,100];
@@ -14,7 +14,8 @@ classdef CartPole < Env.AbstractEnv
             obj.dt                   = dt;
             obj.reward               = reward;
             obj.active_visualization = false;
-            obj.Load_parameters()
+            obj.prm                  = prm;
+            %obj.Load_parameters()
             if(~isempty(varargin))
                 if(strcmp(varargin{1},'ConfigFile'))
                     obj.prm = Utils.CopyPrmFromFile(varargin{2},obj.prm);

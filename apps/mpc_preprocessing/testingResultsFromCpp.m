@@ -9,7 +9,7 @@ control_mode     = "regulator"; % tracker, regulator
 %% activate or deactivate visualization
 visualization    = false;
 %% activate or deactivate state plot againist desired trajectory or state trajectories from matlab mpc
-plot_flag        = true;
+plot_flag        = false;
 
 
 % open file inside @log
@@ -48,7 +48,7 @@ end
 state_average_error  = sum(sum((state_cpp - all_states_gt).^2,2))/length(all_states_gt)
 action_average_error = sum(sum((action_cpp- all_action_gt).^2,2))/length(all_action_gt)
 
-%% visualization -----------------------------------------------------------------------
+%% visualization -----------------------------------------------------------------------TOFIX
 if(visualization)
     state = state_cpp;
     % plot using the enviroment 
@@ -118,7 +118,8 @@ if(plot_flag)
         plot(state_cpp(:,2));
     elseif(strcmp(control_mode,"regulator"))
         
-        
+        % blu is the cpp 
+        % red is the ground truth
         for i =1:size(all_states_gt,2)
             figure
             plot(all_states_gt(:,i),'r')

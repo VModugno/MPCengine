@@ -4,14 +4,12 @@ env_name    = specify the name of the corresponding env (use class name)
 
 internal_dt  = this variables specify the controller time step (that can be different from the environment time step)
 
-for continuos system
+prm          = it is a structure that contains all the enviroment parameters. depending on the kind of system in use they will appear in the non linear model, the linearized model or both
+
+for continuos and discretized system
 	A_cont
 	B_cont 
 	C_cont      = tre matrix of the linearized/linear system
-for discretized system
-	A
-	B
-	C           = tre matrix of the linearized/linear system
 
 discretized   = a flag that specify if the system is discretized or not
 feedback_lin  = i speify here if i want to compute the feedback lin for the system or not
