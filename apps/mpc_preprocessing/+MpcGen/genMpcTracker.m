@@ -6,7 +6,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
     properties
         
         orig_n      % state dimension before the exstension with the control input
-        u_cur       % last input value
+        u_cur       % last input value (numerical version of u_prev)
        
         maxInput    
         maxOutput     
@@ -21,10 +21,10 @@ classdef genMpcTracker < MpcGen.coreGenerator
     
     methods
         function obj = genMpcTracker(A_cont,B_cont,C_cont,maxInput,maxOutput,delta,N,state_gain,control_cost,...
-                                     type,solver,generate_functions,discretized,mutable_constr)
+                                     type,solver,generate_functions,discretized,mutable_constr,function_list)
                     
             % call super class constructor
-            obj = obj@MpcGen.coreGenerator(type,solver,generate_functions,size(A_cont,1),size(B_cont,2),size(C_cont,1),N);
+            obj = obj@MpcGen.coreGenerator(type,solver,generate_functions,size(A_cont,1),size(B_cont,2),size(C_cont,1),N,function_list);
             
             % problem structure
             obj.type         = type; 
@@ -38,9 +38,6 @@ classdef genMpcTracker < MpcGen.coreGenerator
             obj.N            = N;
             obj.delta        = delta;
             % symbolic parameters
-            %obj.x_0     = sym('x_0',[obj.orig_n,1],'real');
-            %obj.u_0     = sym('u_0',[obj.m,1],'real');
-            %obj.ref_0   = sym('ref_0',[obj.N*obj.q,1],'real'); 
             % when we do not have external varialbes to optimize  we assign a dimension of one just to allow
             % matlab to provide the right functions signature
             % i need to set a dimension of 2 here in order to force the
@@ -106,45 +103,149 @@ classdef genMpcTracker < MpcGen.coreGenerator
             obj.m_c = mutable_constr;
             if(isempty(mutable_constr))
                 obj.m_c_flag = false;
+                obj.m_c.g    = "nonMut";
+                obj.m_c.w    = "nonMut";
+                obj.m_c.s    = "nonMut";
             else
                 obj.m_c_flag = true;
-            end
-
-            %% Create matrix 
-            for k = 1:obj.N
-                for j = 1:k
-                    S_bar(obj.n*(k-1)+(1:obj.n),obj.m*(k-j)+(1:obj.m))   = A^(j-1)*B;
-                    S_bar_C(obj.q*(k-1)+(1:obj.q),obj.m*(k-j)+(1:obj.m)) = C*A^(j-1)*B;
+                if(obj.m_c.g)
+                    obj.m_c.g = "pattern";
+                else
+                    obj.m_c.g ="nonMut";
                 end
-                T_bar(obj.n*(k-1)+(1:obj.n),1:obj.n)                     = A^k;
-                T_bar_C(obj.q*(k-1)+(1:obj.q),1:obj.n)                   = C*A^k;
-                Q_hat(obj.q*(k-1)+(1:obj.q),obj.n*(k-1)+(1:obj.n))       = Q*C;
-                Q_bar(obj.n*(k-1)+(1:obj.n),obj.n*(k-1)+(1:obj.n))       = C'*Q*C;
-                R_bar(obj.m*(k-1)+(1:obj.m),obj.m*(k-1)+(1:obj.m))       = R;
+                if(obj.m_c.w)
+                    obj.m_c.w = "pattern";
+                else
+                    obj.m_c.w ="nonMut";
+                end
+                if(obj.m_c.s)
+                    obj.m_c.s = "pattern";
+                else
+                    obj.m_c.s ="nonMut";
+                end
             end
+            %% overWrite A and B if the system is LTV and i Initialize inner_x_ext
+             if(strcmp(obj.type,"ltv"))
+                [A,B]=ComputeMatricesLTV(obj,A,B);
+            else
+                obj.inner_x_ext = []; % empty vector
+             end
+            %% Construct matrices (it automatically detects fixed or ltv)
+            propModelCall             = "CostFunc.propagationModel_tracker_"+ type + "_" + obj.propagationModel + "(obj,A,B,C,Q,R)";
+            [S_bar,S_bar_C,T_bar,T_bar_C,Q_bar,R_bar] = eval(propModelCall);
             %% Cost function matrices
-            obj.H     = (R_bar + S_bar'*Q_bar*S_bar);
-            obj.F_tra = [-Q_hat*S_bar ;T_bar'*Q_bar*S_bar];
+            costFuncCall      = "CostFunc.tracker_" + obj.costFunc + "(S_bar,T_bar,Q_bar,R_bar)";
+            [obj.H,obj.F_tra] = eval(costFuncCall);
 
             %% Constraint matrices
-            obj.G     = [ S_bar_C;-S_bar_C; tril(ones(obj.N*obj.m)); -tril(ones(obj.N*obj.m))];
-            if (obj.m_c_flag)
-                obj.W_numeric = obj.MutableConstraints_W(obj.u_cur);
-            else
-                obj.W     = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput);...
-                            -kron(ones(obj.N,1),obj.u_0)+kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.u_0) + kron(ones(obj.N,1),obj.maxInput)];
-                obj.W     = matlabFunction(obj.W,'vars', {obj.u_0});
+            %% Constraints matrices
+            
+            % g function
+            % through obj.m_c.g we know if g is mutable or not 
+            constrFuncG_Call = "Constraint.tracker_G_" +obj.m_c.g + "_" + obj.constrG + "(obj,S_bar_C)";
+            obj.G            = eval(constrFuncG_Call);
+             % if G is mutable i need to store the current function inside
+             % a function handle of the class (needded both for func gen and compute control)
+             % and i need to store the variables that G is depending upon
+            if(strcmp(obj.m_c.g,"pattern"))
+                str2funcCall             = "Constraint.tracker_G_" +obj.m_c.g + "_" + obj.constrG + "(obj,S_bar_C)";
+                obj.MutableConstraints_G = str2func(str2funcCall);
+                obj.m_c.S_bar_C          = S_bar_C;
             end
-            obj.S     = [-T_bar_C; T_bar_C; zeros(obj.N*obj.m,obj.n); zeros(obj.N*obj.m,obj.n)];
+            % S function
+            % through obj.m_c.s we know if g is mutable or not 
+            constrFuncS_Call = "Constraint.tracker_S_" +obj.m_c.s + "_" + obj.constrS + "(obj,T_bar_C)";
+            obj.S            = eval(constrFuncS_Call);
+            % if S is mutable i need to store the current function inside
+            % a function handle of the class (needded both for func gen and compute control)
+            % and i need to store the variables that G is depending upon
+            if(strcmp(obj.m_c.s,"pattern"))
+                str2funcCall             = "Constraint.tracker_S_" +obj.m_c.s + "_" + obj.constrS;   
+                obj.MutableConstraints_S = str2func(str2funcCall);
+                obj.m_c.T_bar_C          = T_bar_C;
+            end
+             % w function
+             % through obj.m_c.w we know if g is mutable or not 
+            constrFuncW_Call = "Constraint.tracker_W_" +obj.m_c.w + "_" + obj.constrW + "(obj,obj.u_prev)";
+            obj.W            = eval(constrFuncW_Call);
+            % if W is mutable i need to store the current function inside
+            % a function handle of the class (needded both for func gen and compute control)
+            % and i need to store the variables that G is depending upon
+            if(strcmp(obj.m_c.w,"pattern"))
+                str2funcCall             = "Constraint.tracker_W_" +obj.m_c.w + "_" + obj.constrW;
+                obj.MutableConstraints_W = str2func(str2funcCall);
+            end
+            
+%             if (obj.m_c_flag)
+%                 obj.W_numeric = obj.MutableConstraints_W(obj.u_cur);
+%             else
+%                 obj.W     = [kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput);...
+%                             -kron(ones(obj.N,1),obj.u_prev)+kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.u_prev) + kron(ones(obj.N,1),obj.maxInput)];
+%                 obj.W     = matlabFunction(obj.W,'vars', {obj.u_prev});
+%             end
+            
            
-            %% i need it for the computation of the cpp controller function      
+            %% i copy all the matrix in the sym_* variables in order to pass them to the function generation method   
             obj.sym_H      = sym(obj.H);                   
             obj.sym_F_tra  = sym(obj.F_tra); 
             obj.sym_G      = sym(obj.G);      
-            obj.sym_W      = sym([kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput);...
-                             -kron(ones(obj.N,1),obj.u_0)+kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.u_0) + kron(ones(obj.N,1),obj.maxInput)]);
+            %obj.sym_W      = sym([kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput);...
+            %                 -kron(ones(obj.N,1),obj.u_prev)+kron(ones(obj.N,1),obj.maxInput); kron(ones(obj.N,1),obj.u_prev) + kron(ones(obj.N,1),obj.maxInput)]);
+            obj.sym_W      = sym(obj.W);
             obj.sym_S      = sym(obj.S);
             
+            %% TODO here before continuing i need to set the value of the outer parameters by calling the update function
+            
+            
+            %% cost function post processing
+            % if the matrix has been computed for LTV i need to transform
+            % them into matlab function to use them inside matlab for
+            % compute control 
+            if(strcmp(obj.type,"ltv"))
+                obj.H     = matlabFunction(obj.H,'vars', {obj.x_0,obj.inner_x_ext});
+                obj.F_tra = matlabFunction(obj.F_tra,'vars', {obj.x_0,obj.inner_x_ext});
+            end
+                
+            
+            %% constraints function post processing
+            % if some of the constraints matrix are mutable i need to store
+            % them inside the 
+            % G post-processing
+            if(strcmp(obj.m_c.g,"pattern"))
+                if(strcmp(obj.type,"ltv"))
+                    obj.m_c.S_bar_func       = matlabFunction(obj.m_c.S_bar,'vars', {obj.x_0,obj.inner_x_ext});
+                elseif(strcmp(obj.type,"fixed"))
+                    % in the case of fixed pattern i need to initialize the
+                    % current matrix value with the one computed before 
+                    obj.cur_G = obj.G;     
+                end      
+            else
+                if(strcmp(obj.type,"ltv"))
+                    obj.G = matlabFunction(obj.G,'vars', {obj.x_0,obj.inner_x_ext});
+                end
+            end
+            % S post-processing
+            if(strcmp(obj.m_c.s,"pattern"))
+                if(strcmp(obj.type,"ltv"))
+                    obj.m_c.T_bar_func       = matlabFunction(obj.m_c.T_bar,'vars', {obj.x_0,obj.inner_x_ext});
+                elseif(strcmp(obj.type,"fixed"))
+                    % in the case of fixed pattern i need to initialize the
+                    % current matrix value with the one computed before
+                    obj.cur_S = obj.S;
+                end 
+
+            else
+                if strcmp(obj.type,"ltv")
+                    obj.S = matlabFunction(obj.S,'vars', {obj.x_0,obj.inner_x_ext});
+                end
+            end
+            % W post-processing
+            if(strcmp(obj.m_c.w,"pattern"))
+                % in the case of fixed pattern i need to initialize the
+                % current matrix value with the one computed before
+                obj.cur_W = obj.W;
+            end
+            %% store number of constraints
             % here i compute the number of constraints for each step it is
             % very immportant for the Cpp version of mpc
             obj.N_constr  = size(obj.S,1)/obj.N;

@@ -14,7 +14,7 @@ visualization    = true;
 %% logging data for comparison with results obtained with c++ (it works only if start_simulation = true)
 logging          = true;
 %% MPC Model
-model_name       = "twod_xy_lip_0"; 
+model_name       = "cart_pole_1"; 
 
 %% experiment time structure (for the environment different from the internal time)
 ft         = 5;       % 20 50 

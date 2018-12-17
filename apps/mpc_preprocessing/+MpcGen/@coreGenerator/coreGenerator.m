@@ -29,8 +29,9 @@ classdef coreGenerator <  handle
         sym_S           %
         index           % inner variables for mutable constraints (in order to select the different W structure)
         x_0             % inner_variables
-        u_0             % inner_variables
+        u_prev          % inner_variables (it is used only for tracking and represents the previous control)
         ref_0           % inner_variables
+        inner_x_ext     % variable used to get the trajectories from the oracle (for LTV propagation) 
         outer_x         % parameters to optimize that do not belong to the mpc variables
         extern_var      % "true" or "false"
         extern_dim      % dimension of external variable vector to optimize
@@ -41,7 +42,7 @@ classdef coreGenerator <  handle
         W
         S
         
-        inner_x_ext            % variable used to get the trajectories from the oracle (for LTV propagation) 
+        
         propagationModel       % (str) name of the function that we will use 
         costFunc               % (str) name of the function that we will use 
         constrW                % (str) name of the function that we will use 
@@ -63,7 +64,7 @@ classdef coreGenerator <  handle
         function obj = coreGenerator(type,solver,generate_functions,n,m,q,N,function_list)
             obj.index            = sym('ind',[1,1],'real');
             obj.x_0              = sym('x_0',[n,1],'real');
-            obj.u_0              = sym('u_0',[m,1],'real');
+            obj.u_prev           = sym('u_prev',[m,1],'real');
             obj.ref_0            = sym('ref_0',[N*q,1],'real');
             obj.type             = type;
             obj.solver           = solver;
@@ -212,6 +213,50 @@ classdef coreGenerator <  handle
            xmlwrite(char(filepath),pNode);   
        end 
        
+       function [all_A,all_B]=ComputeMatricesLTV(obj,A,B)
+            obj.inner_x_ext = [];
+            all_A           = cell(obj.N,1);
+            all_B           = cell(obj.N,1);
+            % i have always to use the same variables name inside mpcModel 
+            x               = sym('x',[obj.n,1],'real');
+            u               = sym('u',[obj.m,1],'real');
+            for kk = 1:obj.N
+                % here i create the symbolic variables
+                cur_x_name = "x_" + num2str(kk-1);
+                cur_u_name = "u_" + num2str(kk-1);
+                cur_x = sym(cur_x_name,[obj.n,1],'real');
+                cur_u = sym(cur_u_name,[obj.m,1],'real');
+                % substitute the variables in A and B with cur_u and
+                % cur_x
+                cur_A = A;
+                cur_B = B;
+
+                cur_A = subs(cur_A,[x],[cur_x]);
+                cur_A = subs(cur_A,[u],[cur_u]);
+
+                cur_B = subs(cur_B,[x],[cur_x]);
+                cur_B = subs(cur_B,[u],[cur_u]);
+
+                % i store the resulting value inside all A and all B
+                all_A{kk} = cur_A;
+                all_B{kk} = cur_B;
+                % i store the current variables inside inner_x_ext
+                if(kk==1)
+                     % for regulator and tracker i will not insert inside the inner_x_ext
+                     % the first x variables, a.k.a. x_0, because i want to
+                     % use the x_0 already defined inside the coreGenerator
+                     % class. 
+                     % 
+                     obj.inner_x_ext = [obj.inner_x_ext;cur_u];
+                else
+                     % the order which i store this variables is gonna
+                     % be the orders that i have to observe when i pass
+                     % the variables to the function
+                     obj.inner_x_ext = [obj.inner_x_ext;cur_x;cur_u];
+                end
+
+            end
+       end
        % each time i call this function i get one step update of
        % constraints.
        % I update m_c inside

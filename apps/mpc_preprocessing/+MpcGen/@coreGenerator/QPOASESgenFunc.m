@@ -9,7 +9,8 @@ function QPOASESgenFunc(obj)
    %    l_b <= A*z <= u_b
    %% here i define the structure of the inner_x
    if(strcmp(obj.problemClass,"tracker"))
-        inner_x = [obj.x_0;obj.u_0;obj.ref_0;obj.index];
+        %inner_x = [obj.x_0;obj.u_0;obj.ref_0;obj.index];
+         inner_x = [obj.u_prev;obj.x_0;obj.inner_x_ext;obj.ref_0;obj.index];
    else
        % if the system is not LTV obj.inner_x_ext is gonna be
        % zero
@@ -25,7 +26,7 @@ function QPOASESgenFunc(obj)
    %% linear term cost function
    disp('generating g')
    if(strcmp(obj.problemClass,"tracker"))
-        g_  = vpa(([obj.ref_0;obj.x_0;obj.u_0]'*obj.F_tra)'); 
+        g_  = vpa(([obj.ref_0;obj.x_0;obj.u_prev]'*obj.F_tra)'); 
    else
         g_  = vpa((obj.x_0'*obj.sym_F_tra)');
    end
@@ -46,14 +47,14 @@ function QPOASESgenFunc(obj)
    if(strcmp(obj.problemClass,"tracker"))
        if(strcmp(obj.m_c.w,"pattern") || strcmp(obj.m_c.s,"pattern"))
             % with this functions i write the function and i correct it 
-            obj.MutableConstraints_QPOASES([obj.x_0;obj.u_0],'compute_ub','current_func',{inner_x,obj.outer_x},'ub');
+            obj.MutableConstraints_QPOASES([obj.x_0;obj.u_prev],'compute_ub','current_func',{inner_x,obj.outer_x},'ub');
        else
-            ub_ = vpa(obj.sym_W + obj.sym_S*[obj.x_0;obj.u_0]);
+            ub_ = vpa(obj.sym_W + obj.sym_S*[obj.x_0;obj.u_prev]);
             % with this functions i write the function and i correct it 
             obj.cCode(ub_,'compute_ub','current_func',{inner_x,obj.outer_x},'ub');
             obj.PostProcessFunctionForqpOASES('compute_ub','ub') 
        end
-   else
+   elseif(strcmp(obj.problemClass,"regulator"))
         if(strcmp(obj.m_c.w,"pattern") || strcmp(obj.m_c.s,"pattern"))
             % with this functions i write the function and i correct it 
             obj.MutableConstraints_QPOASES(obj.x_0,'compute_ub','current_func',{inner_x,obj.outer_x},'ub');

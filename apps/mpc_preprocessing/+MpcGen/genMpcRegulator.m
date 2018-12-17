@@ -121,7 +121,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             
             %% overWrite A and B if the system is LTV and i Initialize inner_x_ext
             if(strcmp(obj.type,"ltv"))
-                [A,B]=ComputeMatricesLTV(obj,A,B,C);
+                [A,B]=obj.ComputeMatricesLTV(A,B);
             else
                 obj.inner_x_ext = []; % empty vector
             end
@@ -170,7 +170,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                 obj.MutableConstraints_W = str2func(str2funcCall);
             end
             
-            % i copy all the matrix in the sym_* variables in order to pass them to  the function generation method 
+            %% i copy all the matrix in the sym_* variables in order to pass them to the function generation method 
             obj.sym_H      = sym(obj.H);                   
             obj.sym_F_tra  = sym(obj.F_tra); 
             obj.sym_G      = sym(obj.G);      % for the function generation it works only if G is not mutable (it should works right away both fixed and ltv)
@@ -293,45 +293,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
              end
         end
         
-        function [all_A,all_B]=ComputeMatricesLTV(obj,A,B,C)
-            obj.inner_x_ext = [];
-            all_A           = cell(obj.N,1);
-            all_B           = cell(obj.N,1);
-            % i have always to use the same variables name inside mpcModel 
-            x               = sym('x',[obj.n,1],'real');
-            u               = sym('u',[obj.m,1],'real');
-            for kk = 1:obj.N
-                % here i create the symbolic variables
-                cur_x_name = "x_" + num2str(kk-1);
-                cur_u_name = "u_" + num2str(kk-1);
-                cur_x = sym(cur_x_name,[obj.n,1],'real');
-                cur_u = sym(cur_u_name,[obj.m,1],'real');
-                % substitute the variables in A and B with cur_u and
-                % cur_x
-                cur_A = A;
-                cur_B = B;
-
-                cur_A = subs(cur_A,[x],[cur_x]);
-                cur_A = subs(cur_A,[u],[cur_u]);
-
-                cur_B = subs(cur_B,[x],[cur_x]);
-                cur_B = subs(cur_B,[u],[cur_u]);
-
-                % i store the resulting value inside all A and all B
-                all_A{kk} = cur_A;
-                all_B{kk} = cur_B;
-                % i store the current variables inside inner_x_ext
-                if(kk==1)
-                     obj.inner_x_ext = [obj.inner_x_ext;cur_u];
-                else
-                     % the order which i store this variables is gonna
-                     % be the orders that i have to observe when i pass
-                     % the variables to the function
-                     obj.inner_x_ext = [obj.inner_x_ext;cur_x;cur_u];
-                end
-
-            end
-        end
+        
         
         function GenFunctions(obj) 
              GenFunctions@MpcGen.coreGenerator(obj)  
