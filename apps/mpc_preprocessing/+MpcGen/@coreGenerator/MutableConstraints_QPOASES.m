@@ -10,7 +10,7 @@ function MutableConstraints_QPOASES(obj,var_for_ub,namefunc,path_to_folder,vars,
     if(strcmp(output,"A"))
         for i=1:obj.N 
             A_        = obj.MutableConstraints_G(obj,obj.m_c.S_bar)';
-           all_rep{i} = A_(:);
+           all_rep{i} = vpa(A_(:));
            obj.UpdateConstrPattern();
         end   
     elseif(strcmp(output,"ub"))
@@ -37,7 +37,7 @@ function MutableConstraints_QPOASES(obj,var_for_ub,namefunc,path_to_folder,vars,
         % i compute all the function ub_ to stitch togheter 
         jj = 1;
         for i=1:obj.N
-           all_rep{i} = all_W(:,i) + all_S(:,jj:jj+(obj.n-1) )*var_for_ub;
+           all_rep{i} = vpa(all_W(:,i) + all_S(:,jj:jj+(obj.n-1) )*var_for_ub);
            jj = jj + obj.n;
         end
     end

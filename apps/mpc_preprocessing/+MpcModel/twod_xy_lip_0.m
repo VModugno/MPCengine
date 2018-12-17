@@ -66,7 +66,7 @@ init_state = [ 0; 0; 0;   % com position, com velocity and zmp position
                0; 0; 0;   % com position, com velocity and zmp position
                0; 0;      % left foot position and velocity
              -0.2; 0;    % right foot position and velocity
-              prm.foot_to_foot_y; prm.vref_x]; % foot-to-foot distance and vRef   
+              prm.foot_to_foot_y; prm.vref_y]; % foot-to-foot distance and vRef   
           
 %% Bounds (here the state bounds change for each walking phase)
 maxOutputL = [infinity; 0; infinity; prm.footSize_x; infinity; max_f_to_f;

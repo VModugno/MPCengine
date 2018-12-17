@@ -3,16 +3,16 @@ close all
 clc
 
 %% activate or deactivate function generation
-generate_func    = true;
+generate_func    = false;
 %%
 %% simulate the mpc 
-start_simulation = false;
+start_simulation = true;
 %%
 %% activate or deactivate visualization
-visualization    = false;
+visualization    = true;
 %%
 %% logging data for comparison with results obtained with c++ (it works only if start_simulation = true)
-logging          = false;
+logging          = true;
 %% MPC Model
 model_name       = "twod_xy_lip_0"; 
 

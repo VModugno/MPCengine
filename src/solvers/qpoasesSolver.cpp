@@ -79,7 +79,7 @@ qpoasesSolver::qpoasesSolver(const std::string filename,bool direct_solution){
     // set qpoases option
 	//options.setToReliable();
 	options.setToMPC();
-	options.printLevel           = qpOASES::PL_HIGH;//qpOASES::PL_HIGH;
+	options.printLevel           = qpOASES::PL_NONE;//qpOASES::PL_HIGH;
 	options.enableNZCTests       = qpOASES::BT_TRUE;
 	options.enableFlippingBounds = qpOASES::BT_TRUE;
 
