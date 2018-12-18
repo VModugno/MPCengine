@@ -20,8 +20,8 @@ prm.c1z = 0;
 prm.c2x = -0.2;
 prm.c2y = 0.02;
 prm.c2z = 0;
-prm.J1zz = 1/12*obj.prm.m1*obj.prm.l1^2 + obj.prm.m1*obj.prm.c1x^2 + obj.prm.m1*obj.prm.c1y^2;
-prm.J2zz = 1/12*obj.prm.m2*obj.prm.l2^2 + obj.prm.m2*obj.prm.c2x^2 + obj.prm.m2*obj.prm.c2y^2;
+prm.J1zz = 1/12*prm.m1*prm.l1^2 + prm.m1*prm.c1x^2 + prm.m1*prm.c1y^2;
+prm.J2zz = 1/12*prm.m2*prm.l2^2 + prm.m2*prm.c2x^2 + prm.m2*prm.c2y^2;
 prm.tq_saturation = [1e10;1e10];
 % control step used inside the controller in general different from time step for integration 
 internal_dt = 0.01; 

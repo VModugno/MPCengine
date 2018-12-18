@@ -3,29 +3,29 @@ close all
 clc
 
 %% activate or deactivate function generation
-generate_func    = false;
+generate_func    = true;
 %%
 %% simulate the mpc 
-start_simulation = true;
+start_simulation = false;
 %%
 %% activate or deactivate visualization
-visualization    = true;
+visualization    = false;
 %%
 %% logging data for comparison with results obtained with c++ (it works only if start_simulation = true)
-logging          = true;
+logging          = false;
 %% MPC Model
 model_name       = "cart_pole_1"; 
 
 %% experiment time structure (for the environment different from the internal time)
-ft         = 5;       % 20 50 
-delta_t    = 0.05;    % 0.1 0.01 (to the env class)
+ft         = 100;       % 20 50 
+delta_t    = 0.01;    % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
 
 %% MPC parameters
 % cpp solver to use 
 solver       = "QPoases";
 % tracker or regulator
-control_mode = "regulator"; 
+control_mode = "tracker"; 
 
 %% regulator testing
 if(strcmp(control_mode,"regulator")) 
@@ -55,7 +55,7 @@ elseif(strcmp(control_mode,"tracker"))
     %% MPC ----------------------------------------------------------------
     % tracker
     controller   = MpcGen.genMpcTracker(A_cont,B_cont,C_cont,maxInput,maxOutput,internal_dt,N,state_gain,control_cost,...
-                                        type,solver,generate_func,discretized,mutable_constr);
+                                        type,solver,generate_func,discretized,mutable_constr,function_list);
     %% testing MPC tracking on the environment 
     
     % preparing the reference for testing

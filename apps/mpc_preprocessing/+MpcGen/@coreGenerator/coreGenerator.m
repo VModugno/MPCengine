@@ -41,6 +41,10 @@ classdef coreGenerator <  handle
         G
         W
         S
+        cur_W                  % auxiliary variable introduce to omogenize the input to the controller
+        cur_G
+        cur_S
+        
         
         
         propagationModel       % (str) name of the function that we will use 

@@ -6,9 +6,6 @@ classdef genMpcRegulator < MpcGen.coreGenerator
         maxInput    
         maxOutput 
         
-        cur_W                  % auxiliary variable introduce to omogenize the input to the controller
-        cur_G
-        cur_S
         
        
         

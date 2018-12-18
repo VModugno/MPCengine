@@ -132,14 +132,12 @@ classdef genMpcTracker < MpcGen.coreGenerator
              end
             %% Construct matrices (it automatically detects fixed or ltv)
             propModelCall             = "CostFunc.propagationModel_tracker_"+ type + "_" + obj.propagationModel + "(obj,A,B,C,Q,R)";
-            [S_bar,S_bar_C,T_bar,T_bar_C,Q_bar,R_bar] = eval(propModelCall);
+            [S_bar,S_bar_C,T_bar,T_bar_C,Q_hat,Q_bar,R_bar] = eval(propModelCall);
             %% Cost function matrices
-            costFuncCall      = "CostFunc.tracker_" + obj.costFunc + "(S_bar,T_bar,Q_bar,R_bar)";
+            costFuncCall      = "CostFunc.tracker_" + obj.costFunc + "(S_bar,T_bar,Q_hat,Q_bar,R_bar)";
             [obj.H,obj.F_tra] = eval(costFuncCall);
 
-            %% Constraint matrices
-            %% Constraints matrices
-            
+            %% Constraint matrices            
             % g function
             % through obj.m_c.g we know if g is mutable or not 
             constrFuncG_Call = "Constraint.tracker_G_" +obj.m_c.g + "_" + obj.constrG + "(obj,S_bar_C)";
@@ -213,7 +211,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
             % G post-processing
             if(strcmp(obj.m_c.g,"pattern"))
                 if(strcmp(obj.type,"ltv"))
-                    obj.m_c.S_bar_func       = matlabFunction(obj.m_c.S_bar,'vars', {obj.x_0,obj.inner_x_ext});
+                    obj.m_c.S_bar_C_func       = matlabFunction(obj.m_c.S_bar_C,'vars', {obj.x_0,obj.inner_x_ext});
                 elseif(strcmp(obj.type,"fixed"))
                     % in the case of fixed pattern i need to initialize the
                     % current matrix value with the one computed before 
@@ -227,7 +225,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
             % S post-processing
             if(strcmp(obj.m_c.s,"pattern"))
                 if(strcmp(obj.type,"ltv"))
-                    obj.m_c.T_bar_func       = matlabFunction(obj.m_c.T_bar,'vars', {obj.x_0,obj.inner_x_ext});
+                    obj.m_c.T_bar_C_func       = matlabFunction(obj.m_c.T_bar_C,'vars', {obj.x_0,obj.inner_x_ext});
                 elseif(strcmp(obj.type,"fixed"))
                     % in the case of fixed pattern i need to initialize the
                     % current matrix value with the one computed before
@@ -243,7 +241,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
             if(strcmp(obj.m_c.w,"pattern"))
                 % in the case of fixed pattern i need to initialize the
                 % current matrix value with the one computed before
-                obj.cur_W = obj.W;
+                obj.cur_W = double(subs(obj.W,obj.u_prev,obj.u_cur));
             end
             %% store number of constraints
             % here i compute the number of constraints for each step it is
@@ -255,10 +253,10 @@ classdef genMpcTracker < MpcGen.coreGenerator
         
         function tau = ComputeControl(obj,x_cur,cur_ref)
             % i do not update here the W the W for mutable constraints case
-            if (~obj.m_c_flag)
-                obj.W_numeric = obj.W(obj.u_cur);
-            end
-            new_F_tra = [cur_ref; x_cur;obj.u_cur]'*obj.F_tra;
+%             if (~obj.m_c_flag)
+%                 obj.W_numeric = obj.W(obj.u_cur);
+%             end
+%             new_F_tra = [cur_ref; x_cur;obj.u_cur]'*obj.F_tra;
             
             %% debug
             %inner_x = [cur_ref; x_cur;obj.u_cur];
@@ -268,24 +266,70 @@ classdef genMpcTracker < MpcGen.coreGenerator
             %H_      = obj.H';
             %H_      = H_(:);
             %ub_     = W + obj.S*[x_cur;obj.u_cur];
-           
-            [u_star,fval,exitflag,output,lambda] = quadprog(obj.H, new_F_tra, obj.G,obj.W_numeric + obj.S*[x_cur;obj.u_cur]);
+            if(strcmp(obj.type,"ltv"))
+                 H     = obj.H(xu_oracle_trajectory);
+                 F_tra = obj.F_tra(xu_oracle_trajectory);
+                 if(strcmp(obj.m_c.g,"pattern"))
+                    S_bar_C     = obj.m_c.S_bar_C_func(xu_oracle_trajectory);
+                 else
+                    obj.cur_G = obj.G(xu_oracle_trajectory);
+                 end
+                 if(strcmp(obj.m_c.s,"pattern"))
+                    T_bar_C     = obj.m_c.T_bar_C_func(xu_oracle_trajectory);
+                 else
+                    obj.cur_S = obj.S(xu_oracle_trajectory);
+                 end
+            elseif(strcmp(obj.type,"fixed"))
+                 H          = obj.H;
+                 F_tra      = obj.F_tra;
+                 if(strcmp(obj.m_c.g,"pattern"))
+                    S_bar_C      = obj.m_c.S_bar_C;
+                 else
+                     obj.cur_G = obj.G;
+                 end
+                 if(strcmp(obj.m_c.s,"pattern"))
+                    T_bar_C      = obj.m_c.T_bar_C;
+                 else
+                    obj.cur_S  = obj.S;
+                 end
+                 if(~strcmp(obj.m_c.w,"pattern"))
+                    obj.cur_W  = double(subs(obj.W,obj.u_prev,obj.u_cur));
+                    
+                 end
+            end
+             
+            [u_star,fval] = quadprog(H,[cur_ref; x_cur;obj.u_cur]'*F_tra, obj.cur_G,obj.cur_W + obj.cur_S*[x_cur;obj.u_cur]);
             % new control
             obj.u_cur     = obj.u_cur + u_star(1: obj.m);
             % after updating u_cur i can update W for the next iteration 
             % when we have mutable constraints
+%             if (obj.m_c_flag)
+%                 obj.UpdateConstrPattern();
+%                 obj.W_numeric = obj.MutableConstraints_W(obj.u_cur);
+%             end
             if (obj.m_c_flag)
-                obj.UpdateConstrPattern();
-                obj.W_numeric = obj.MutableConstraints_W(obj.u_cur);
+                 % i assume that the pattern are the same for every
+                 %  matrix constraint
+                 obj.UpdateConstrPattern();
+                 if(strcmp(obj.m_c.g,"pattern"))
+                    obj.cur_G   = obj.MutableConstraints_G(obj,S_bar_C);
+                 end
+                 if(strcmp(obj.m_c.s,"pattern"))
+                     obj.cur_S   = obj.MutableConstraints_S(obj,T_bar_C);
+                 end
+                 if(strcmp(obj.m_c.w,"pattern"))
+                    obj.cur_W   = obj.MutableConstraints_W(obj,obj.u_cur);
+                 end
+                 
             end
-            
-            
+         
             % for debugging
             obj.Ustar{obj.it}        = reshape(u_star,[obj.m,obj.N]);
             obj.Ustar_used(:,obj.it) = obj.u_cur + u_star(1:obj.m);
             obj.all_fval(1,obj.it)   = fval;
             obj.it                   = obj.it + 1;
             %
+            
             % control action 
             tau = obj.u_cur; 
         end

@@ -1,6 +1,6 @@
-%% Create matrix 
 
-function  [S_bar,S_bar_C,T_bar,T_bar_C,Q_bar,R_bar] = propagationModel_tracker_fixed_std(obj,A,B,C,Q,R)
+
+function  [S_bar,S_bar_C,T_bar,T_bar_C,Q_hat,Q_bar,R_bar] = propagationModel_tracker_fixed_std(obj,A,B,C,Q,R)
 
     for k = 1:obj.N
         for j = 1:k

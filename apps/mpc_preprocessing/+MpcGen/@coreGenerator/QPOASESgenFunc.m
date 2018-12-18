@@ -26,7 +26,7 @@ function QPOASESgenFunc(obj)
    %% linear term cost function
    disp('generating g')
    if(strcmp(obj.problemClass,"tracker"))
-        g_  = vpa(([obj.ref_0;obj.x_0;obj.u_prev]'*obj.F_tra)'); 
+        g_  = vpa(([obj.ref_0;obj.x_0;obj.u_prev]'*obj.sym_F_tra)'); 
    else
         g_  = vpa((obj.x_0'*obj.sym_F_tra)');
    end
