@@ -3,8 +3,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
     properties
           
-        maxInput    
-        maxOutput 
+      
         
         
        
@@ -14,7 +13,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
 
     methods
-        function obj = genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,delta,N,state_gain,control_cost,...
+        function obj = genMpcRegulator(A_cont,B_cont,C_cont,B_In,B_out,delta,N,state_gain,control_cost,...
                                        type,solver,generate_functions,discretized,mutable_constr,function_list)
             
             % call super class constructor
@@ -40,7 +39,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.extern_var = "false";
             obj.extern_dim = 0;
             
-            if(length(maxInput)~= obj.m)
+            if(length(B_In.max)~= obj.m)
                 % i need to avoid to rise an error for dimension mismatch
                 % when i have mutable constraints
                 if(isempty(mutable_constr))

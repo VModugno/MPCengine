@@ -15,12 +15,15 @@ internal_dt = 0.05;
 prm.h              = 0.8;
 infinity           = 10e6;
 prm.footSize_x     = 0.05;
-footSize_y         = 0.03;
+prm.footSize_y     = 0.03;
 %foot_to_foot_x = 0.0;        % desired foot to foot distance along x
 %foot_to_foot_y = -0.2;       % desired foot to foot distance along x
 %ref_vel_x      = 0.2;        % desired com velocity
 %ref_vel_y      = 0;
-max_f_to_f         = 0.2;        % bounds  
+max_f_to_f_x         = 0.25;        % bounds  
+min_f_to_f_x         = -0.25;
+max_f_to_f_y         = 0.25;        % bounds  
+min_f_to_f_y         = 0.15;
 
 % LIP model
 omega = sqrt(9.8/prm.h);
@@ -28,7 +31,7 @@ omega = sqrt(9.8/prm.h);
 ch    = cosh(omega*internal_dt);
 sh    = sinh(omega*internal_dt);
 A_lip = [ch, sh/omega, 1-ch; omega*sh, ch, -omega*sh; 0, 0, 1];
-B_lip = [delta-sh/omega; 1-ch; internal_dt];
+B_lip = [internal_dt-sh/omega; 1-ch; internal_dt];
 %A_lip = [0 1; omega^2 0];
 %B_lip = [0; omega^2];
 
@@ -40,8 +43,8 @@ A_foot = eye(2) + internal_dt*[0, 1; 0, 0];
 B_foot = internal_dt*[0; 1];
 
 % Full system
-A_x    = blkdiag(A_lip, A_foot, A_foot);
-A_y    = blkdiag(A_lip, A_foot, A_foot);
+A_x    = blkdiag(A_lip, A_foot, A_foot);    % sagittal section
+A_y    = blkdiag(A_lip, A_foot, A_foot);    % coronal  section
 B      = blkdiag(B_lip, B_foot, B_foot);
 A_cont = blkdiag(A_x, A_y);
 B_cont = blkdiag(B, B);
@@ -52,12 +55,12 @@ C       = [0, 1, 0, 0, 0, 0, 0;  % com velocity
            0, 0, 0, 0, 0, 0, 1;  % right foot velocity
            0, 0, 1,-1, 0, 0, 0;  % zmp from left foot
            0, 0, 1, 0, 0,-1, 0;  % zmp from right foot
-           0, 0, 0, 1, 0,-1, 0]; % foot to foot
+           0, 0, 0, +1, 0,-1, 0]; % foot to foot
  C_cont = blkdiag(C, C);
 
 % with this flag i tell the MPC constructor if the matrix has already been discretized or not      
 discretized = true;
-% with this i require to do the feedback linearization (by default is false)
+% with this I require to do the feedback linearization (by default is false)
 feedback_lin  = false;
 %% Initial state
 init_state = [ 0; 0; 0;   % com position, com velocity and zmp position
@@ -70,14 +73,23 @@ init_state = [ 0; 0; 0;   % com position, com velocity and zmp position
           
 %% Bounds (here the state bounds change for each walking phase)
 maxOutputL = [infinity; 0; infinity; prm.footSize_x; infinity; max_f_to_f;
-              infinity; 0; infinity; prm.footSize_y; infinity; max_f_to_f];
+              infinity; 0; infinity; prm.footSize_y; infinity; max_f_to_f_y];
+minOutputL = [-infinity; 0; -infinity; -prm.footSize_x; -infinity; min_f_to_f;
+              -infinity; 0; -infinity; -prm.footSize_y; -infinity; min_f_to_f_y];          
 maxOutputR = [infinity; infinity; 0; infinity; prm.footSize_x; max_f_to_f;
-              infinity; infinity; 0; infinity; prm.footSize_y; max_f_to_f];
-bounds     = [maxOutputL,maxOutputR];
+              infinity; infinity; 0; infinity; prm.footSize_y; max_f_to_f_y];
+minOutputR = [-infinity; -infinity; 0; -infinity; -prm.footSize_x; min_f_to_f;
+              -infinity; -infinity; 0; -infinity; -prm.footSize_y; min_f_to_f_y];
+          
+boundsOutput.max  = [maxOutputL,maxOutputR];
+boundsOutput.min  = [minOutputL,minOutputR];
+boundsInput       = [];
 % here max_output is empty because here we are going to use mutable bounds
-maxOutput  = [];
-maxInput   = [infinity; infinity; infinity;
-              infinity; infinity; infinity];         
+B_Out.max  = [];
+B_Out.min  = [];
+B_In.max   = [infinity; infinity; infinity;
+              infinity; infinity; infinity];       
+B_In.min   = [];          
 %%gains
 state_gain   = [100, 0, 0, 0, 0, 0,100, 0, 0, 0, 0, 0];    % penalty error on the state
 control_cost = [1,1,1,1,1,1]; 
@@ -93,7 +105,8 @@ foot_pattern = [pattern_1,pattern_2];
 
 mutable_constr.N_state           = 2;
 mutable_constr.const_pattern     = foot_pattern;
-mutable_constr.bounds            = bounds;
+mutable_constr.boundsOutput      = boundsOutput;
+mutable_constr.boundsOutput      = [];
 
 mutable_constr.g    = false;
 mutable_constr.w    = true;

@@ -21,6 +21,9 @@ classdef coreGenerator <  handle
         N           % widht of prediction window
         N_constr    % number of constraints
         
+        B_In        % input  bound (B_In.max and B_In.min) if B_In.min empty the framework will automatically assume   -B_In.max <u< B_In.max    
+        B_Out       % output bound(B_Out.max and B_Out.min) if B_Out.min empty the framework will automatically assume   -B_Out.max <u< B_Out.max
+        
         %  for code generation
         sym_H           %             
         sym_F_tra       %

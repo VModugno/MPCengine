@@ -49,8 +49,10 @@ feedback_lin  = false;
 %% init state
 init_state = [0; 0; pi/8; 0];
 %% cart pole state and control bounds  
-maxOutput    = [10;100;100];
-maxInput     = [100];
+B_Out.max    = [10;100;100];
+B_Out.min    = [];
+B_In.max     = [100];
+B_In.min     = [];
 %% gains
 state_gain   = 100;    % penalty error on the state
 control_cost = 1; 

@@ -36,8 +36,10 @@ feedback_lin  = true;
 %% init state
 init_state    = [pi; pi/2; 0; 0];
 %% cart pole state and control bounds  (for MPC)
-maxOutput     = [10;10;10;10];
-maxInput      = [20;20];
+B_Out.max    = [10;10;10;10];
+B_Out.min    = [];
+B_In.max     = [20;20];
+B_In.min     = [];
 %% 2 r robot gains
 state_gain    = 100;    % penalty error on the state
 control_cost  = 1;  
