@@ -38,7 +38,7 @@ if(strcmp(control_mode,"regulator"))
     env        = eval(env_call);
     %% MPC ----------------------------------------------------------------    
     % regulator 
-    controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,maxInput,maxOutput,internal_dt,N,state_gain,control_cost,...
+    controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,B_In,B_Out,internal_dt,N,state_gain,control_cost,...
                                         type,solver,generate_func,discretized,mutable_constr,function_list); 
 elseif(strcmp(control_mode,"tracker"))
     %% system -------------------------------------------------------------
@@ -54,7 +54,7 @@ elseif(strcmp(control_mode,"tracker"))
     
     %% MPC ----------------------------------------------------------------
     % tracker
-    controller   = MpcGen.genMpcTracker(A_cont,B_cont,C_cont,maxInput,maxOutput,internal_dt,N,state_gain,control_cost,...
+    controller   = MpcGen.genMpcTracker(A_cont,B_cont,C_cont,B_In,B_Out,internal_dt,N,state_gain,control_cost,...
                                         type,solver,generate_func,discretized,mutable_constr,function_list);
     %% testing MPC tracking on the environment 
     

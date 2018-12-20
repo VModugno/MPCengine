@@ -72,23 +72,23 @@ init_state = [ 0; 0; 0;   % com position, com velocity and zmp position
          
           
 %% Bounds (here the state bounds change for each walking phase)
-maxOutputL = [infinity; 0; infinity; prm.footSize_x; infinity; max_f_to_f;
+maxOutputL = [infinity; 0; infinity; prm.footSize_x; infinity; max_f_to_f_x;
               infinity; 0; infinity; prm.footSize_y; infinity; max_f_to_f_y];
-minOutputL = [-infinity; 0; -infinity; -prm.footSize_x; -infinity; min_f_to_f;
+minOutputL = [-infinity; 0; -infinity; -prm.footSize_x; -infinity; min_f_to_f_x;
               -infinity; 0; -infinity; -prm.footSize_y; -infinity; min_f_to_f_y];          
-maxOutputR = [infinity; infinity; 0; infinity; prm.footSize_x; max_f_to_f;
+maxOutputR = [infinity; infinity; 0; infinity; prm.footSize_x; max_f_to_f_x;
               infinity; infinity; 0; infinity; prm.footSize_y; max_f_to_f_y];
-minOutputR = [-infinity; -infinity; 0; -infinity; -prm.footSize_x; min_f_to_f;
+minOutputR = [-infinity; -infinity; 0; -infinity; -prm.footSize_x; min_f_to_f_x;
               -infinity; -infinity; 0; -infinity; -prm.footSize_y; min_f_to_f_y];
           
 boundsOutput.max  = [maxOutputL,maxOutputR];
 boundsOutput.min  = [minOutputL,minOutputR];
-boundsInput       = [];
+boundsInput.max   = [infinity; infinity; infinity;
+                     infinity; infinity; infinity];     
 % here max_output is empty because here we are going to use mutable bounds
 B_Out.max  = [];
 B_Out.min  = [];
-B_In.max   = [infinity; infinity; infinity;
-              infinity; infinity; infinity];       
+B_In.max   = [];       
 B_In.min   = [];          
 %%gains
 state_gain   = [100, 0, 0, 0, 0, 0,100, 0, 0, 0, 0, 0];    % penalty error on the state
@@ -106,7 +106,7 @@ foot_pattern = [pattern_1,pattern_2];
 mutable_constr.N_state           = 2;
 mutable_constr.const_pattern     = foot_pattern;
 mutable_constr.boundsOutput      = boundsOutput;
-mutable_constr.boundsOutput      = [];
+mutable_constr.boundsInput       = boundsInput;
 
 mutable_constr.g    = false;
 mutable_constr.w    = true;
@@ -132,7 +132,7 @@ v_foot_y_L    = 0*ones(size(t));
 v_foot_y_R    = 0*ones(size(t));
 zmp_foot_y_L  = 0*ones(size(t));
 zmp_foot_y_R  = 0*ones(size(t));
-f_to_f_y      = -0.3*ones(size(t));
+f_to_f_y      = 0.3*ones(size(t));
 % you have to specify a x_des_model otherwise it is going to fail   
 x_des_model    = [v_com_x_ref;v_foot_x_L;v_foot_x_R;zmp_foot_x_L;zmp_foot_x_R;f_to_f_x;...
                   v_com_y_ref;v_foot_y_L;v_foot_y_R;zmp_foot_y_L;zmp_foot_y_R;f_to_f_y];

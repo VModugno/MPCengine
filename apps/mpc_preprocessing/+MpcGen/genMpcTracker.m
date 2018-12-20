@@ -7,9 +7,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
         
         orig_n      % state dimension before the exstension with the control input
         u_cur       % last input value (numerical version of u_prev)
-       
-        maxInput    
-        maxOutput     
+            
         %% for logging
         it          % internal iterator to keep track of the data
         Ustar
@@ -20,7 +18,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
     
     
     methods
-        function obj = genMpcTracker(A_cont,B_cont,C_cont,maxInput,maxOutput,delta,N,state_gain,control_cost,...
+        function obj = genMpcTracker(A_cont,B_cont,C_cont,B_In,B_Out,delta,N,state_gain,control_cost,...
                                      type,solver,generate_functions,discretized,mutable_constr,function_list)
                     
             % call super class constructor
@@ -50,19 +48,19 @@ classdef genMpcTracker < MpcGen.coreGenerator
             
             obj.it    = 1;
             
-            if(length(maxInput)~= obj.m)
+            if(length(B_In.max)~= obj.m)
                 if(isempty(mutable_constr))
                     error('the maxInput has to be a vector with q elements wehre q is the number of output')
                 end
             else
-                obj.maxInput = maxInput;
+                obj.B_In = B_In;
             end
-            if(length(maxOutput)~= obj.q)
+            if(length(B_Out.max)~= obj.q)
                 if(isempty(mutable_constr))
                     error('the maxOutput has to be a vector with m elements wehre m is the number of input')
                 end
             else
-                obj.maxOutput = maxOutput;    
+                obj.B_Out = B_Out;    
             end
             %% extended system and discretize when necessary
             if(~discretized)
@@ -297,8 +295,9 @@ classdef genMpcTracker < MpcGen.coreGenerator
                     
                  end
             end
-             
+            tic 
             [u_star,fval] = quadprog(H,[cur_ref; x_cur;obj.u_cur]'*F_tra, obj.cur_G,obj.cur_W + obj.cur_S*[x_cur;obj.u_cur]);
+            toc
             % new control
             obj.u_cur     = obj.u_cur + u_star(1: obj.m);
             % after updating u_cur i can update W for the next iteration 

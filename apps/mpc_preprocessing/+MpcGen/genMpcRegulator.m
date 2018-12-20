@@ -13,7 +13,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
 
     methods
-        function obj = genMpcRegulator(A_cont,B_cont,C_cont,B_In,B_out,delta,N,state_gain,control_cost,...
+        function obj = genMpcRegulator(A_cont,B_cont,C_cont,B_In,B_Out,delta,N,state_gain,control_cost,...
                                        type,solver,generate_functions,discretized,mutable_constr,function_list)
             
             % call super class constructor
@@ -46,16 +46,16 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                     error('the maxInput has to be a vector with m elements wehre m is the number of input')
                 end
             else
-                obj.maxInput = maxInput;
+                obj.B_In = B_In;
             end
-            if(length(maxOutput)~= obj.q)
+            if(length(B_Out.max)~= obj.q)
                 % i need to avoid to rise an error for dimension mismatch
                 % when i have mutable constraints
                 if(isempty(mutable_constr))
                     error('the maxOutput has to be a vector with q elements wehre q is the number of output')
                 end
             else
-                obj.maxOutput = maxOutput;    
+                obj.B_Out = B_Out;    
             end
             
             %% Discrete system (when necessary)

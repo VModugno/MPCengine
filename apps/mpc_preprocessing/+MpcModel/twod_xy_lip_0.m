@@ -74,14 +74,14 @@ maxOutputL = [infinity; 0; infinity; prm.footSize_x; infinity; max_f_to_f;
 maxOutputR = [infinity; infinity; 0; infinity; prm.footSize_x; max_f_to_f;
               infinity; infinity; 0; infinity; prm.footSize_y; max_f_to_f];
 boundsOutput.max  = [maxOutputL,maxOutputR];
-boundsOutput.min  = [minOutputL,minOutputR];
-boundsInput       = [];
+boundsOutput.min  = [];
+boundsInput.max   = [infinity; infinity; infinity;
+                     infinity; infinity; infinity];
 % here max_output is empty because here we are going to use mutable bounds
           
 B_Out.max  = [];
 B_Out.min  = [];
-B_In.max   = [infinity; infinity; infinity;
-              infinity; infinity; infinity];       
+B_In.max   = [];       
 B_In.min   = [];           
           
 %% gains
@@ -100,7 +100,7 @@ foot_pattern = [pattern_1,pattern_2];
 mutable_constr.N_state           = 2;
 mutable_constr.const_pattern     = foot_pattern;
 mutable_constr.boundsOutput      = boundsOutput;
-mutable_constr.boundsInput       = [];
+mutable_constr.boundsInput       = boundsInput;
 
 mutable_constr.g    = false;
 mutable_constr.w    = true;
