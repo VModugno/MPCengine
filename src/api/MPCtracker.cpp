@@ -22,7 +22,7 @@
 namespace pt = boost::property_tree;
 namespace fs = boost::filesystem;
 
-MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & traj)
+MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & traj,P_oracle oracle)
 {
 	std::stringstream ss;
 	// i get the current working directory
@@ -69,6 +69,7 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & tra
     // (the explanation of dim 2 is in the matlab files)
     	this->external_variables = Eigen::VectorXd::Zero(2);
     }
+    this->oracle = oracle;
 }
 
 Eigen::VectorXd MPCtracker::Init(Eigen::VectorXd state_0_in){

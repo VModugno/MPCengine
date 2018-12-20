@@ -14,7 +14,7 @@
 namespace pt = boost::property_tree;
 namespace fs = boost::filesystem;
 
-MPCregulator::MPCregulator(const std::string filename,P_solv solv)
+MPCregulator::MPCregulator(const std::string filename,P_solv solv,P_oracle oracle)
 {
 	std::stringstream ss;
 	// i get the current working directory
@@ -48,7 +48,7 @@ MPCregulator::MPCregulator(const std::string filename,P_solv solv)
 	// (the explanation of dim 2 is in the matlab files)
 		this->external_variables = Eigen::VectorXd::Zero(2);
 	}
-
+    this->oracle = oracle;
 }
 
 Eigen::VectorXd MPCregulator::Init(Eigen::VectorXd state_0_in){

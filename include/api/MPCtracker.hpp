@@ -32,7 +32,7 @@ public:
 	int             current_step;
 	double          current_time_step;
 
-	MPCtracker(const std::string filename,P_solv solv,trajectories & traj);
+	MPCtracker(const std::string filename,P_solv solv,trajectories & traj,P_oracle oracle = NULL);
 	Eigen::VectorXd Init(Eigen::VectorXd state_0_in);
 	Eigen::VectorXd ComputeControl(Eigen::VectorXd state_i_in);
 	~MPCtracker(){};
