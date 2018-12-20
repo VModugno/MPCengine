@@ -83,7 +83,13 @@ Eigen::VectorXd MPCtracker::Init(Eigen::VectorXd state_0_in){
 	//std::cout << "this->inner_x.size() = "<< this->inner_x.size() << std::endl;
 
 	// DONT CHANGE! the right order is set inside the code generator class in matlab with the inner_x variables
-	this->inner_x << this->action,state_0_in,ref,inner_step;
+	if(pd.type.compare("ltv")==0){
+		Eigen::VectorXd trace = oracle->ComputePlan(state_0_in);
+		this->inner_x << this->action,trace,ref,inner_step;
+	}else if(pd.type.compare("fixed")==0){
+		this->inner_x << this->action,state_0_in,ref,inner_step;
+	}
+
 
 	//DEBUG
 	//std::cout << "this->inner_x = "<<this->inner_x<<std::endl;
@@ -109,7 +115,13 @@ Eigen::VectorXd MPCtracker::ComputeControl(Eigen::VectorXd state_i_in){
 
 	ref = traj.ComputeTraj(current_time_step,current_step);
 	// DONT CHANGE! the right order is set inside the code generator class in matlab with the inner_x variables
-	this->inner_x << this->action,state_i_in,ref,inner_step;
+	if(pd.type.compare("ltv")==0){
+			Eigen::VectorXd trace = oracle->ComputePlan(state_i_in);
+			this->inner_x << this->action,trace,ref,inner_step;
+	}else if(pd.type.compare("fixed")==0){
+		this->inner_x << this->action,state_i_in,ref,inner_step;
+	}
+	//this->inner_x << this->action,state_i_in,ref,inner_step;
 
 	this->delta_action = solver->solveQP(this->inner_x,this->external_variables,this->pd);
 	// update of last_action

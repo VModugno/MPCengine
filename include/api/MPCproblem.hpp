@@ -9,12 +9,14 @@
 #define MPCPROBLEM_HPP_
 
 #include "solvers/AbsSolver.hpp"
+#include "OraclePlanner.hpp"
 
 
 class MPCproblem {
 public:
 
 	P_solv           solver;               // all the dimension of the problem are stored in the abstract solver
+	P_oracle         oracle;               // i will use p oracle only if the problem is ltv
 	ProblemDetails   pd;
 	Eigen::VectorXd  inner_x;              // here I store full mpc tracker state
 	Eigen::VectorXd  external_variables;   // here i store the external variables for the current experiment

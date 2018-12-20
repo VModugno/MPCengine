@@ -69,6 +69,7 @@ set(MPCEngine_Api_HDR
   ${CMAKE_SOURCE_DIR}/include/api/MPCproblem.hpp
   ${CMAKE_SOURCE_DIR}/include/api/MPCregulator.hpp
   ${CMAKE_SOURCE_DIR}/include/api/MPCtracker.hpp
+  ${CMAKE_SOURCE_DIR}/include/api/OraclePlanner.hpp
 )
 
 install(FILES ${MPCEngine_Api_HDR} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/MPCEngine/api/)
@@ -119,6 +120,7 @@ set(MPCEngine_HDR
   ${CMAKE_SOURCE_DIR}/include/api/MPCproblem.hpp
   ${CMAKE_SOURCE_DIR}/include/api/MPCregulator.hpp
   ${CMAKE_SOURCE_DIR}/include/api/MPCtracker.hpp
+  ${CMAKE_SOURCE_DIR}/include/api/OraclePlanner.hpp
   ${CMAKE_SOURCE_DIR}/include/trajectories/all_traj.hpp
   ${CMAKE_SOURCE_DIR}/include/trajectories/all_traj_include.hpp
   ${CMAKE_SOURCE_DIR}/include/trajectories/recorded_f.hpp
