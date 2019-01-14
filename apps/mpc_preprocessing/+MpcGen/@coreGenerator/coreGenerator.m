@@ -228,11 +228,15 @@ classdef coreGenerator <  handle
             x               = sym('x',[obj.n,1],'real');
             u               = sym('u',[obj.m,1],'real');
             for kk = 1:obj.N
+                disp("ciclooo")
                 % here i create the symbolic variables
-                cur_x_name = "x_" + num2str(kk-1);
-                cur_u_name = "u_" + num2str(kk-1);
+                %cur_x_name = "x_" + num2str(kk-1);
+                cur_x_name = "x_" + num2str(kk);
+                %cur_u_name = "u_" + num2str(kk-1);
+                cur_u_name = "u_" + num2str(kk);
                 cur_x = sym(cur_x_name,[obj.n,1],'real');
                 cur_u = sym(cur_u_name,[obj.m,1],'real');
+                
                 % substitute the variables in A and B with cur_u and
                 % cur_x
                 cur_A = A;
@@ -248,19 +252,20 @@ classdef coreGenerator <  handle
                 all_A{kk} = cur_A;
                 all_B{kk} = cur_B;
                 % i store the current variables inside inner_x_ext
-                if(kk==1)
+                %if(kk==1)
                      % for regulator and tracker i will not insert inside the inner_x_ext
                      % the first x variables, a.k.a. x_0, because i want to
                      % use the x_0 already defined inside the coreGenerator
                      % class. 
                      % 
-                     obj.inner_x_ext = [obj.inner_x_ext;cur_u];
-                else
+                     %obj.inner_x_ext = [obj.inner_x_ext;cur_u];
+                %else
                      % the order which i store this variables is gonna
                      % be the orders that i have to observe when i pass
                      % the variables to the function
-                     obj.inner_x_ext = [obj.inner_x_ext;cur_x;cur_u];
-                end
+                     %obj.inner_x_ext = [obj.inner_x_ext;cur_x;cur_u];
+                %end
+                obj.inner_x_ext = [obj.inner_x_ext;cur_x;cur_u];
 
             end
        end

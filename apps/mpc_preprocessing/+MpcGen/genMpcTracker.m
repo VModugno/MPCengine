@@ -131,6 +131,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
             %% Construct matrices (it automatically detects fixed or ltv)
             propModelCall             = "CostFunc.propagationModel_tracker_"+ type + "_" + obj.propagationModel + "(obj,A,B,C,Q,R)";
             [S_bar,S_bar_C,T_bar,T_bar_C,Q_hat,Q_bar,R_bar] = eval(propModelCall);
+            %S_bar,S_bar_C,T_bar,T_bar_C,Q_hat,Q_bar,R_bar
             %% Cost function matrices
             costFuncCall      = "CostFunc.tracker_" + obj.costFunc + "(S_bar,T_bar,Q_hat,Q_bar,R_bar)";
             [obj.H,obj.F_tra] = eval(costFuncCall);
@@ -198,8 +199,10 @@ classdef genMpcTracker < MpcGen.coreGenerator
             % them into matlab function to use them inside matlab for
             % compute control 
             if(strcmp(obj.type,"ltv"))
-                obj.H     = matlabFunction(obj.H,'vars', {obj.x_0,obj.inner_x_ext});
-                obj.F_tra = matlabFunction(obj.F_tra,'vars', {obj.x_0,obj.inner_x_ext});
+                %obj.H     = matlabFunction(obj.H,'vars', {obj.x_0,obj.inner_x_ext});
+                obj.H     = matlabFunction(obj.H,'vars', {obj.inner_x_ext});
+                %obj.F_tra = matlabFunction(obj.F_tra,'vars', {obj.x_0,obj.inner_x_ext});
+                obj.F_tra = matlabFunction(obj.F_tra,'vars', {obj.inner_x_ext});
             end
                 
             
@@ -209,7 +212,8 @@ classdef genMpcTracker < MpcGen.coreGenerator
             % G post-processing
             if(strcmp(obj.m_c.g,"pattern"))
                 if(strcmp(obj.type,"ltv"))
-                    obj.m_c.S_bar_C_func       = matlabFunction(obj.m_c.S_bar_C,'vars', {obj.x_0,obj.inner_x_ext});
+                    %obj.m_c.S_bar_C_func       = matlabFunction(obj.m_c.S_bar_C,'vars', {obj.x_0,obj.inner_x_ext});
+                    obj.m_c.S_bar_C_func       = matlabFunction(obj.m_c.S_bar_C,'vars', {obj.inner_x_ext});
                 elseif(strcmp(obj.type,"fixed"))
                     % in the case of fixed pattern i need to initialize the
                     % current matrix value with the one computed before 
@@ -217,7 +221,8 @@ classdef genMpcTracker < MpcGen.coreGenerator
                 end      
             else
                 if(strcmp(obj.type,"ltv"))
-                    obj.G = matlabFunction(obj.G,'vars', {obj.x_0,obj.inner_x_ext});
+                    %obj.G = matlabFunction(obj.G,'vars', {obj.x_0,obj.inner_x_ext});
+                    obj.G = matlabFunction(obj.G,'vars', {obj.inner_x_ext});
                 end
             end
             % S post-processing
@@ -232,7 +237,8 @@ classdef genMpcTracker < MpcGen.coreGenerator
 
             else
                 if strcmp(obj.type,"ltv")
-                    obj.S = matlabFunction(obj.S,'vars', {obj.x_0,obj.inner_x_ext});
+                    %obj.S = matlabFunction(obj.S,'vars', {obj.x_0,obj.inner_x_ext});
+                    obj.S = matlabFunction(obj.S,'vars', {obj.inner_x_ext});
                 end
             end
             % W post-processing
@@ -249,7 +255,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
             
         end
         
-        function tau = ComputeControl(obj,x_cur,cur_ref)
+        function tau = ComputeControl(obj,x_cur,xu_oracle_trajectory)
             % i do not update here the W the W for mutable constraints case
 %             if (~obj.m_c_flag)
 %                 obj.W_numeric = obj.W(obj.u_cur);
@@ -264,18 +270,38 @@ classdef genMpcTracker < MpcGen.coreGenerator
             %H_      = obj.H';
             %H_      = H_(:);
             %ub_     = W + obj.S*[x_cur;obj.u_cur];
+            
+            %suppose that we want to trak 4 state, we insert into xu
+            %state_1+input_1,state_2+input_2 and so on. Here automatically
+            %we extend the ref state to include dummy state for the
+            %tracking variable. We also extrapolate only the state traking
+            %ref
+            xu_oracle_complete = vertcat(xu_oracle_trajectory(1:1 + obj.q) , 0 , xu_oracle_trajectory(2 + obj.q));
+            x_ref = xu_oracle_trajectory(1:obj.q);
+            for j = 2:obj.N
+                temp = vertcat(xu_oracle_trajectory((j-1)*obj.q + 1:(j-1)*obj.q + 1 + obj.q) , 0 , xu_oracle_trajectory((j-1)*obj.q + 2 + obj.q));
+                xu_oracle_complete = vertcat(xu_oracle_complete,temp);
+                x_ref = vertcat(x_ref,xu_oracle_trajectory((j-1)*obj.q + 1:(j-1)*obj.q + obj.q));
+            end
+            %%%%%%%%%%%%%%%%%%%%%%
             if(strcmp(obj.type,"ltv"))
-                 H     = obj.H(xu_oracle_trajectory);
-                 F_tra = obj.F_tra(xu_oracle_trajectory);
+                 H     = obj.H(xu_oracle_complete);
+                 %H     = obj.H(in1,in2);
+                 F_tra = obj.F_tra(xu_oracle_complete);
+                 %F_tra = obj.F_tra(in1,in2);
                  if(strcmp(obj.m_c.g,"pattern"))
                     S_bar_C     = obj.m_c.S_bar_C_func(xu_oracle_trajectory);
                  else
-                    obj.cur_G = obj.G(xu_oracle_trajectory);
+                    obj.cur_G = obj.G(xu_oracle_complete);
                  end
                  if(strcmp(obj.m_c.s,"pattern"))
                     T_bar_C     = obj.m_c.T_bar_C_func(xu_oracle_trajectory);
                  else
-                    obj.cur_S = obj.S(xu_oracle_trajectory);
+                    obj.cur_S = obj.S(xu_oracle_complete);
+                 end
+                 %funziona?
+                 if(~strcmp(obj.m_c.w,"pattern"))
+                    obj.cur_W  = double(subs(obj.W,obj.u_prev,obj.u_cur));
                  end
             elseif(strcmp(obj.type,"fixed"))
                  H          = obj.H;
@@ -291,12 +317,13 @@ classdef genMpcTracker < MpcGen.coreGenerator
                     obj.cur_S  = obj.S;
                  end
                  if(~strcmp(obj.m_c.w,"pattern"))
-                    obj.cur_W  = double(subs(obj.W,obj.u_prev,obj.u_cur));
-                    
+                    obj.cur_W  = double(subs(obj.W,obj.u_prev,obj.u_cur));                    
                  end
             end
             tic 
-            [u_star,fval] = quadprog(H,[cur_ref; x_cur;obj.u_cur]'*F_tra, obj.cur_G,obj.cur_W + obj.cur_S*[x_cur;obj.u_cur]);
+            %[u_star,fval] = quadprog(H,[cur_ref; x_cur;obj.u_cur]'*F_tra, obj.cur_G,obj.cur_W + obj.cur_S*[x_cur;obj.u_cur]);
+            [u_star,fval] = quadprog(H,[x_ref; x_cur;obj.u_cur]'*F_tra, obj.cur_G,obj.cur_W + obj.cur_S*[x_cur;obj.u_cur]);
+            %[u_star,fval] = quadprog(H,[x_ref; x_cur;obj.u_cur]'*F_tra);
             toc
             % new control
             obj.u_cur     = obj.u_cur + u_star(1: obj.m);
