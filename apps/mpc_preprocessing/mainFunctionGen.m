@@ -14,10 +14,10 @@ visualization    = true;
 %% logging data for comparison with results obtained with c++ (it works only if start_simulation = true)
 logging          = false;
 %% MPC Model
-model_name       = "twod_xy_lip_1"; 
+model_name       = "cart_pole_1"; 
 
 %% experiment time structure (for the environment different from the internal time)
-ft         = 10;       % 20 50 
+ft         = 10;       % final time 20 50 
 delta_t    = 0.05;    % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
 
@@ -64,7 +64,7 @@ elseif(strcmp(control_mode,"tracker"))
     % final time
     last_ref = x_des(:,end);
     for i=1:N
-        total_ref = [total_ref;last_ref];
+        total_ref = [total_ref;last_ref]; %#ok<AGROW>
     end
 end
 
@@ -82,7 +82,8 @@ if(start_simulation)
         if(strcmp(control_mode,"regulator"))
             tau = controller.ComputeControl(cur_x);          
         elseif(strcmp(control_mode,"tracker"))
-            tau = controller.ComputeControl(cur_x,total_ref((i-1)*controller.q + 1:(i-1)*controller.q + controller.N*controller.q));
+            %tau = controller.ComputeControl(cur_x,total_ref((i-1)*controller.q + 1:(i-1)*controller.q + controller.N*controller.q));
+            tau = controller.ComputeControl(cur_x,total_ref((i-1)*controller.q + 1:(i-1)*controller.q + controller.N*controller.q + controller.N + 2));
         end
         %% feedback linearization when required
         if(feedback_lin)

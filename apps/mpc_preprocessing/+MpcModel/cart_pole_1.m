@@ -57,7 +57,7 @@ B_In.min     = [];
 state_gain   = 100;    % penalty error on the state
 control_cost = 1; 
 %% predictive windows (it is useful for mutable constraints)
-N            = 10;  
+N            = 4;  
 %% here i define if the model is fixed or ltv
 type         = "ltv"; % if the model is type ltv i need to specify the system matrix already using symbolic varialbes
 %% here i define if the model is with variable constraints or not
@@ -72,7 +72,9 @@ function_list.constrS          = "std";
 %% desired trajectories
 xc_des        = 0*ones(size(t));
 theta_des     = 0*ones(size(t));
+%xc_des        = 0*ones(size(t));
 theta_dot_des = 0*ones(size(t));
 
 
+%x_des_model    = [xc_des;theta_des;xl_des;theta_dot_des];
 x_des_model    = [xc_des;theta_des;theta_dot_des];
