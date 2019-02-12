@@ -17,7 +17,6 @@ prm.h              = 0.8;%0.8;
 prm.footSize_x     = 0.05;
 prm.foot_to_foot_x = 0.0;        % desired foot to foot distance along x
 prm.vref_x         = 0.1;        % desired com velocity
-max_f_to_f         = 0.05;       % bounds  
 
 % LIP model
 omega = sqrt(9.8/prm.h);
