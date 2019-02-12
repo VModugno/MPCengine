@@ -39,7 +39,7 @@ B_In.min     = [];
 state_gain   = 100;    % penalty error on the state
 control_cost = 1; 
 %% predictive windows (it is useful for mutable constraints)
-N            = 30;  
+N            = 50;  
 %% here i define if the model is fixed or ltv
 type         = "fixed"; % if the model is type ltv i need to specify the system matrix already using symbolic varialbes
 %% here i define if the model is with variable constraints or not

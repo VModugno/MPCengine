@@ -2,8 +2,9 @@ clear variables
 close all
 clc
 
+
 %% activate or deactivate function generation
-generate_func    = false;
+generate_func    = true;
 %%
 %% simulate the mpc 
 start_simulation = true;
@@ -14,10 +15,10 @@ visualization    = true;
 %% logging data for comparison with results obtained with c++ (it works only if start_simulation = true)
 logging          = false;
 %% MPC Model
-model_name       = "cart_pole_1"; 
+model_name       = "pendubot_0"; 
 
 %% experiment time structure (for the environment different from the internal time)
-ft         = 10;       % final time 20 50 
+ft         = 1;       % final time 20 50 
 delta_t    = 0.05;    % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
 
