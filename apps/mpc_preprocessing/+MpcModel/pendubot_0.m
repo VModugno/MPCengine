@@ -10,15 +10,19 @@
 
 %% cart pole model 
 % name of the enviroment which the current model represents
-env_name ="CartPole";
+env_name ="Pendubot";
 % control step used inside the controller in general different from time step for integration 
 internal_dt = 0.05; 
 %cart pole parameters (to the env class) (TODO add read parameters from file)
-prm.mCart    = 0.1;
-prm.mPend    = 0.1;
-prm.L        = 0.5;
-g            = 9.8;
-xCartMax     = 5;
+prm.m1 = 0.09;
+prm.m2 = 0.08;
+prm.l1 = 0.1492;
+prm.l2 = 0.1905;
+prm.lc1 = prm.l1/2;
+prm.lc2 = prm.l2/2;
+prm.I1 = (prm.m1*prm.l1^2)/12;
+prm.I2 = (prm.m2*prm.l2^2)/12;
+prm.Im = 4.74e-4;
 
 % for ltv I need to define the parametrized linearized model using the
 % symbolic toolbox
@@ -29,13 +33,29 @@ m = 1;
 x = sym('x',[n,1],'real');
 u = sym('u',[m,1],'real');
 
-mes_acc   = [(u + prm.mPend*sin(x(3))*(prm.L*x(4)^2-g*cos(x(3))))/(prm.mCart+prm.mPend*sin(x(3))^2);...
-            (-u*cos(x(3)) - prm.mPend*prm.L*x(4)^2*sin(x(3))*cos(x(3)) + (prm.mPend+prm.mCart)*g*sin(x(3)))/(prm.L*(prm.mCart+prm.mPend*sin(x(3))^2))];
 
-f         = [x(2); ...
-            mes_acc(1);...
-            x(4);...
-            mes_acc(2)];
+M = zeros(2,2);
+M = sym(M);
+M(1,1) = simplify(prm.m1*prm.lc1^2+prm.m2*(prm.l1^2+prm.lc2^2+2*prm.l1*prm.lc2*cos(x(2)))+prm.I1+prm.I2+prm.Im);
+M(1,2) = simplify(prm.m2*(prm.lc2^2+prm.l1*prm.lc2*cos(x(2)))+prm.I2);
+M(2,1) = M(1,2);
+M(2,2) = prm.m2*prm.lc2^2+prm.I2;
+C = zeros(2,1);
+C = sym(C);
+C(1,1) = simplify(-prm.m2*prm.l1*prm.lc2*sin(x(2))*x(4)^2 - 2*prm.m2*prm.l1*prm.lc2*sin(x(2))*x(3)*x(4));
+C(2,1) = simplify(prm.m2*prm.l1*prm.lc2*sin(x(2))*x(3)^2);
+phi = zeros(2,1);
+phi = sym(phi);
+g = 9.8;
+phi(1,1) = simplify((prm.m1*prm.lc1+prm.m2*prm.l1)*g*cos(x(1)+pi/2)+prm.m2*prm.lc2*g*cos(x(1)+pi/2+x(2)));
+phi(2,1) = simplify(prm.m2*prm.lc2*g*cos(x(1)+pi/2+x(2)));
+
+mes_acc   = M\(u - C - phi);
+
+f         = [x(3); ...
+             x(4);...
+             mes_acc(1);...
+             mes_acc(2)];
 
 A_cont = jacobian(f, x);
 B_cont = jacobian(f, u);
@@ -48,7 +68,7 @@ discretized   = false;
 % with this i require to do the feedback linearization (by default is false)
 feedback_lin  = false;
 %% init state
-init_state = [0; 0; pi/14; 0];
+init_state = [0; 0; 0; 0];
 %% cart pole state and control bounds  
 B_Out.max    = [10;100;100;100];
 B_Out.min    = [];

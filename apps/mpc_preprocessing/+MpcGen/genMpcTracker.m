@@ -128,14 +128,23 @@ classdef genMpcTracker < MpcGen.coreGenerator
             else
                 obj.inner_x_ext = []; % empty vector
              end
+            %A = simplify(A);
+            %B = simplify(B);
             %% Construct matrices (it automatically detects fixed or ltv)
             propModelCall             = "CostFunc.propagationModel_tracker_"+ type + "_" + obj.propagationModel + "(obj,A,B,C,Q,R)";
             [S_bar,S_bar_C,T_bar,T_bar_C,Q_hat,Q_bar,R_bar] = eval(propModelCall);
+            %S_bar = simplify(S_bar);
+            %S_bar_C = simplify(S_bar_C);
+            %T_bar = simplify(T_bar);
+            %T_bar_C = simplify(T_bar_C);
+  
+            
             %S_bar,S_bar_C,T_bar,T_bar_C,Q_hat,Q_bar,R_bar
             %% Cost function matrices
             costFuncCall      = "CostFunc.tracker_" + obj.costFunc + "(S_bar,T_bar,Q_hat,Q_bar,R_bar)";
             [obj.H,obj.F_tra] = eval(costFuncCall);
-
+            disp("f_tra before")
+            %obj.F_tra
             %% Constraint matrices            
             % g function
             % through obj.m_c.g we know if g is mutable or not 
@@ -183,7 +192,8 @@ classdef genMpcTracker < MpcGen.coreGenerator
             
            
             %% i copy all the matrix in the sym_* variables in order to pass them to the function generation method   
-            obj.sym_H      = sym(obj.H);                   
+            obj.sym_H      = sym(obj.H);
+            %obj.H
             obj.sym_F_tra  = sym(obj.F_tra); 
             obj.sym_G      = sym(obj.G);      
             %obj.sym_W      = sym([kron(ones(obj.N,1),obj.maxOutput); kron(ones(obj.N,1),obj.maxOutput);...
@@ -191,19 +201,30 @@ classdef genMpcTracker < MpcGen.coreGenerator
             obj.sym_W      = sym(obj.W);
             obj.sym_S      = sym(obj.S);
             
+            disp("F_sym")
+            %obj.sym_F_tra
+            %temo = ([obj.ref_0;obj.x_0;obj.u_prev]'*obj.sym_F_tra)'
+            
+            %% store number of constraints
+            % here i compute the number of constraints for each step it is
+            % very immportant for the Cpp version of mpc
+            obj.N_constr  = size(obj.S,1)/obj.N;
+            
+            
             %% TODO here before continuing i need to set the value of the outer parameters by calling the update function
-            
-            
             %% cost function post processing
             % if the matrix has been computed for LTV i need to transform
             % them into matlab function to use them inside matlab for
             % compute control 
+            tic
             if(strcmp(obj.type,"ltv"))
                 %obj.H     = matlabFunction(obj.H,'vars', {obj.x_0,obj.inner_x_ext});
-                obj.H     = matlabFunction(obj.H,'vars', {obj.inner_x_ext});
+                %obj.H = simplify(obj.H);
+                %obj.H     = matlabFunction(obj.H,'vars', {obj.inner_x_ext});
                 %obj.F_tra = matlabFunction(obj.F_tra,'vars', {obj.x_0,obj.inner_x_ext});
-                obj.F_tra = matlabFunction(obj.F_tra,'vars', {obj.inner_x_ext});
+                %obj.F_tra = matlabFunction(obj.F_tra,'vars', {obj.inner_x_ext});
             end
+            toc
                 
             
             %% constraints function post processing
@@ -213,7 +234,8 @@ classdef genMpcTracker < MpcGen.coreGenerator
             if(strcmp(obj.m_c.g,"pattern"))
                 if(strcmp(obj.type,"ltv"))
                     %obj.m_c.S_bar_C_func       = matlabFunction(obj.m_c.S_bar_C,'vars', {obj.x_0,obj.inner_x_ext});
-                    obj.m_c.S_bar_C_func       = matlabFunction(obj.m_c.S_bar_C,'vars', {obj.inner_x_ext});
+                    %obj.m_c.S_bar_C_func       = matlabFunction(obj.m_c.S_bar_C,'vars', {obj.inner_x_ext});
+                    obj.m_c.S_bar_C_func = obj.m_c.S_bar_C;
                 elseif(strcmp(obj.type,"fixed"))
                     % in the case of fixed pattern i need to initialize the
                     % current matrix value with the one computed before 
@@ -222,13 +244,14 @@ classdef genMpcTracker < MpcGen.coreGenerator
             else
                 if(strcmp(obj.type,"ltv"))
                     %obj.G = matlabFunction(obj.G,'vars', {obj.x_0,obj.inner_x_ext});
-                    obj.G = matlabFunction(obj.G,'vars', {obj.inner_x_ext});
+                    %obj.G = matlabFunction(obj.G,'vars', {obj.inner_x_ext});
+                    
                 end
             end
             % S post-processing
             if(strcmp(obj.m_c.s,"pattern"))
                 if(strcmp(obj.type,"ltv"))
-                    obj.m_c.T_bar_C_func       = matlabFunction(obj.m_c.T_bar_C,'vars', {obj.x_0,obj.inner_x_ext});
+                    %obj.m_c.T_bar_C_func       = matlabFunction(obj.m_c.T_bar_C,'vars', {obj.x_0,obj.inner_x_ext});
                 elseif(strcmp(obj.type,"fixed"))
                     % in the case of fixed pattern i need to initialize the
                     % current matrix value with the one computed before
@@ -238,7 +261,7 @@ classdef genMpcTracker < MpcGen.coreGenerator
             else
                 if strcmp(obj.type,"ltv")
                     %obj.S = matlabFunction(obj.S,'vars', {obj.x_0,obj.inner_x_ext});
-                    obj.S = matlabFunction(obj.S,'vars', {obj.inner_x_ext});
+                    %obj.S = matlabFunction(obj.S,'vars', {obj.inner_x_ext});
                 end
             end
             % W post-processing
@@ -247,10 +270,8 @@ classdef genMpcTracker < MpcGen.coreGenerator
                 % current matrix value with the one computed before
                 obj.cur_W = double(subs(obj.W,obj.u_prev,obj.u_cur));
             end
-            %% store number of constraints
-            % here i compute the number of constraints for each step it is
-            % very immportant for the Cpp version of mpc
-            obj.N_constr  = size(obj.S,1)/obj.N;
+            
+
             
             
         end
@@ -285,19 +306,25 @@ classdef genMpcTracker < MpcGen.coreGenerator
             end
             %%%%%%%%%%%%%%%%%%%%%%
             if(strcmp(obj.type,"ltv"))
-                 H     = obj.H(xu_oracle_complete);
+                 H = double(subs(obj.H,obj.inner_x_ext,xu_oracle_complete(1:(obj.n+1)*obj.N)));
+                 F_tra = double(subs(obj.F_tra,obj.inner_x_ext,xu_oracle_complete(1:(obj.n+1)*obj.N)));
+                 %H = obj.H;
+                 %F_tra = obj.F_tra;
+                 %H     = obj.H(xu_oracle_complete);
                  %H     = obj.H(in1,in2);
-                 F_tra = obj.F_tra(xu_oracle_complete);
+                 %F_tra = obj.F_tra(xu_oracle_complete);
                  %F_tra = obj.F_tra(in1,in2);
                  if(strcmp(obj.m_c.g,"pattern"))
                     S_bar_C     = obj.m_c.S_bar_C_func(xu_oracle_trajectory);
                  else
-                    obj.cur_G = obj.G(xu_oracle_complete);
+                    obj.cur_G = double(subs(obj.G,obj.inner_x_ext,xu_oracle_complete(1:(obj.n+1)*obj.N)));
+                    %obj.cur_G = obj.G(xu_oracle_complete);
                  end
                  if(strcmp(obj.m_c.s,"pattern"))
                     T_bar_C     = obj.m_c.T_bar_C_func(xu_oracle_trajectory);
                  else
-                    obj.cur_S = obj.S(xu_oracle_complete);
+                    obj.cur_S = double(subs(obj.S,obj.inner_x_ext,xu_oracle_complete(1:(obj.n+1)*obj.N)));
+                    %obj.cur_S = obj.S(xu_oracle_complete);
                  end
                  %funziona?
                  if(~strcmp(obj.m_c.w,"pattern"))
@@ -320,6 +347,16 @@ classdef genMpcTracker < MpcGen.coreGenerator
                     obj.cur_W  = double(subs(obj.W,obj.u_prev,obj.u_cur));                    
                  end
             end
+            disp("H")
+            H
+            disp("F_premult")
+            F_tra
+            disp("F")
+            [x_ref; x_cur;obj.u_cur]'*F_tra
+            disp("G")
+            obj.cur_G
+            disp("bo")
+            obj.cur_W + obj.cur_S*[x_cur;obj.u_cur]
             tic 
             %[u_star,fval] = quadprog(H,[cur_ref; x_cur;obj.u_cur]'*F_tra, obj.cur_G,obj.cur_W + obj.cur_S*[x_cur;obj.u_cur]);
             [u_star,fval] = quadprog(H,[x_ref; x_cur;obj.u_cur]'*F_tra, obj.cur_G,obj.cur_W + obj.cur_S*[x_cur;obj.u_cur]);
@@ -350,10 +387,10 @@ classdef genMpcTracker < MpcGen.coreGenerator
             end
          
             % for debugging
-            obj.Ustar{obj.it}        = reshape(u_star,[obj.m,obj.N]);
-            obj.Ustar_used(:,obj.it) = obj.u_cur + u_star(1:obj.m);
-            obj.all_fval(1,obj.it)   = fval;
-            obj.it                   = obj.it + 1;
+            %obj.Ustar{obj.it}        = reshape(u_star,[obj.m,obj.N]);
+            %obj.Ustar_used(:,obj.it) = obj.u_cur + u_star(1:obj.m);
+            %obj.all_fval(1,obj.it)   = fval;
+            %obj.it                   = obj.it + 1;
             %
             
             % control action 

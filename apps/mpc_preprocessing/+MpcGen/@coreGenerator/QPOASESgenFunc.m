@@ -11,6 +11,7 @@ function QPOASESgenFunc(obj)
    if(strcmp(obj.problemClass,"tracker"))
         %inner_x = [obj.x_0;obj.u_0;obj.ref_0;obj.index];
          inner_x = [obj.u_prev;obj.x_0;obj.inner_x_ext;obj.ref_0;obj.index];
+         inner_x
    else
        % if the system is not LTV obj.inner_x_ext is gonna be
        % zero

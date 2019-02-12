@@ -227,8 +227,9 @@ classdef coreGenerator <  handle
             % i have always to use the same variables name inside mpcModel 
             x               = sym('x',[obj.n,1],'real');
             u               = sym('u',[obj.m,1],'real');
+            disp("compute_matrix_A_B");
             for kk = 1:obj.N
-                disp("ciclooo")
+                %disp("ciclooo")
                 % here i create the symbolic variables
                 %cur_x_name = "x_" + num2str(kk-1);
                 cur_x_name = "x_" + num2str(kk);
