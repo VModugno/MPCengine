@@ -2,10 +2,19 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
 
     properties
-          
-      
-        
-        
+           
+      propModelCall
+      costFuncCall
+      constrFuncG_Call
+      constrFuncS_Call
+      constrFuncW_Call
+      A
+      B
+      C_constr
+      C_obj
+      Q
+      R
+      u_star_debug 
        
         
     end
@@ -13,23 +22,19 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
 
     methods
-        function obj = genMpcRegulator(A_cont,B_cont,C_cont,B_In,B_Out,delta,N,state_gain,control_cost,...
-                                       type,solver,generate_functions,discretized,mutable_constr,function_list)
-            
+        function obj = genMpcRegulator(A_cont,B_cont,C_cont_obj,C_cont_constr,B_In,B_Out,delta,N,state_gain,control_cost,...
+                                       type,solver,generate_functions,discretized,mutable_constr,state_machine,function_list)
+           
             % call super class constructor
-            obj = obj@MpcGen.coreGenerator(type,solver,generate_functions,size(A_cont,1),size(B_cont,2),size(C_cont,1),N,function_list);
+            obj = obj@MpcGen.coreGenerator(type,solver,generate_functions,A_cont,B_cont,C_cont_obj,C_cont_constr,N,delta,state_machine,function_list);
             
             % problem structure
             obj.type         = type; 
             obj.solver       = solver; 
             obj.problemClass = 'regulator';
             
-            % problem dimensions
-            obj.n     = size(A_cont,1);
-            obj.m     = size(B_cont,2);
-            obj.q     = size(C_cont,1);
-            obj.N     = N;
-            obj.delta = delta;
+            obj.state_machine = state_machine;
+               
             
             % when we do not have external varialbes to optimize we assign a dimension of one just to allow
             % matlab to provide the right functions signature
@@ -39,53 +44,93 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.extern_var = "false";
             obj.extern_dim = 0;
             
-            if(length(B_In.max)~= obj.m)
-                % i need to avoid to rise an error for dimension mismatch
-                % when i have mutable constraints
-                if(isempty(mutable_constr))
-                    error('the maxInput has to be a vector with m elements wehre m is the number of input')
+            
+            %% TODO add managment of bounds ONLY with state machine
+            if(isempty(state_machine))
+                if(length(B_In.max)~= obj.m)
+                    % i need to avoid to rise an error for dimension mismatch
+                    % when i have mutable constraints
+                    if(isempty(mutable_constr))
+                        error('the maxInput has to be a vector with m elements wehre m is the number of input')
+                    end
+                else
+                    obj.B_In = B_In;
                 end
-            else
-                obj.B_In = B_In;
-            end
-            if(length(B_Out.max)~= obj.q)
-                % i need to avoid to rise an error for dimension mismatch
-                % when i have mutable constraints
-                if(isempty(mutable_constr))
-                    error('the maxOutput has to be a vector with q elements wehre q is the number of output')
+                if(length(B_Out.max)~= obj.q)
+                    % i need to avoid to rise an error for dimension mismatch
+                    % when i have mutable constraints
+                    if(isempty(mutable_constr) && isempty(state_machine))
+                        error('the maxOutput has to be a vector with q elements wehre q is the number of output')
+                    end
+                else
+                    obj.B_Out = B_Out;    
                 end
-            else
-                obj.B_Out = B_Out;    
             end
             
             %% Discrete system (when necessary)
-            if(~discretized)
-                A = eye(obj.n) + delta*A_cont;
-                B = obj.delta*B_cont;
-                C = C_cont;
+            if(~isempty(obj.state_machine))
+                if(~discretized)
+                    for i=1:obj.state_machine.n_of_models
+                        obj.A{i}        = eye(obj.n(i)) + delta*A_cont{i};
+                        obj.B{i}        = obj.delta*B_cont{i};
+                        obj.C_constr{i} = C_cont_constr{i};
+                        obj.C_obj{i}    = C_cont_obj{i};
+                    end
+                else
+                    obj.A        = A_cont;
+                    obj.B        = B_cont;
+                    obj.C_constr = C_cont_constr;
+                    obj.C_obj    = C_cont_obj;
+                end
             else
-                A = A_cont;
-                B = B_cont;
-                C = C_cont;
+                if(~discretized)
+                    %% tODO add different C matrix (one for measure one for constraints)
+                    A = eye(obj.n) + delta*A_cont;
+                    B = obj.delta*B_cont;
+                    C = C_cont;
+                else
+                    A = A_cont;
+                    B = B_cont;
+                    C = C_cont;
+                end
+                
             end
 
             %% Cost Function (here i can manage both scalar and vector cost)
-            if(length(state_gain)==1)
-                Q = state_gain*eye(obj.q);
-            else
-                if(length(state_gain) == obj.q)
-                    Q = diag(state_gain);
-                else
-                    error('diagonal state gain has the wrong size, fix it!');
+            if(~isempty(obj.state_machine))
+                for i=1:obj.state_machine.n_of_models 
+                    if(length(state_gain{i}) == obj.q_obj(i))
+                        obj.Q{i} = diag(state_gain{i});
+                    else
+                        error('diagonal state gain has the wrong size, fix it!');
+                    end
+        
+                    if(length(control_cost{i}) == obj.m(i))
+                        obj.R{i} = diag(control_cost{i});
+                    else
+                        error('diagonal control cost has the wrong size, fix it!');
+                    end
+                    
                 end
-            end
-            if(length(state_gain)==1)
-                R = control_cost*eye(obj.m);
             else
-                if(length(control_cost) == obj.m)
-                R = diag(control_cost);
+                %% TODO distinguish between constraints C and Objective C
+                if(length(state_gain)==1)
+                    Q = state_gain*eye(obj.q);
                 else
-                    error('diagonal control cost has the wrong size, fix it!');
+                    if(length(state_gain) == obj.q)
+                        Q = diag(state_gain);
+                    else
+                        error('diagonal state gain has the wrong size, fix it!');
+                    end
+                end
+                if(length(state_gain)==1)
+                    R = control_cost*eye(obj.m);
+                else
+                    if(length(control_cost) == obj.m)
+                    R = diag(control_cost);
+                    else
+                        error('diagonal control cost has the wrong size, fix it!');
+                    end
                 end
             end
 
@@ -116,53 +161,60 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             end
             
             %% overWrite A and B if the system is LTV and i Initialize inner_x_ext
+            A = obj.A;
+            B = obj.B; 
+            C_constr = obj.C_constr;
+            C_obj = obj.C_obj;
+            Q = obj.Q;
+            R = obj.R;
+            
             if(strcmp(obj.type,"ltv"))
                 [A,B]=obj.ComputeMatricesLTV(A,B);
             else
                 obj.inner_x_ext = []; % empty vector
             end
             %% Construct matrices (it automatically detects fixed or ltv)
-            propModelCall             = "CostFunc.propagationModel_regulator_"+ type + "_" + obj.propagationModel + "(obj,A,B,C,Q,R)";
-            [S_bar,T_bar,Q_bar,R_bar] = eval(propModelCall);
+            obj.propModelCall             = "CostFunc.propagationModel_regulator_"+ type + "_" + obj.propagationModel + "(obj,A,B,C_obj,C_constr,Q,R)";
+            [S_bar_obj,S_bar_constr,T_bar_obj,T_bar_constr,Q_bar,R_bar] = eval(obj.propModelCall);
 
             %% Cost function matrices
-            costFuncCall      = "CostFunc.regulator_" + obj.costFunc + "(S_bar,T_bar,Q_bar,R_bar)";
-            [obj.H,obj.F_tra] = eval(costFuncCall);
+            obj.costFuncCall      = "CostFunc.regulator_" + obj.costFunc + "(S_bar_obj,T_bar_obj,Q_bar,R_bar)";
+            [obj.H,obj.F_tra] = eval(obj.costFuncCall);
             %% Constraints matrices
             
             % g function
             % through obj.m_c.g we know if g is mutable or not 
-            constrFuncG_Call = "Constraint.regulator_G_" +obj.m_c.g + "_" + obj.constrG + "(obj,S_bar)";
-            obj.G            = eval(constrFuncG_Call);
+            obj.constrFuncG_Call = "Constraint.regulator_G_"+ type + "_" +obj.m_c.g + "_" + obj.constrG + "(obj,S_bar_constr)";
+            obj.G                = eval(obj.constrFuncG_Call);
              % if G is mutable i need to store the current function inside
              % a function handle of the class (needded both for func gen and compute control)
              % and i need to store the variables that G is depending upon
             if(strcmp(obj.m_c.g,"pattern"))
-                str2funcCall             = "Constraint.regulator_G_" +obj.m_c.g + "_" + obj.constrG + "(obj,S_bar)";
+                str2funcCall             = "Constraint.regulator_G_" + type + "_" +obj.m_c.g + "_" + obj.constrG + "(obj,S_bar_constr)";
                 obj.MutableConstraints_G = str2func(str2funcCall);
                 obj.m_c.S_bar            = S_bar;
             end
             % S function
             % through obj.m_c.s we know if g is mutable or not 
-            constrFuncS_Call = "Constraint.regulator_S_" +obj.m_c.s + "_" + obj.constrS + "(obj,T_bar)";
-            obj.S            = eval(constrFuncS_Call);
+            obj.constrFuncS_Call = "Constraint.regulator_S_" + type + "_" +obj.m_c.s + "_" + obj.constrS + "(obj,T_bar_constr)";
+            obj.S                = eval(obj.constrFuncS_Call);
             % if S is mutable i need to store the current function inside
             % a function handle of the class (needded both for func gen and compute control)
             % and i need to store the variables that G is depending upon
             if(strcmp(obj.m_c.s,"pattern"))
-                str2funcCall             = "Constraint.regulator_S_" +obj.m_c.s + "_" + obj.constrS;   
+                str2funcCall             = "Constraint.regulator_S_"+ type + "_" + obj.m_c.s + "_" + obj.constrS;   
                 obj.MutableConstraints_S = str2func(str2funcCall);
                 obj.m_c.T_bar            = T_bar;
             end
              % w function
              % through obj.m_c.w we know if g is mutable or not 
-            constrFuncW_Call = "Constraint.regulator_W_" +obj.m_c.w + "_" + obj.constrW + "(obj)";
-            obj.W            = eval(constrFuncW_Call);
+            obj.constrFuncW_Call = "Constraint.regulator_W_" + type + "_" +obj.m_c.w + "_" + obj.constrW + "(obj)";
+            obj.W                = eval(obj.constrFuncW_Call);
             % if W is mutable i need to store the current function inside
             % a function handle of the class (needded both for func gen and compute control)
             % and i need to store the variables that G is depending upon
             if(strcmp(obj.m_c.w,"pattern"))
-                str2funcCall             = "Constraint.regulator_W_" +obj.m_c.w + "_" + obj.constrW;
+                str2funcCall             = "Constraint.regulator_W_" + type + "_" + obj.m_c.w + "_" + obj.constrW;
                 obj.MutableConstraints_W = str2func(str2funcCall);
             end
             
@@ -229,6 +281,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             %% store number of constraints
             % here i compute the number of constraints for each step it is
             % very immportant for the Cpp version of mpc
+            %% TODO to fix for cpp code generator
             obj.N_constr  = size(obj.S,1)/obj.N;
             
         end
@@ -266,12 +319,55 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                  if(~strcmp(obj.m_c.w,"pattern"))
                     obj.cur_W  = obj.W;
                  end
+             elseif(strcmp(obj.type,"statemachine"))
+                 H          = obj.H;
+                 F_tra      = obj.F_tra;
+                 obj.cur_G  = obj.G;
+                 obj.cur_S  = obj.S;
+                 %obj.cur_W  = obj.W; 
+                 
              end
              tic
              u_star = quadprog(H, x_cur'*F_tra, obj.cur_G, obj.cur_W+obj.cur_S*x_cur);%,[],[],[],[],[],options);
              toc
-             tau = u_star(1:obj.m);
-             % after each iteration we need to update the mutable constraints 
+             if(strcmp(obj.type,"statemachine"))
+                index = obj.state_machine.state_pattern(1);
+                tau   = u_star(1:obj.m(index));
+                % DEBUG
+                index_control = 0;
+                for i = 1:length(obj.state_machine.state_pattern)
+                    current_system          = obj.state_machine.state_pattern(i);
+                    current_dimension       = obj.m(current_system);
+                    obj.u_star_debug{i}     = u_star(index_control+(1:current_dimension));
+                    index_control           = index_control + current_dimension;
+                end
+                % DEBUG
+             else
+                 tau = u_star(1:obj.m);
+             end
+                 
+             % after each iteration we need to update the mutable (when they are present)
+             % constraints and the state machine constraints
+             if(strcmp(obj.type,"statemachine"))
+                 A        = obj.A;
+                 B        = obj.B;
+                 C_constr = obj.C_constr;
+                 C_obj    = obj.C_obj;
+                 Q        = obj.Q;
+                 R        = obj.R;
+                 obj.UpdateStateMachinePattern();
+                 [S_bar_obj,S_bar_constr,T_bar_obj,T_bar_constr,Q_bar,R_bar] = eval(obj.propModelCall);
+                 [obj.H,obj.F_tra]                                           = eval(obj.costFuncCall);
+                  if(~strcmp(obj.m_c.g,"pattern"))
+                    obj.G                                                    = eval(obj.constrFuncG_Call);
+                  end
+                  if(~strcmp(obj.m_c.s,"pattern"))
+                    obj.S                                                    = eval(obj.constrFuncS_Call);
+                  end
+                  if(~strcmp(obj.m_c.w,"pattern"))
+                    obj.cur_W                                                = obj.MutableConstraints_W(obj);
+                  end   
+             end
              if (obj.m_c_flag)
                  % i assume that the pattern are the same for every
                  %  matrix constraint

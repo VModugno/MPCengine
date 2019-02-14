@@ -12,11 +12,14 @@ classdef coreGenerator <  handle
         solver                   % generate functions for target solver (qpoases)
         m_c                      % mutable constraints aka m_c is the structure that contains all the data about the mutable constraints
         m_c_flag                 % this is a flag tha represents if the the constraints change over time or not (case for gait generation)
+        state_machine            % structure to manage state machine problem
         problemClass             % tracker or regulator
         % structure of the problem
         n           % state space dim
         m           % control space dim 
         q           % output space dim 
+        q_constr    % output space dim (new version of output space) for objective function
+        q_obj       % output space dim (new version of output space) for constraints
         delta       % sampling time of the controller (in general different from the sampling time of the enviroment) in the model is called internal dt
         N           % widht of prediction window
         N_constr    % number of constraints
@@ -68,23 +71,58 @@ classdef coreGenerator <  handle
    
     methods
        
-        function obj = coreGenerator(type,solver,generate_functions,n,m,q,N,function_list)
-            obj.index            = sym('ind',[1,1],'real');
-            obj.x_0              = sym('x_0',[n,1],'real');
-            obj.u_prev           = sym('u_prev',[m,1],'real');
-            obj.ref_0            = sym('ref_0',[N*q,1],'real');
-            obj.type             = type;
-            obj.solver           = solver;
-            obj.propagationModel = function_list.propagationModel;    % (str) name of the function that we will use 
-            obj.costFunc         = function_list.costFunc;            % (str) name of the function that we will use 
-            obj.constrW          = function_list.constrW;             % (str) name of the function that we will use 
-            obj.constrG          = function_list.constrG;             % (str) name of the function that we will use 
-            obj.constrS          = function_list.constrS;             % (str) name of the function that we will use 
-            obj.GetBasePath();
-            if(generate_functions)
-                if ~exist(obj.basepath,'dir')
-                    mkdir(convertStringsToChars(obj.basepath));
+        function obj = coreGenerator(type,solver,generate_functions,A_cont,B_cont,C_cont_obj,C_cont_constr,N,delta,state_machine,function_list)
+            if(~strcmp(type,'statemachine'))
+                obj.n     = size(A_cont,1);
+                obj.m     = size(B_cont,2);
+                obj.q     = size(C_cont,1); 
+                obj.N     = N;
+                obj.delta = delta;
+                obj.index            = sym('ind',[1,1],'real');
+                obj.x_0              = sym('x_0',[n,1],'real');
+                obj.u_prev           = sym('u_prev',[m,1],'real');
+                obj.ref_0            = sym('ref_0',[N*q,1],'real');
+                obj.type             = type;
+                obj.solver           = solver;
+                obj.propagationModel = function_list.propagationModel;    % (str) name of the function that we will use 
+                obj.costFunc         = function_list.costFunc;            % (str) name of the function that we will use 
+                obj.constrW          = function_list.constrW;             % (str) name of the function that we will use 
+                obj.constrG          = function_list.constrG;             % (str) name of the function that we will use 
+                obj.constrS          = function_list.constrS;             % (str) name of the function that we will use 
+                obj.GetBasePath();
+                if(generate_functions)
+                    if ~exist(obj.basepath,'dir')
+                        mkdir(convertStringsToChars(obj.basepath));
+                    end
                 end
+            else
+                % if we are dealing with state machine
+                for i= 1:state_machine.n_of_models
+                    obj.n(i)       = size(A_cont{i},1);
+                    obj.m(i)       = size(B_cont{i},2);
+                    obj.q_constr(i) = size(C_cont_constr{i},1);
+                    obj.q_obj(i)   = size(C_cont_obj{i},1);
+                end
+                obj.N                = N;
+                obj.delta            = delta;
+                obj.index            = sym('ind',[1,1],'real');
+                obj.x_0              = sym('x_0',[obj.n(1),1],'real');
+                %obj.u_prev           = sym('u_prev',[m,1],'real');
+                %obj.ref_0            = sym('ref_0',[N*q,1],'real');
+                obj.type             = type;
+                obj.solver           = solver;
+                obj.propagationModel = function_list.propagationModel;    % (str) name of the function that we will use 
+                obj.costFunc         = function_list.costFunc;            % (str) name of the function that we will use 
+                obj.constrW          = function_list.constrW;             % (str) name of the function that we will use 
+                obj.constrG          = function_list.constrG;             % (str) name of the function that we will use 
+                obj.constrS          = function_list.constrS;             % (str) name of the function that we will use 
+                obj.GetBasePath();
+                if(generate_functions)
+                    if ~exist(obj.basepath,'dir')
+                        mkdir(convertStringsToChars(obj.basepath));
+                    end
+                end
+                
             end
             
             
@@ -270,10 +308,20 @@ classdef coreGenerator <  handle
 
             end
        end
+       
+       function UpdateStateMachinePattern(obj)
+           
+            % circular buffer (in this way the state pattern behave as a circular pattern)
+            obj.state_machine.state_pattern = [ obj.state_machine.state_pattern(2:end,:);obj.state_machine.state_pattern(1,:)];
+           
+       end
        % each time i call this function i get one step update of
        % constraints.
        % I update m_c inside
        function UpdateConstrPattern(obj)
+           
+            
+            obj.m_c.footstep_pattern = [ obj.m_c.footstep_pattern(2:end);obj.m_c.footstep_pattern(1)+2];
             for i = 1:obj.m_c.N_state
                 % circular buffer (each pattern with this update behave as a circular buffer)
                 obj.m_c.const_pattern(:,i) = [ obj.m_c.const_pattern(2:end,i);obj.m_c.const_pattern(1,i)];

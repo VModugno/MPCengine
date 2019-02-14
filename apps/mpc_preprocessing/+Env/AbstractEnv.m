@@ -88,6 +88,14 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
             obj.state = obj.init_state;
         end
         
+        function SetState(obj,state)
+            obj.state  = state;
+            % clean_all_states
+            obj.all_states = []; 
+            % initialize with the new init state
+            obj.all_states = state;
+        end
+        
     end
     
     

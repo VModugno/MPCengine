@@ -4,7 +4,7 @@ clc
 
 
 %% activate or deactivate function generation
-generate_func    = true;
+generate_func    = false;
 %%
 %% simulate the mpc 
 start_simulation = true;
@@ -14,19 +14,21 @@ visualization    = true;
 %%
 %% logging data for comparison with results obtained with c++ (it works only if start_simulation = true)
 logging          = false;
+%% DEBUGGING
+debugging        = false;
 %% MPC Model
-model_name       = "pendubot_0"; 
+model_name       = "twod_xy_lip_no_foot_model_automatic_footstep"; 
 
 %% experiment time structure (for the environment different from the internal time)
-ft         = 1;       % final time 20 50 
-delta_t    = 0.05;    % 0.1 0.01 (to the env class)
+ft         = 10;       % final time 20 50 
+delta_t    = 0.05;     % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
 
 %% MPC parameters
 % cpp solver to use 
 solver       = "QPoases";
 % tracker or regulator
-control_mode = "tracker"; 
+control_mode = "regulator"; 
 
 %% regulator testing
 if(strcmp(control_mode,"regulator")) 
@@ -37,10 +39,14 @@ if(strcmp(control_mode,"regulator"))
     reward     = @(x,u)(norm(x));
     env_call   = "Env."+ env_name + "(init_state,delta_t,reward,prm)";
     env        = eval(env_call);
+    
+    %% DEBUG
+    env_vis_debug    = eval(env_call);
+    
     %% MPC ----------------------------------------------------------------    
     % regulator 
-    controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont,B_In,B_Out,internal_dt,N,state_gain,control_cost,...
-                                        type,solver,generate_func,discretized,mutable_constr,function_list); 
+    controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont_obj,C_cont_constr,B_In,B_Out,internal_dt,N,state_gain,control_cost,...
+                                        type,solver,generate_func,discretized,mutable_constr,state_machine,function_list); 
 elseif(strcmp(control_mode,"tracker"))
     %% system -------------------------------------------------------------
     str = "MpcModel." + model_name + ".m";
@@ -72,6 +78,9 @@ end
 if(visualization) 
     env.Render();
 end
+if(debugging)
+    env_vis_debug.Render();
+end
 if(start_simulation)
     cur_x           = init_state;
     all_states(:,1) = cur_x;
@@ -81,7 +90,18 @@ if(start_simulation)
         end
         %% mpc controller  
         if(strcmp(control_mode,"regulator"))
-            tau = controller.ComputeControl(cur_x);          
+            tau = controller.ComputeControl(cur_x);  
+            
+            %% DEBUG
+            if(debugging)
+                env_vis_debug.SetState(cur_x)
+                cur_x_debug = cur_x;
+                for jj = 1:length(controller.u_star_debug) 
+                    env_vis_debug.UpdateRender(cur_x_debug);  
+                    cur_x_debug = env_vis_debug.Step(controller.u_star_debug{jj});
+                end
+            disp('after debug')
+            end
         elseif(strcmp(control_mode,"tracker"))
             %tau = controller.ComputeControl(cur_x,total_ref((i-1)*controller.q + 1:(i-1)*controller.q + controller.N*controller.q));
             tau = controller.ComputeControl(cur_x,total_ref((i-1)*controller.q + 1:(i-1)*controller.q + controller.N*controller.q + controller.N + 2));
@@ -98,7 +118,7 @@ if(start_simulation)
         % update variables
         cur_x             = new_state;
         all_states(:,i+1) = cur_x;
-        all_action(:,i)   = tau;
+        %all_action(:,i)   = tau;
     end
 end
 
