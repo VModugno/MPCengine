@@ -3,11 +3,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
     properties
            
-      propModelCall
-      costFuncCall
-      constrFuncG_Call
-      constrFuncS_Call
-      constrFuncW_Call
+      
       A
       B
       C_constr

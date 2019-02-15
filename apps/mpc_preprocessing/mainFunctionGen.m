@@ -4,7 +4,7 @@ clc
 
 
 %% activate or deactivate function generation
-generate_func    = false;
+generate_func    = true;
 %%
 %% simulate the mpc 
 start_simulation = true;

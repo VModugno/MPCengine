@@ -51,6 +51,12 @@ classdef coreGenerator <  handle
         cur_G
         cur_S
         
+        % link to function pointer
+        propModelCall
+        costFuncCall
+        constrFuncG_Call
+        constrFuncS_Call
+        constrFuncW_Call
         
         
         propagationModel       % (str) name of the function that we will use 
@@ -179,8 +185,6 @@ classdef coreGenerator <  handle
            fid = fopen(new_name_file,'w');
            fprintf(fid,'%s',new_string);
            fclose(fid);
-
-           % memcpy(H_out,H[0], sizeof(double)*64);
 
            % delete old .c file
            delete(char(filepath));
