@@ -43,24 +43,31 @@ B_lip = [internal_dt-sh/omega; 1-ch; internal_dt];
 % footstep propagation model already discretized I + dt*A
 A_f   =  1;
 B_f   =  1;
+% reference propagation model 
+A_ref =  1;
+B_ref =  0;
 % Full system (two versions) (number of states = 8, number of inputs = 4 or 2 depending on the model)
-A_x   = blkdiag(A_lip, A_f);
-A_y   = blkdiag(A_lip, A_f);
+A_x   = blkdiag(A_lip, A_f, A_ref);
+A_y   = blkdiag(A_lip, A_f, A_ref);
 B_x_1 = blkdiag(B_lip, B_f);
-B_x_2 = [B_lip;0];
+B_x_1 = [B_x_1;0,0];
 B_y_1 = blkdiag(B_lip, B_f);
-B_y_2 = [B_lip;0];
+B_y_1 = [B_y_1;0,0];
+B_x_2 = [B_lip;0;0];
+B_y_2 = [B_lip;0;0];
+A1    = blkdiag(A_x, A_y);
+A2    = blkdiag(A_x, A_y);
 B1    = blkdiag(B_x_1,B_y_1);
 B2    = blkdiag(B_x_2,B_y_2);
 
 % for this case A_cont B_cont and C_cont are a sequence of matrices (cell vectors) and we need to
 % define a mask for each of them
-A_cont = {blkdiag(A_x, A_y),blkdiag(A_x, A_y)};
+A_cont = {A1,A2};
 B_cont = {B1,B2};
 
 % System outputs (C_x = C_y)
-C_x_objective    = [0 1 0 0];
-C_x_constraints  = [0 0 1 -1];
+C_x_objective    = [0 1 0 0 -1];
+C_x_constraints  = [0 0 1 -1 0];
 C_cont_obj       = {blkdiag(C_x_objective,C_x_objective),blkdiag(C_x_objective,C_x_objective)};
 % for now i put everything inside C_cont even if 
 C_cont_constr    = {blkdiag(C_x_constraints,C_x_constraints);blkdiag(C_x_constraints,C_x_constraints)};
@@ -80,8 +87,8 @@ discretized   = true;
 % with this i require to do the feedback linearization (by default is false)
 feedback_lin  = false;
 %% Initial state
-init_state = [  0; 0; 0; 0;   % sagittal axis (x coordinate) com position, com velocity, zmp position and initial footstep 
-                0.05; 0; 0; 0.1];  % coronal  axis (y coordinate) foot position and velocity, zmp position and initial footstep
+init_state = [  0;    0; 0; 0  ;  0.1;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
+                0.05; 0; 0; 0.1;  0];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
              
           
 %% here we consider the case with mutable bounds induced by  

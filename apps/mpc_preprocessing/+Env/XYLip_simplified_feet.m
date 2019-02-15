@@ -9,7 +9,7 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
     
     methods
         function obj = XYLip_simplified_feet(init_state,dt,reward,prm,varargin)
-            obj.num_state            = 8;
+            obj.num_state            = 10;
             obj.state_bounds(1,:)    = [-100,100];
             obj.state_bounds(2,:)    = [-100,100];
             obj.state_bounds(3,:)    = [-100,100];
@@ -20,7 +20,7 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
             obj.state_bounds(8,:)    = [-100,100];
             obj.init_state           = init_state;
             obj.state                = init_state;
-            obj.state_name           = ["x_com" "x_com_dot" "x_zmp" "x_foot" "y_com" "y_com_dot" "y_zmp" "y_foot"];
+            obj.state_name           = ["x_com" "x_com_dot" "x_zmp" "x_foot" "vref_x" "y_com" "y_com_dot" "y_zmp" "y_foot" "vref_y"];
             obj.dt                   = dt;
             obj.reward               = reward;
             obj.active_visualization = false;
@@ -41,9 +41,10 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
     
 
             % Full system
-            A_x = blkdiag(A_lip,1);
-            A_y = blkdiag(A_lip,1);
-            B   = blkdiag(B_lip,1);
+            A_x   = blkdiag(A_lip,1,1);
+            A_y   = blkdiag(A_lip,1,1);
+            B     = blkdiag(B_lip,1);
+            B     = [B; 0 0];
             obj.A = blkdiag(A_x, A_y);
             obj.B = blkdiag(B, B);
             % i need to set it to true because in this way i will go
@@ -81,7 +82,7 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
             obj.all_states = [obj.all_states,obj.init_state];
             
             hold on;
-            plot(obj.init_state([1,3,4],:)', obj.init_state(obj.num_state/2+[1,3,4],:)')
+            plot(obj.init_state([1,3],:)', obj.init_state(obj.num_state/2+[1,3],:)')
 %             obj.visualization.footRect = [-obj.prm.footSize_x,  obj.prm.footSize_x, obj.prm.footSize_x, -obj.prm.footSize_x;
 %                                           -obj.prm.footSize_y, -obj.prm.footSize_y, obj.prm.footSize_y,  obj.prm.footSize_y];
 %             p1 = patch(obj.init_state(4,end)+obj.visualization.footRect(1,:), obj.init_state(obj.num_state/2+4,end)+obj.visualization.footRect(2,:), 'r');
@@ -102,14 +103,19 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
             
             obj.all_states = [obj.all_states,state];
             
-%             plot(obj.all_states([1,3,4],:)', obj.all_states(obj.num_state/2+[1,3,4],:)')
-%             axis equal; axis([-0.5 0.5 -0.5 0.5]);
-
-            subplot(2,1,1)
-            plot(obj.all_states(obj.num_state/2 + [1,3],:)');
             
-            subplot(2,1,2)
-            plot(obj.all_states(obj.num_state/2 + [4],:)');
+            subplot(3,1,1)
+            %hold on
+            plot(obj.all_states([1,3],:)', obj.all_states(obj.num_state/2 + [1 3],:)')
+            %plot(obj.all_states(3,:)', obj.all_states(obj.num_state/2 + 3,:)')
+            %axis equal; axis([-0.5 0.5 -0.5 0.5]);
+            %hold off
+            
+            subplot(3,1,2)
+            plot(obj.all_states([4],:)');
+            
+            subplot(3,1,3)
+            plot(obj.all_states([obj.num_state/2 + 4],:)');
             
 %             p1 = patch(state(4,end)+obj.visualization.footRect(1,:), state(obj.num_state/2+4,end)+obj.visualization.footRect(2,:), 'r');
 %             p2 = patch(state(6,end)+obj.visualization.footRect(1,:), state(obj.num_state/2+6,end)+obj.visualization.footRect(2,:), 'r');
@@ -117,6 +123,7 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
 %             set(p2,'FaceAlpha',0.1,'EdgeColor','k','LineWidth',1,'LineStyle','-');
 %             legend('pos', 'zmp', 'footL', 'footR')
             drawnow
+            
         end
         
         function state = Wrapping(obj,state)

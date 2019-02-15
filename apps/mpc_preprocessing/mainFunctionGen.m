@@ -100,7 +100,7 @@ if(start_simulation)
                     env_vis_debug.UpdateRender(cur_x_debug);  
                     cur_x_debug = env_vis_debug.Step(controller.u_star_debug{jj});
                 end
-            disp('after debug')
+                disp('after debug')
             end
         elseif(strcmp(control_mode,"tracker"))
             %tau = controller.ComputeControl(cur_x,total_ref((i-1)*controller.q + 1:(i-1)*controller.q + controller.N*controller.q));

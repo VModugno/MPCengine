@@ -2,8 +2,8 @@
 
 function  [S_bar_obj,S_bar_constr,T_bar_obj,T_bar_constr,Q_bar,R_bar] = propagationModel_regulator_statemachine_std(obj,A,B,C_obj,C_constr,Q,R)
 
-    n = obj.n(1);
-    A = A{1};
+    n                = obj.n(1);
+    A                = A{1};
     k_counter_obj    = 0;
     k_counter_constr = 0;
     j_counter_out    = 0;
