@@ -1,6 +1,8 @@
 function W = regulator_W_statemachine_pattern_walking(obj)
 
     input_counter = 0; 
+    infinity = 10e6;
+    
     for k = 1:obj.N % k = rows n (rows of C)
         k_state = obj.state_machine.state_pattern(k);
         m       = obj.m(k_state);
@@ -12,7 +14,9 @@ function W = regulator_W_statemachine_pattern_walking(obj)
         W_input_min(input_counter+(1:m),1) = obj.m_c.boundsInput.min{k_state}(:,left_or_right);
         input_counter = input_counter + m;
     end
+    
     output_counter = 0; 
+    
     for k = 1:obj.N % k = rows n (rows of C)
         k_state = obj.state_machine.state_pattern(k);
         q       = obj.q_constr(k_state);
@@ -20,8 +24,16 @@ function W = regulator_W_statemachine_pattern_walking(obj)
         % cases in the mutable constraints (in this left and right)
         left_or_right = (mod(obj.m_c.footstep_pattern(k),2) == 0) + 1; 
         
-        W_output_max(output_counter+(1:q),1) = obj.m_c.boundsOutput.max{k_state}(:,left_or_right);
-        W_output_min(output_counter+(1:q),1) = obj.m_c.boundsOutput.min{k_state}(:,left_or_right);
+        % in this way we do not apply the zmp constraints to the first
+        % element because we exploit the fact that footstep_pattern is
+        % incremented at each iteration (so one appears only a the beginning)
+        if obj.m_c.footstep_pattern(k) == 1 %|| obj.m_c.footstep_pattern(k) == 2
+            W_output_max(output_counter+(1:q),1) =  infinity*ones(q,1);
+            W_output_min(output_counter+(1:q),1) = -infinity*ones(q,1);
+        else
+            W_output_max(output_counter+(1:q),1) = obj.m_c.boundsOutput.max{k_state}(:,left_or_right);
+            W_output_min(output_counter+(1:q),1) = obj.m_c.boundsOutput.min{k_state}(:,left_or_right);
+        end
         output_counter = output_counter + q;
     end
     

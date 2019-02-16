@@ -7,7 +7,7 @@ clc
 generate_func    = true;
 %%
 %% simulate the mpc 
-start_simulation = true;
+start_simulation = false;
 %%
 %% activate or deactivate visualization
 visualization    = true;

@@ -1,6 +1,10 @@
 function SlidingWindowCppFunction(obj,path_to_folder,all_rep,namefunc,vars,output)
 %% with the first ccode initilialize the function structure
-    [funstr, hstring] = obj.ccodefunctionstring(all_rep{1},'funname',namefunc,'vars',vars,'output',output);
+    [funstr, hstring] = obj.ccodefunctionstring(all_rep{1},'funname',char(namefunc),'vars',vars,'output',char(output));
+    
+    % file of c name and header
+    funfilename = [char(namefunc),'.cpp'];
+    hfilename   = [char(namefunc),'.h'];
     % delimiter for the second split (on the body) to separate the
     % declaration of variables from the actual value assignement
     
@@ -22,8 +26,9 @@ function SlidingWindowCppFunction(obj,path_to_folder,all_rep,namefunc,vars,outpu
     % declare variable inside 
     arr_variable_declare = strcat("double ",output,'[1]',new_func2{1},';');
     % with the second split i separate between varaibles declaration and assignement 
-    W_length             = 2*(obj.N*obj.q) + 2*(obj.N*obj.m);
-    delimiter            = "ub[0][" + num2str(W_length-1) + "]=0;";
+    %matrix_length        = 2*(obj.N*obj.q) + 2*(obj.N*obj.m);
+    matrix_length        = length(all_rep{1});
+    delimiter            = output + "[0][" + num2str(matrix_length-1) + "]=0;";
     second_split         = strsplit(body,{char(delimiter)});
     var_declaration      = second_split{1};
     var_assignement      = second_split{2};
@@ -32,7 +37,7 @@ function SlidingWindowCppFunction(obj,path_to_folder,all_rep,namefunc,vars,outpu
                         + newline + '}';
     % i start to collect the structure for each variables 
     for i = 2:obj.N
-       [funstr_cur]   = obj.ccodefunctionstring(all_rep{i},'funname',namefunc,'vars',vars,'output',output);
+       [funstr_cur]   = obj.ccodefunctionstring(all_rep{i},'funname',char(namefunc),'vars',vars,'output',char(output));
        first_split    = strsplit(funstr_cur,{'{','}'});
        second_split   = strsplit(first_split{2},{char(delimiter)});       
        cpp_final_func = cpp_final_func + "else if(ind1=="+ num2str(i-1) + "){" + newline + second_split{2} + newline + "}";

@@ -2,6 +2,13 @@
 %%                inner_variables = (in this order) current_state, last_control, current_ref, (we need them bot for fixed and ltv mpc)
 %%                outer_variables = model parameters that we want to optimize with an external optimization loop (such as cmaes, or other black box optimization)
 
+%% idee:
+%% ristrutturare classi
+%% partire dal presupposto che le matrici sono cell array (partire dal caso piu esteso cioe statemachine)
+%% rendere classi mutable constraints e statemachine(maybe)
+%% fare un uso razionale delle funzioni abstract per forzare la costruzione di classi applicative
+%% individuare porzioni di codice che possono essere riutilizzate massimizzandole ma tenendo il codice flessibile
+%% 
 
 classdef coreGenerator <  handle
     

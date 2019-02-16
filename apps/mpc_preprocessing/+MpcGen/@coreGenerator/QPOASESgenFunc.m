@@ -20,7 +20,9 @@ function QPOASESgenFunc(obj)
    if(~isempty(obj.state_machine))
        out = obj.StateMachineGenerator();
        disp('generating H,g')
-       StateMachineObjective_QPOASES(out,ref_0,x_0,u_prev,['compute_H','compute_g'],'current_func',{inner_x,obj.outer_x},['H','g'])
+       obj.StateMachineObjective_QPOASES(out,obj.ref_0,obj.x_0,obj.u_prev,["compute_H","compute_g"],'current_func',{inner_x,obj.outer_x},["H","g"])
+       disp('generating A,ub')
+       %StateMachineConstraints_QPOASES(out,obj.ref_0,obj.x_0,obj.u_prev,['compute_A','compute_ub'],'current_func',{inner_x,obj.outer_x},['A','ub'])
    else
        disp('generating H')
        %H_  = obj.sym_H(:);
