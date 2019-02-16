@@ -19,8 +19,8 @@ function QPOASESgenFunc(obj)
    %% hessian cost function 
    if(~isempty(obj.state_machine))
        out = obj.StateMachineGenerator();
-       disp('generating H')
-       
+       disp('generating H,g')
+       StateMachineObjective_QPOASES(out,ref_0,x_0,u_prev,['compute_H','compute_g'],'current_func',{inner_x,obj.outer_x},['H','g'])
    else
        disp('generating H')
        %H_  = obj.sym_H(:);

@@ -80,6 +80,8 @@ type             = "statemachine";
 % state_pattern               = [2*ones(N/2-1,1);1;2*ones(N/2-1,1);1];
 state_pattern               = [2*ones(N/2-1,1);1;2*ones(N/2-1,1);1];
 state_machine.state_pattern = state_pattern;
+% i need this to reset the pattern
+state_machine.reset         = state_pattern;
 state_machine.n_of_models   = 2;
 
 % with this flag i tell the MPC constructor if the matrix has already been discretized or not      
@@ -141,7 +143,9 @@ foot_pattern = [pattern_1,pattern_2];
 
 mutable_constr.N_state           = 2;
 mutable_constr.footstep_pattern  = footstep_pattern;
+mutable_constr.reset_footstep    = footstep_pattern;
 mutable_constr.const_pattern     = foot_pattern;
+mutable_constr.reset_pattern     = foot_pattern;
 mutable_constr.boundsOutput      = boundsOutput;
 mutable_constr.boundsInput       = boundsInput;
 

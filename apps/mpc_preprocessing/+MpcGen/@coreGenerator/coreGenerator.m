@@ -314,24 +314,27 @@ classdef coreGenerator <  handle
        end
        
        function UpdateStateMachinePattern(obj)
-           
             % circular buffer (in this way the state pattern behave as a circular pattern)
             obj.state_machine.state_pattern = [ obj.state_machine.state_pattern(2:end,:);obj.state_machine.state_pattern(1,:)];
-           
+       end
+       function ResetStateMachinePattern(obj)
+            % circular buffer (in this way the state pattern behave as a circular pattern)
+            obj.state_machine.state_pattern = obj.state_machine.reset;
        end
        % each time i call this function i get one step update of
        % constraints.
        % I update m_c inside
-       function UpdateConstrPattern(obj)
-           
-            
+       function UpdateConstrPattern(obj) 
             obj.m_c.footstep_pattern = [ obj.m_c.footstep_pattern(2:end);obj.m_c.footstep_pattern(1)+2];
             for i = 1:obj.m_c.N_state
                 % circular buffer (each pattern with this update behave as a circular buffer)
                 obj.m_c.const_pattern(:,i) = [ obj.m_c.const_pattern(2:end,i);obj.m_c.const_pattern(1,i)];
-            end
-            
-       end  
+            end 
+       end 
+       function ResetStateConstrPattern(obj)
+            obj.m_c.footstep_pattern = obj.m_c.reset_footstep;
+            obj.m_c.const_pattern    = obj.m_c.reset_pattern;
+       end
        
     end
     
