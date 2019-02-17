@@ -9,9 +9,13 @@
 
 class qpoasesSolver  : public AbsSolver {
 	public:
-	qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver,bool direct_solution = false);
-	qpoasesSolver(const std::string filename,bool direct_solution = false);
+		//qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver,bool direct_solution = false);
+		qpoasesSolver(const std::string filename,bool direct_solution = false);
 		// initialization
+		// i have introduced initDim in order to manage the case with state_machine mpc that provides
+		// dimensions that are arrays and not
+	    void            initDim(int n,int m,int q,int N_constr,int N);
+        void            initDim(Eigen::VectorXd n,Eigen::VectorXd m,Eigen::VectorXd q,Eigen::VectorXd N_constr,int N);
 		Eigen::VectorXd initSolver(Eigen::VectorXd x0_in,Eigen::VectorXd  x0_ext,ProblemDetails & pd);
 		Eigen::VectorXd initSolver(double * x0_in,double * x0_ext,ProblemDetails & pd);
 		// Solve
@@ -29,7 +33,9 @@ class qpoasesSolver  : public AbsSolver {
 		// Compute MAtrix for the MPC QP batch problem
 	    void computeMatrix(qpOASES::real_t  H[],qpOASES::real_t g[],qpOASES::real_t A[],qpOASES::real_t ubA[],double * xi_in,double * xi_ext,ProblemDetails & pd);
 	    // solver parameters
-		qpOASES::int_t nWSR;
+	    int nVariables_batch;                // total number of variables over the prediction windows
+	    int nConstraints_batch;              // total number of constraints over the prediction windows
+	    qpOASES::int_t nWSR;
 		qpOASES::int_t original_nWSR;   // i need this variables in order to restore the value of nwrs (that is overwritten by the method)
 		//double mpcTimeStep          = 100;
 		//double controlTimeStep      = 100;

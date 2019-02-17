@@ -25,10 +25,12 @@ public:
 	// GET function
 	int getStateDim(){return this->n;};
 	int getControlDim(){return this->m;};
-	int getOutputDim(){return this->p;};
+	int getOutputDim(){return this->q;};
 	int getPredictionDim(){return this->N;};
     // virtual function
 	// initialize the solver if necessary
+	virtual void            initDim(int n,int m,int q,int N_constr, int N) = 0;
+	virtual void            initDim(Eigen::VectorXd n,Eigen::VectorXd m,Eigen::VectorXd q,Eigen::VectorXd N_constr, int N) = 0;
 	virtual Eigen::VectorXd initSolver(Eigen::VectorXd x0_in,Eigen::VectorXd  x0_ext,ProblemDetails & pd) = 0;
 	virtual Eigen::VectorXd solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  x0_ext,ProblemDetails &  pd) = 0;
     virtual void            plotInfoQP()=0;
@@ -38,10 +40,10 @@ protected:
     // problem parameters
 	int n;                         // state   space dim
 	int m;                         // control space dim
-	int p;                         // output  space dim
+	int q;                         // output  space dim
 	int N;                         // prediction window
 	int N_constr;                  // number of constraints
-	bool time_perfomance = false;  // activate or deactivate perfomance computation
+	bool time_perfomance = false;  // activate or deactivate performance computation
 
 };
 

@@ -221,18 +221,36 @@ classdef coreGenerator <  handle
            entry_node = pNode.createElement('Entry');
            pNode.getDocumentElement.appendChild(entry_node);
          
+           if(length(obj.n)>1)
+               string    = mat2str(obj.n);
+               string    = erase(string,["[","]"]);
+               name_text = pNode.createTextNode(strrep(string,";"," "));
+           else
+               name_text = pNode.createTextNode(int2str(obj.n));
+           end
            name_node = pNode.createElement('n');
-           name_text = pNode.createTextNode(int2str(obj.n));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
+           if(length(obj.m)>1)
+               string    = mat2str(obj.m);
+               string    = erase(string,["[","]"]);
+               name_text = pNode.createTextNode(strrep(string,";"," "));
+           else
+               name_text = pNode.createTextNode(int2str(obj.m));
+           end
            name_node = pNode.createElement('m');
-           name_text = pNode.createTextNode(int2str(obj.m));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
+           if(length(obj.q)>1)
+               string    = mat2str(obj.q);
+               string    = erase(string,["[","]"]);
+               name_text = pNode.createTextNode(strrep(string,";"," "));
+           else
+               name_text = pNode.createTextNode(int2str(obj.q));
+           end
            name_node = pNode.createElement('q');
-           name_text = pNode.createTextNode(int2str(obj.q));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            

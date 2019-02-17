@@ -10,20 +10,20 @@
 namespace pt = boost::property_tree;
 namespace fs = boost::filesystem;
 
-qpoasesSolver::qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver,bool direct_solution){
+/*qpoasesSolver::qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver,bool direct_solution){
 	// Set up parameters
-	this->n           = n;
-	this->m           = m;
-	this->p           = p;
-    this->N           = N;
-    this->N_constr    = N_constr;
-    int nVariables    = this->N * this->m;
-    int nConstraints  = this->N * this->N_constr;
-    this->direct_solution = direct_solution;
+	this->n                     = n;
+	this->m                     = m;
+	this->p                     = p;
+    this->N                     = N;
+    this->N_constr              = N_constr;
+    this->nVariables_batch      = this->N * this->m;
+    this->nConstraints_batch    = this->N * this->N_constr;
+    this->direct_solution       = direct_solution;
     if(direct_solution){
-		this->qp   = qpOASES::QProblem(nVariables,nConstraints);
+		this->qp   = qpOASES::QProblem(nVariables_batch,nConstraints_batch);
 	}else{
-		this->sqp  = qpOASES::SQProblem(nVariables,nConstraints);
+		this->sqp  = qpOASES::SQProblem(nVariables_batch,nConstraints_batch);
 	}
     original_nWSR  = 300;
 	this->nWSR     = original_nWSR;
@@ -36,12 +36,28 @@ qpoasesSolver::qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string t
 
 	time_perfomance = true;
 
+}*/
+
+
+void qpoasesSolver::initDim(int n_,int m_,int q_,int N_constr_,int N_){
+	this->n                   = n_;
+	this->m                   = m_;
+	this->q                   = q_;
+	this->N                   = N_;
+	this->N_constr            = N_constr_;
+	this->nVariables_batch    = this->N * this->m;
+	this->nConstraints_batch  = this->N * this->N_constr;
+}
+// in case of statemachine problem I'm not going to initialize the n m q variables because i do not use them
+// anywhere inside the methods of QPOASES. here i only compute nVariables_batch and nConstraints_batch for now
+void qpoasesSolver::initDim(Eigen::VectorXd n,Eigen::VectorXd m,Eigen::VectorXd q,Eigen::VectorXd N_constr_,int N){
+	//this->nVariables_batch    = this->N * this->m;
+    //this->nConstraints_batch  = this->N * this->N_constr;
 }
 
 qpoasesSolver::qpoasesSolver(const std::string filename,bool direct_solution){
 
 
-	this->direct_solution = direct_solution;
 	// i create a string stream for concatenating strings
 	std::stringstream ss;
     // i get the current working directory
@@ -61,18 +77,27 @@ qpoasesSolver::qpoasesSolver(const std::string filename,bool direct_solution){
 	pt::ptree tree;
 	// Parse the XML into the property tree.
 	pt::read_xml(full_path, tree);
-	// Set up parameters
-	this->n           = tree.get<int>("parameters.Entry.n");
-	this->m           = tree.get<int>("parameters.Entry.m");
-	this->p           = tree.get<int>("parameters.Entry.q");
-    this->N           = tree.get<int>("parameters.Entry.N");
-    this->N_constr    = tree.get<int>("parameters.Entry.N_constr");
-    int nVariables    = this->N * this->m;
-    int nConstraints  = this->N * this->N_constr;
+
+	// in order to manage the case of statemachine mpc i need to deal with the case
+	// where the dimensions of the problem are arrays
+	std::string problem_type    = tree.get<std::string>("parameters.Entry.type");
+    if(problem_type.compare("statemachine")==0){
+
+    }
+    else{
+		// Set up parameters
+		int n_                   = tree.get<int>("parameters.Entry.n");
+		int m_                   = tree.get<int>("parameters.Entry.m");
+		int q_                   = tree.get<int>("parameters.Entry.q");
+		int N_constr_            = tree.get<int>("parameters.Entry.N_constr");
+		int N_                   = tree.get<int>("parameters.Entry.N");
+		this->initDim(n_,m_,q_,N_constr_,N_);
+    }
+    this->direct_solution     = direct_solution;
     if(direct_solution){
-    	this->qp   = qpOASES::QProblem(nVariables,nConstraints);
+    	this->qp   = qpOASES::QProblem(nVariables_batch,nConstraints_batch);
     }else{
-    	this->sqp  = qpOASES::SQProblem(nVariables,nConstraints);
+    	this->sqp  = qpOASES::SQProblem(nVariables_batch,nConstraints_batch);
     }
     original_nWSR  = 300;
     this->nWSR     = original_nWSR;
@@ -104,8 +129,9 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 	//for(int ii = 0; ii<4; ii++)
 	//	std::cout << x0[ii] << " ";
 	//std::cout << std::endl;
-	int nVariables_batch   = this->N * this->m;
-	int nConstraints_batch = this->N * this->N_constr;
+
+	//int nVariables_batch   = this->N * this->m;
+	//int nConstraints_batch = this->N * this->N_constr;
     // fitness matrices
 	qpOASES::real_t H[nVariables_batch*nVariables_batch];
 	qpOASES::real_t g[nVariables_batch];
@@ -146,16 +172,16 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 
 Eigen::VectorXd qpoasesSolver::initSolver(double * x0_in,double * x0_ext,ProblemDetails & pd)
 {
-	int nVariables   = this->N * this->m;
-	int nConstraints = this->N * this->N_constr;
+	//int nVariables   = this->N * this->m;
+	//int nConstraints = this->N * this->N_constr;
     // fitness matrices
-	qpOASES::real_t H[nVariables*nVariables];
-	qpOASES::real_t g[nVariables];
+	qpOASES::real_t H[nVariables_batch*nVariables_batch];
+	qpOASES::real_t g[nVariables_batch];
 	// constraints matrices
-	qpOASES::real_t A[nConstraints*nVariables];
-	qpOASES::real_t ubA[nConstraints];
+	qpOASES::real_t A[nConstraints_batch*nVariables_batch];
+	qpOASES::real_t ubA[nConstraints_batch];
 	// solution
-	qpOASES::real_t xOpt[nVariables];
+	qpOASES::real_t xOpt[nVariables_batch];
 	Eigen::VectorXd decisionVariables(this->m);
 
     // compute components
@@ -190,8 +216,8 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi
 	double *xi_e;
 	xi_e = xi_ext.data();
 
-	int nVariables_batch   = this->N*this->m;
-	int nConstraints_batch = this->N*this->N_constr;
+	//int nVariables_batch   = this->N*this->m;
+	//int nConstraints_batch = this->N*this->N_constr;
 
 	qpOASES::real_t H[nVariables_batch*nVariables_batch];
 	qpOASES::real_t g[nVariables_batch];
@@ -341,7 +367,7 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetai
 void qpoasesSolver::plotInfoQP(){
 	std::cout << "n = " << this->n << std::endl;
 	std::cout << "m = " << this->m << std::endl;
-	std::cout << "p = " << this->p << std::endl;
+	std::cout << "q = " << this->q << std::endl;
 	std::cout << "N = " << this->N << std::endl;
 	std::cout << "N_constr = " << this->N_constr << std::endl;
 }
