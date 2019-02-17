@@ -1,10 +1,18 @@
+%% it should work even for a single repetition
+
 function SlidingWindowCppFunction(obj,path_to_folder,all_rep,namefunc,vars,output)
-%% with the first ccode initilialize the function structure
-    [funstr, hstring] = obj.ccodefunctionstring(all_rep{1},'funname',char(namefunc),'vars',vars,'output',char(output));
     
+    %% TODO check if namefunc and output are char 
+    %% and return an error if it does not happen
+
     % file of c name and header
     funfilename = [char(namefunc),'.cpp'];
     hfilename   = [char(namefunc),'.h'];
+
+    %% with the first ccode initilialize the function structure
+    [funstr, hstring] = obj.ccodefunctionstring(all_rep{1},'funname',namefunc,'vars',vars,'output',output);
+    
+    
     % delimiter for the second split (on the body) to separate the
     % declaration of variables from the actual value assignement
     
@@ -37,7 +45,7 @@ function SlidingWindowCppFunction(obj,path_to_folder,all_rep,namefunc,vars,outpu
                         + newline + '}';
     % i start to collect the structure for each variables 
     for i = 2:obj.N
-       [funstr_cur]   = obj.ccodefunctionstring(all_rep{i},'funname',char(namefunc),'vars',vars,'output',char(output));
+       [funstr_cur]   = obj.ccodefunctionstring(all_rep{i},'funname',namefunc,'vars',vars,'output',output);
        first_split    = strsplit(funstr_cur,{'{','}'});
        second_split   = strsplit(first_split{2},{char(delimiter)});       
        cpp_final_func = cpp_final_func + "else if(ind1=="+ num2str(i-1) + "){" + newline + second_split{2} + newline + "}";

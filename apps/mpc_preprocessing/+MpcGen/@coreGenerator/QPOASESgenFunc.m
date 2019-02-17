@@ -9,6 +9,7 @@ function QPOASESgenFunc(obj)
    %    l_b <= A*z <= u_b
    %% here i define the structure of the inner_x
    if(strcmp(obj.problemClass,"tracker"))
+         %% TODO each class has to become owner of these variables (in other words we need to create this variables inside the respective class)
         %inner_x = [obj.x_0;obj.u_0;obj.ref_0;obj.index];
          inner_x = [obj.u_prev;obj.x_0;obj.inner_x_ext;obj.ref_0;obj.index];
    else
@@ -20,9 +21,10 @@ function QPOASESgenFunc(obj)
    if(~isempty(obj.state_machine))
        out = obj.StateMachineGenerator();
        disp('generating H,g')
-       obj.StateMachineObjective_QPOASES(out,obj.ref_0,obj.x_0,obj.u_prev,["compute_H","compute_g"],'current_func',{inner_x,obj.outer_x},["H","g"])
+       %% TODO we need to decouple this function in a class dependant part and a solver dependant part
+       obj.StateMachineObjective_QPOASES(out,["compute_H","compute_g"],'current_func',{inner_x,obj.outer_x},["H","g"])
        disp('generating A,ub')
-       %StateMachineConstraints_QPOASES(out,obj.ref_0,obj.x_0,obj.u_prev,['compute_A','compute_ub'],'current_func',{inner_x,obj.outer_x},['A','ub'])
+       obj.StateMachineConstraints_QPOASES(out,["compute_A","compute_ub"],'current_func',{inner_x,obj.outer_x},["A","ub"])
    else
        disp('generating H')
        %H_  = obj.sym_H(:);

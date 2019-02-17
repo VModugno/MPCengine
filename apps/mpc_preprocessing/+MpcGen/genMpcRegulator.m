@@ -3,7 +3,6 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
     properties
            
-      
       A
       B
       C_constr
