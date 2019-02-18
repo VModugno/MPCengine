@@ -14,8 +14,7 @@ class qpoasesSolver  : public AbsSolver {
 		// initialization
 		// i have introduced initDim in order to manage the case with state_machine mpc that provides
 		// dimensions that are arrays and not
-	    void            initDim(int n,int m,int q,int N_constr,int N);
-        void            initDim(Eigen::VectorXd n,Eigen::VectorXd m,Eigen::VectorXd q,Eigen::VectorXd N_constr,int N);
+	    void            initDim(pt::ptree & tree);
 		Eigen::VectorXd initSolver(Eigen::VectorXd x0_in,Eigen::VectorXd  x0_ext,ProblemDetails & pd);
 		Eigen::VectorXd initSolver(double * x0_in,double * x0_ext,ProblemDetails & pd);
 		// Solve

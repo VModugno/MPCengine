@@ -15,18 +15,20 @@ classdef coreGenerator <  handle
     properties 
         % general information about path and type of solver
         basepath                 % to identify the folder to write the generated functions
-        type                     % fixed or LTV
+        type                     % fixed, LTV or statemachine
         solver                   % generate functions for target solver (qpoases)
         m_c                      % mutable constraints aka m_c is the structure that contains all the data about the mutable constraints
         m_c_flag                 % this is a flag tha represents if the the constraints change over time or not (case for gait generation)
         state_machine            % structure to manage state machine problem
         problemClass             % tracker or regulator
         % structure of the problem
-        n           % state space dim
-        m           % control space dim 
-        q           % output space dim 
-        q_constr    % output space dim (new version of output space) for objective function
-        q_obj       % output space dim (new version of output space) for constraints
+        n                  % state space dim
+        m                  % control space dim 
+        q                  % output space dim 
+        q_constr           % output space dim (new version of output space) for objective function
+        q_obj              % output space dim (new version of output space) for constraints
+        nVariables_batch   % total numer of variables in the prediction windows
+        nConstraints_batch % totale number of constraints in the prediction windows
         delta       % sampling time of the controller (in general different from the sampling time of the enviroment) in the model is called internal dt
         N           % widht of prediction window
         N_constr    % number of constraints
@@ -243,14 +245,25 @@ classdef coreGenerator <  handle
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
-           if(length(obj.q)>1)
-               string    = mat2str(obj.q);
+           if(length(obj.q_constr)>1)
+               string    = mat2str(obj.q_constr);
                string    = erase(string,["[","]"]);
                name_text = pNode.createTextNode(strrep(string,";"," "));
            else
-               name_text = pNode.createTextNode(int2str(obj.q));
+               name_text = pNode.createTextNode(int2str(obj.q_constr));
            end
-           name_node = pNode.createElement('q');
+           name_node = pNode.createElement('q_constr');
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           if(length(obj.q_obj)>1)
+               string    = mat2str(obj.q_obj);
+               string    = erase(string,["[","]"]);
+               name_text = pNode.createTextNode(strrep(string,";"," "));
+           else
+               name_text = pNode.createTextNode(int2str(obj.q_obj));
+           end
+           name_node = pNode.createElement('q_obj');
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
@@ -269,6 +282,16 @@ classdef coreGenerator <  handle
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
+           name_node = pNode.createElement('nVariables_batch');
+           name_text = pNode.createTextNode(int2str(obj.nVariables_batch));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('nConstraints_batch');
+           name_text = pNode.createTextNode(int2str(obj.nConstraints_batch));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
            name_node = pNode.createElement('type');
            name_text = pNode.createTextNode(obj.type);
            name_node.appendChild(name_text);
@@ -283,6 +306,26 @@ classdef coreGenerator <  handle
            name_text = pNode.createTextNode(int2str(obj.extern_dim));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
+           
+           if(strcmp(obj.type,"statemachine"))
+               % better to reset the state machine pattern
+               obj.ResetStateMachinePattern();
+               % here because i just need the information about the
+               % dimension of the control input at each sample in the
+               % prediction window
+               state_machine_dim_pattern = 
+               for i=1:length(obj.state_machine.state_pattern)
+                   
+               end
+               string    = mat2str(obj.state_machine.state_pattern);
+               string    = erase(string,["[","]"]);
+               name_text = pNode.createTextNode(strrep(string,";"," "));
+               name_node = pNode.createElement('state_machine_control_dim_pattern');
+               name_node.appendChild(name_text);
+               entry_node.appendChild(name_node);
+           end
+               
+           
            
            xmlwrite(char(filepath),pNode);   
        end 

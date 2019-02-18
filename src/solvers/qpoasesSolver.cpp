@@ -1,13 +1,10 @@
 #include "solvers/qpoasesSolver.hpp"
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
 #include <boost/filesystem.hpp>
 #include <sstream>
 #include <stdlib.h>
 #include <chrono>
 
 
-namespace pt = boost::property_tree;
 namespace fs = boost::filesystem;
 
 /*qpoasesSolver::qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver,bool direct_solution){
@@ -39,21 +36,49 @@ namespace fs = boost::filesystem;
 }*/
 
 
-void qpoasesSolver::initDim(int n_,int m_,int q_,int N_constr_,int N_){
-	this->n                   = n_;
-	this->m                   = m_;
-	this->q                   = q_;
-	this->N                   = N_;
-	this->N_constr            = N_constr_;
-	this->nVariables_batch    = this->N * this->m;
-	this->nConstraints_batch  = this->N * this->N_constr;
+void qpoasesSolver::initDim(pt::ptree & tree){
+
+	std::string problem_type    = tree.get<std::string>("parameters.Entry.type");
+	if(problem_type.compare("statemachine")==0){
+		// Set up parameters
+		/*Eigen::VectorXd n_,m_,q_,N_constr_,state_machine_pattern;
+		int number_of_models     = tree.get<int>("parameters.Entry.number_of_models");
+		int N_                   = tree.get<int>("parameters.Entry.N");
+		n_                       = Eigen::VectorXd(number_of_models);
+		m_                       = Eigen::VectorXd(number_of_models);
+		q_                       = Eigen::VectorXd(number_of_models);
+		N_constr_                = Eigen::VectorXd(number_of_models);
+		std::stringstream ss_n(tree.get<std::string>("parameters.Entry.n"));
+		std::stringstream ss_m(tree.get<std::string>("parameters.Entry.m"));
+		std::stringstream ss_q(tree.get<std::string>("parameters.Entry.q"));
+		double cur_n,cur_m,cur_q;
+		for (int i = 0; i<number_of_models; i++){
+			ss_n >> cur_n;
+			ss_m >> cur_m;
+			ss_q >> cur_q;
+			n_(i) = cur_n;
+			m_(i) = cur_m;
+			q_(i) = cur_q;
+		}*/
+		this->N                   = tree.get<int>("parameters.Entry.N");
+		this->nVariables_batch    = tree.get<int>("parameters.Entry.nVariables_batch");
+		this->nConstraints_batch  = tree.get<int>("parameters.Entry.nConstraints_batch");
+	}
+	else{
+		// Set up parameters
+		this->n                   = tree.get<int>("parameters.Entry.n");;
+		this->m                   = tree.get<int>("parameters.Entry.m");
+		this->q                   = tree.get<int>("parameters.Entry.q");
+		this->N                   = tree.get<int>("parameters.Entry.N");
+		this->N_constr            = tree.get<int>("parameters.Entry.N_constr");
+		this->nVariables_batch    = this->N * this->m;
+		this->nConstraints_batch  = this->N * this->N_constr;
+	}
+
 }
 // in case of statemachine problem I'm not going to initialize the n m q variables because i do not use them
 // anywhere inside the methods of QPOASES. here i only compute nVariables_batch and nConstraints_batch for now
-void qpoasesSolver::initDim(Eigen::VectorXd n,Eigen::VectorXd m,Eigen::VectorXd q,Eigen::VectorXd N_constr_,int N){
-	//this->nVariables_batch    = this->N * this->m;
-    //this->nConstraints_batch  = this->N * this->N_constr;
-}
+
 
 qpoasesSolver::qpoasesSolver(const std::string filename,bool direct_solution){
 
@@ -80,19 +105,8 @@ qpoasesSolver::qpoasesSolver(const std::string filename,bool direct_solution){
 
 	// in order to manage the case of statemachine mpc i need to deal with the case
 	// where the dimensions of the problem are arrays
-	std::string problem_type    = tree.get<std::string>("parameters.Entry.type");
-    if(problem_type.compare("statemachine")==0){
+	this->initDim(tree);
 
-    }
-    else{
-		// Set up parameters
-		int n_                   = tree.get<int>("parameters.Entry.n");
-		int m_                   = tree.get<int>("parameters.Entry.m");
-		int q_                   = tree.get<int>("parameters.Entry.q");
-		int N_constr_            = tree.get<int>("parameters.Entry.N_constr");
-		int N_                   = tree.get<int>("parameters.Entry.N");
-		this->initDim(n_,m_,q_,N_constr_,N_);
-    }
     this->direct_solution     = direct_solution;
     if(direct_solution){
     	this->qp   = qpOASES::QProblem(nVariables_batch,nConstraints_batch);

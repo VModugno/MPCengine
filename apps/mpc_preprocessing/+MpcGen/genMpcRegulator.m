@@ -220,6 +220,11 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.sym_W      = sym(obj.W);      % for the function generation it works only if W is not mutable (it works right away both fixed and ltv)
             obj.sym_S      = sym(obj.S);      % for the function generation it works only if W is not mutable (it works right away both fixed and ltv)
             
+            
+            %% here i initialize the variables necessary for qpoases and mpcproblem in cpp
+            obj.nVariables_batch    = size(obj.sym_G,2);
+            obj.nConstraints_batch  = size(obj.sym_G,1);
+            
             %% TODO here before continuing i need to set the value of the outer parameters by calling the update function
             
             

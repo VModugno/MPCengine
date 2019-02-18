@@ -12,6 +12,10 @@
 #include <Eigen/Core>
 #include <iostream>
 #include <memory>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+
+namespace pt = boost::property_tree;
 
 struct ProblemDetails{
 
@@ -29,8 +33,7 @@ public:
 	int getPredictionDim(){return this->N;};
     // virtual function
 	// initialize the solver if necessary
-	virtual void            initDim(int n,int m,int q,int N_constr, int N) = 0;
-	virtual void            initDim(Eigen::VectorXd n,Eigen::VectorXd m,Eigen::VectorXd q,Eigen::VectorXd N_constr, int N) = 0;
+	virtual void            initDim(pt::ptree & tree) = 0;
 	virtual Eigen::VectorXd initSolver(Eigen::VectorXd x0_in,Eigen::VectorXd  x0_ext,ProblemDetails & pd) = 0;
 	virtual Eigen::VectorXd solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  x0_ext,ProblemDetails &  pd) = 0;
     virtual void            plotInfoQP()=0;
