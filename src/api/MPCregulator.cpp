@@ -29,8 +29,6 @@ MPCregulator::MPCregulator(const std::string filename,P_solv solv,P_oracle oracl
 	pt::ptree tree;
 	// Parse the XML into the property tree.
 	pt::read_xml(full_path, tree);
-	this->pd.type               = tree.get<std::string>("parameters.Entry.type");       // fixed or LTV
-	this->pd.external_variables = tree.get<std::string>("parameters.Entry.external_x"); // true or false
 	this->ex_var_dim            = tree.get<int>("parameters.Entry.external_dim"); // true or false
 	// copy shared pointer
 	this->solver       = solv;
@@ -40,6 +38,9 @@ MPCregulator::MPCregulator(const std::string filename,P_solv solv,P_oracle oracl
     this->inner_x      = Eigen::VectorXd::Zero(solver->getStateDim() + 1);
     // initialize internal sample step
     this->inner_step   = 0;
+    // initialize problem details
+    this->pd.type               = tree.get<std::string>("parameters.Entry.type");       // fixed or LTV
+	this->pd.external_variables = tree.get<std::string>("parameters.Entry.external_x"); // true or false
     // i initialize the external  variables if the current problem has set them
     if(this->pd.external_variables.compare("true") == 0){
 		this->external_variables = Eigen::VectorXd::Zero(this->ex_var_dim);

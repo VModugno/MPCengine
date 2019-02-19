@@ -313,11 +313,11 @@ classdef coreGenerator <  handle
                % here because i just need the information about the
                % dimension of the control input at each sample in the
                % prediction window
-               state_machine_dim_pattern = 
+               state_machine_dim_pattern = [];
                for i=1:length(obj.state_machine.state_pattern)
-                   
+                  state_machine_dim_pattern = [state_machine_dim_pattern,  obj.m(obj.state_machine.state_pattern(i))];
                end
-               string    = mat2str(obj.state_machine.state_pattern);
+               string    = mat2str(state_machine_dim_pattern);
                string    = erase(string,["[","]"]);
                name_text = pNode.createTextNode(strrep(string,";"," "));
                name_node = pNode.createElement('state_machine_control_dim_pattern');

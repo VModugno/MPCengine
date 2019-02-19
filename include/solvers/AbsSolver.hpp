@@ -20,7 +20,9 @@ namespace pt = boost::property_tree;
 struct ProblemDetails{
 
 	std::string      external_variables;  // we are optimizing problem parameters
-	std::string      type;                // fixed or LTV
+	std::string      type;                // fixed  LTV or statemachine
+	int              cur_index_pred_win;  // for now i use this variables to tell the solver the current sample inside the prediction windows
+	//Eigen::VectorXd  dim_input_model;   // this vector contains the dimension of the current model given the current time sample in the control window
 };
 
 class AbsSolver {
@@ -41,12 +43,13 @@ public:
 
 protected:
     // problem parameters
-	int n;                         // state   space dim
-	int m;                         // control space dim
-	int q;                         // output  space dim
-	int N;                         // prediction window
-	int N_constr;                  // number of constraints
-	bool time_perfomance = false;  // activate or deactivate performance computation
+	int n;                           // state   space dim
+	int m;                           // control space dim
+	int q;                           // output  space dim
+	int N;                           // prediction window
+	int N_constr;                    // number of constraints
+	bool time_perfomance = false;    // activate or deactivate performance computation
+	Eigen::VectorXd dim_input_model; // this vector contains the dimension of the current model given the current time sample in the control window
 
 };
 

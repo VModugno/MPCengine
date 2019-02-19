@@ -61,6 +61,15 @@ void qpoasesSolver::initDim(pt::ptree & tree){
 			q_(i) = cur_q;
 		}*/
 		this->N                   = tree.get<int>("parameters.Entry.N");
+		this->dim_input_model     = Eigen::VectorXd(N);
+		double cur_val;
+		std::stringstream ss_n(tree.get<std::string>("parameters.Entry.state_machine_control_dim_pattern"));
+		for (int i = 0; i<N; i++){
+			ss_n >> cur_val;
+			this->dim_input_model(i) = cur_val;
+
+		}
+
 		this->nVariables_batch    = tree.get<int>("parameters.Entry.nVariables_batch");
 		this->nConstraints_batch  = tree.get<int>("parameters.Entry.nConstraints_batch");
 	}
@@ -196,7 +205,16 @@ Eigen::VectorXd qpoasesSolver::initSolver(double * x0_in,double * x0_ext,Problem
 	qpOASES::real_t ubA[nConstraints_batch];
 	// solution
 	qpOASES::real_t xOpt[nVariables_batch];
-	Eigen::VectorXd decisionVariables(this->m);
+
+	Eigen::VectorXd decisionVariables;
+	if(pd.type.compare("statemachine")==0){
+		decisionVariables = Eigen::VectorXd(dim_input_model(pd.cur_index_pred_win));
+	}
+	else{
+		decisionVariables = Eigen::VectorXd(this->m);
+	}
+
+
 
     // compute components
 	computeMatrix(H,g,A,ubA,x0_in,x0_ext,pd);
@@ -216,9 +234,17 @@ Eigen::VectorXd qpoasesSolver::initSolver(double * x0_in,double * x0_ext,Problem
 		sqp.getPrimalSolution(xOpt);
 	}
 
-	for(int i=0;i<this->m;++i){
-		decisionVariables(i) = xOpt[i];
+	if(pd.type.compare("statemachine")==0){
+		for(int i=0;i<this->dim_input_model(pd.cur_index_pred_win);++i){
+			decisionVariables(i) = xOpt[i];
+		}
+	}else{
+		for(int i=0;i<this->m;++i){
+			decisionVariables(i) = xOpt[i];
+		}
+
 	}
+
 
     return decisionVariables;
 }
