@@ -6,6 +6,7 @@ function StateMachineConstraints_QPOASES(obj,input,namefunc,path_to_folder,vars,
     all_rep_ub = cell(obj.N,1);
     if(strcmp(obj.problemClass,"regulator"))
         obj.ResetStateConstrPattern();
+        obj.ResetStateMachinePattern();
         for i=1:obj.N 
            S_bar_constr = input.S_bar_constr{i};
            T_bar_constr = input.T_bar_constr{i}; 
@@ -30,6 +31,7 @@ function StateMachineConstraints_QPOASES(obj,input,namefunc,path_to_folder,vars,
            end
            all_rep_ub{i} = vpa(W + S*obj.x_0);
 
+           obj.UpdateStateMachinePattern();
            obj.UpdateConstrPattern();
         end   
     elseif(strcmp(obj.problemClass,"tracker"))

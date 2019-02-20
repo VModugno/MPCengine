@@ -34,6 +34,10 @@ classdef InvPend < Env.AbstractEnv
             
         end
         
+        function action = ReshapeAction(obj,action)
+            
+        end
+        
         function [new_state, mes_acc] = Dynamics(obj,state,action)
             % Pendulum with motor at the joint dynamics. IN - [angle,rate] & torque.
             % OUT - [rate,accel]

@@ -13,15 +13,15 @@ start_simulation = false;
 visualization    = true;
 %%
 %% logging data for comparison with results obtained with c++ (it works only if start_simulation = true)
-logging          = false;
-%% DEBUGGING
+logging          = true;
+%% debugging
 debugging        = false;
 %% MPC Model
 model_name       = "twod_xy_lip_no_foot_model_automatic_footstep"; 
 
 %% experiment time structure (for the environment different from the internal time)
 ft         = 10;       % final time 20 50 
-delta_t    = 0.05;     % 0.1 0.01 (to the env class)
+delta_t    = 0.05;      % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
 
 %% MPC parameters
@@ -115,10 +115,12 @@ if(start_simulation)
          
         % update env
         [new_state]= env.Step(tau);
-        % update variables
+        % update variables 
         cur_x             = new_state;
+        % for logging (TODO we need to move this stuff inside step)
         all_states(:,i+1) = cur_x;
-        %all_action(:,i)   = tau;
+        new_tau = env.ReshapeAction(tau);
+        all_action(:,i)   = new_tau;
     end
 end
 

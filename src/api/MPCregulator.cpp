@@ -57,9 +57,13 @@ Eigen::VectorXd MPCregulator::Init(Eigen::VectorXd state_0_in){
 		Eigen::VectorXd trace = oracle->ComputePlan(state_0_in);
 		this->inner_x << trace,inner_step;
 	}else if(pd.type.compare("fixed")==0 || pd.type.compare("statemachine")==0){
+		//DEBUG
+		std::cout <<"state_0_in.size() = "<<state_0_in.size() << std::endl;
+		std::cout <<"this->inner_x.size() = "<<this->inner_x.size() << std::endl;
+
 		this->inner_x << state_0_in,this->inner_step;
 	}
-	this->pd.cur_index_pred_win = this->current_step;
+	this->pd.cur_index_pred_win = this->inner_step;
 	this->action = solver->initSolver(this->inner_x,this->external_variables,this->pd);
 	// update step
     this->current_step = this->current_step + 1;
@@ -74,7 +78,7 @@ Eigen::VectorXd MPCregulator::ComputeControl(Eigen::VectorXd state_i_in){
 	}else if(pd.type.compare("fixed")==0 || pd.type.compare("statemachine")==0){
 		this->inner_x << state_i_in,this->inner_step;
 	}
-	this->pd.cur_index_pred_win = this->current_step;
+	this->pd.cur_index_pred_win = this->inner_step;
 	this->action = solver->solveQP(this->inner_x,this->external_variables,this->pd);
 	// update step
 	this->current_step = this->current_step + 1;

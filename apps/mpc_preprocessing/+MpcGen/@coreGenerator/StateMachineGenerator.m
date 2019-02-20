@@ -9,7 +9,7 @@ function [out]= StateMachineGenerator(obj)
     Q        = obj.Q;
     R        = obj.R;
     
-    
+    obj.ResetStateMachinePattern();
     for i=1:obj.N 
         [S_bar_obj,S_bar_constr,T_bar_obj,T_bar_constr,Q_bar,R_bar] = eval(obj.propModelCall);
         out.S_bar_obj{i}    = S_bar_obj;

@@ -90,6 +90,9 @@ public:
 	   			this->feedback_lin         = false;
 	   	};
 
+	    Eigen::VectorXd ReshapeAction(Eigen::VectorXd action){
+	    	    	return action;
+	    }
 
 	    P_DynComp GetDynamicalComponents(Eigen::VectorXd cur_state){};
 

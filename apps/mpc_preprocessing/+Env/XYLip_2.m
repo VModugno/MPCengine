@@ -71,6 +71,10 @@ classdef XYLip_2 < Env.AbstractEnv
             
         end
         
+        function action = ReshapeAction(obj,action)
+            
+        end
+        
         function [new_state, mes_acc] = Dynamics(obj,state,action)
             % TODO verify this thing with the dynamics (for now we set mes
             % acc to zero)

@@ -20,6 +20,9 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
     methods
         function [new_state, reward, done] = Step(obj,action)
             
+            % this fucntion do stuff only if the type is statemachine
+            action = obj.ReshapeAction(action);
+            
             if(~obj.use_euler)
                 % to fix
                 substeps = 1;
@@ -101,7 +104,7 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
     
     
     methods(Abstract)
-        
+        action               = ReshapeAction(obj,action)
         [new_state, mes_acc] = Dynamics(obj,state,action)
         Render(obj)
         UpdateRender(obj,state)

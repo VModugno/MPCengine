@@ -7,7 +7,7 @@ clc
 %% tracking or regulator
 control_mode     = "regulator"; % tracker, regulator
 %% activate or deactivate visualization
-visualization    = false;
+visualization    = true;
 %% activate or deactivate state plot againist desired trajectory or state trajectories from matlab mpc
 plot_flag        = false;
 
@@ -52,22 +52,22 @@ action_average_error = sum(sum((action_cpp- all_action_gt).^2,2))/length(all_act
 if(visualization)
     state = state_cpp;
     % plot using the enviroment 
-    delta_t    = 0.05;
-    foot_to_foot_x = 0.0;        % desired foot to foot distance along x
-    foot_to_foot_y = -0.2;       % desired foot to foot distance along x
-    ref_vel_x      = 0.1;        % desired com velocity
-    ref_vel_y      = 0;
+    delta_t                           = 0.2;
+    prm.h                             = 0.26;%0.8;
+    prm.footSize_x                    = 0.05;
+    prm.footSize_y                    = 0.03;
+    %prm.foot_to_foot_x                = 0.0;        % desired foot to foot distance along x
+    %prm.foot_to_foot_y                = -0.2;%-0.2  % desired foot to foot distance along x
+    prm.vref_x                        = 0.1;        % desired com velocity
+    prm.vref_y                        = 0;
+    %prm.footstep_constraints_x        = 0.1;
+    prm.inner_footstep_constraints_y  = 0.20;
+    prm.outer_footstep_constraints_y  = 0.25; 
     %init_state = [0; 0; pi/10; 0];
-    init_state = [ 0; 0; 0;   % com position, com velocity and zmp position
-               0; 0;      % left foot position and velocity
-               0; 0;      % right foot position and velocity
-               foot_to_foot_x; ref_vel_x;    % foot-to-foot distance and vRef 
-               0; 0; 0;   % com position, com velocity and zmp position
-               0; 0;      % left foot position and velocity
-             -0.2; 0;    % right foot position and velocity
-              foot_to_foot_y; ref_vel_y]; % foot-to-foot distance and vRef 
+    init_state = [  0;    0; 0; 0  ;  0.1;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
+                    0.05; 0; 0; 0.1;  0];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
     reward     = @(x,u)(norm(x)); % dummy reward
-    env        = Env.XYLip_0(init_state,delta_t,reward);
+    env        = Env.XYLip_simplified_feet(init_state,delta_t,reward,prm);
     
     env.Render();
     

@@ -90,7 +90,7 @@ discretized   = true;
 feedback_lin  = false;
 %% Initial state
 init_state = [  0;    0; 0; 0  ;  0.1;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
-                0.05; 0; 0; 0.1;  0];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
+                0;    0; 0; 0.1;  0];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
              
           
 %% here we consider the case with mutable bounds induced by  

@@ -56,9 +56,7 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
             
         end
         
-        function [new_state, mes_acc] = Dynamics(obj,state,action)
-            % TODO verify this thing with the dynamics (for now we set mes
-            % acc to zero)
+        function action = ReshapeAction(obj,action)
             if(length(action) == 2)
                 new_action(1) = action(1);
                 new_action(2) = 0;
@@ -67,13 +65,17 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
                 
                 action = new_action';
             end
-            
+        end
+        
+        function [new_state, mes_acc] = Dynamics(obj,state,action)
+            % TODO verify this thing with the dynamics (for now we set mes
+            % acc to zero)
             mes_acc   = [0];
             new_state = obj.A*state + obj.B*action;
         end
         
         function Render(obj)
-            %% Set up the pendulum plot
+            %% Set up the twoxy lip plot
             obj.visualization.panel = figure;
             obj.visualization.panel.Position = [680 558 400 400];
             obj.visualization.panel.Color = [1 1 1];
@@ -102,8 +104,7 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
         function UpdateRender(obj,state)
             
             obj.all_states = [obj.all_states,state];
-            
-            
+             
             subplot(3,1,1)
             %hold on
             plot(obj.all_states([1,3],:)', obj.all_states(obj.num_state/2 + [1 3],:)')
@@ -112,7 +113,7 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
             %hold off
             
             subplot(3,1,2)
-            plot(obj.all_states([4],:)');
+            plot(obj.all_states([4],:));
             
             subplot(3,1,3)
             plot(obj.all_states([obj.num_state/2 + 4],:)');

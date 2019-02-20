@@ -75,6 +75,10 @@ public:
 				this->init_state(count) = d;
 				count++;
 			}
+			//DEBUG
+			std::cout <<"this->init_state  ="<<this->init_state << std::endl;
+
+
 			this->state                = this->init_state;
 			this->dt                   = tree.get<double>("parameters.Entry.delta");
 			this->ft                   = tree.get<double>("parameters.Entry.ft");
@@ -88,7 +92,7 @@ public:
 			this->feedback_lin         = false;
 			this->already_discretized  = true;
 			this->dim_contr            = 4;
-			this->dim_measu            = 1;
+			this->dim_measu            = 2;
 
 			// creating the system
             A = Eigen::MatrixXd::Zero(dim_state,dim_state);
@@ -123,7 +127,7 @@ public:
 	   			this->feedback_lin         = false;
 	   			this->already_discretized  = true;
 	   			this->dim_contr            = 4;
-	   		    this->dim_measu            = 1;
+	   		    this->dim_measu            = 2;
 
 	   		    // creating the system
 				A = Eigen::MatrixXd::Zero(dim_state,dim_state);
@@ -133,6 +137,19 @@ public:
 				computeSystemMatrices(A,B,C);
 	   	};
 
+	    Eigen::VectorXd ReshapeAction(Eigen::VectorXd action){
+
+	    	Eigen::VectorXd new_action = Eigen::VectorXd(4);
+	    	if(action.size()==2){
+				new_action(0) = action(0);
+				new_action(1) = 0;
+				new_action(2) = action(1);
+				new_action(3) = 0;
+			}else{
+				new_action = action;
+			}
+	    	return new_action;
+	    }
 
 	    P_DynComp GetDynamicalComponents(Eigen::VectorXd cur_state){};
 
@@ -148,8 +165,9 @@ public:
 	    	//std::cout << "action = "   << action  <<std::endl;
 
 	    	Eigen::VectorXd new_state(this->dim_state);
-	    	if(action.size()==4)
+	    	/*if(action.size()==4){
 	    		new_state = A*cur_state + B*action;
+	    	}
 	    	else if(action.size()==2){
 	    		Eigen::VectorXd new_action = Eigen::VectorXd(4);
 	    		new_action(0) = action(0);
@@ -157,8 +175,8 @@ public:
 	    		new_action(2) = action(1);
 	    		new_action(3) = 0;
 	    		new_state = A*cur_state + B*new_action;
-	    	}
-
+	    	}*/
+	    	new_state = A*cur_state + B*action;
 	    	return new_state;
 	    };
 
@@ -203,11 +221,11 @@ private:
        	      Eigen::MatrixXd B_dummy = Eigen::MatrixXd::Zero(1,1);
        	      // Full system
        	      Eigen::MatrixXd B_block = Eigen::MatrixXd::Zero(dim_state/2,2);
-       	      //Eigen::VectorXd zero_l = Eigen::VectorXd::Zero(3);
-       	      B_block = blkdiag(std::vector<Eigen::MatrixXd>( {B_lip, B_foot, B_dummy} ));
-       	      //B_block.conservativeResize(B_block.rows()+2,Eigen::NoChange);
+       	      Eigen::VectorXd zero_l = Eigen::VectorXd::Zero(2);
+       	      B_block = blkdiag(std::vector<Eigen::MatrixXd>( {B_lip, B_foot} ));
+       	      B_block.conservativeResize(B_block.rows()+1,Eigen::NoChange);
        	      //B_block.row(B_block.rows()-2) = zero_l;
-       	      //B_block.row(B_block.rows()-1) = zero_l;
+       	      B_block.row(B_block.rows()-1) = zero_l;
        	      //DEBUG
        	      //Eigen::MatrixXd test   = Eigen::MatrixXd::Zero(dim_state/2, dim_state/2);
        	      //test = blkdiag(std::vector<Eigen::MatrixXd>( {B_lip, B_foot, B_foot} ));

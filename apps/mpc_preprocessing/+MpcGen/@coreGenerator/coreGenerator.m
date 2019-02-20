@@ -324,6 +324,11 @@ classdef coreGenerator <  handle
                name_node.appendChild(name_text);
                entry_node.appendChild(name_node);
            end
+           
+           name_node = pNode.createElement('number_of_models');
+           name_text = pNode.createTextNode(int2str(obj.state_machine.n_of_models));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
                
            
            

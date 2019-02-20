@@ -38,8 +38,8 @@ namespace fs = boost::filesystem;
 
 void qpoasesSolver::initDim(pt::ptree & tree){
 
-	std::string problem_type    = tree.get<std::string>("parameters.Entry.type");
-	if(problem_type.compare("statemachine")==0){
+	this->type    = tree.get<std::string>("parameters.Entry.type");
+	if(type.compare("statemachine")==0){
 		// Set up parameters
 		/*Eigen::VectorXd n_,m_,q_,N_constr_,state_machine_pattern;
 		int number_of_models     = tree.get<int>("parameters.Entry.number_of_models");
@@ -60,12 +60,28 @@ void qpoasesSolver::initDim(pt::ptree & tree){
 			m_(i) = cur_m;
 			q_(i) = cur_q;
 		}*/
+		// here i get only the largest dimension because that is the only way to manage the statemachine properly (i hope)
+		int number_of_models = tree.get<int>("parameters.Entry.number_of_models");
+		std::stringstream ss_n(tree.get<std::string>("parameters.Entry.n"));
+		std::stringstream ss_m(tree.get<std::string>("parameters.Entry.m"));
+		double cur_n,cur_m,max_n = 0,max_m = 0;
+		for (int i = 0; i<number_of_models; i++){
+			ss_n >> cur_n;
+			ss_m >> cur_m;
+			if(cur_n > max_n)
+				max_n = cur_n;
+			if(cur_m > max_m)
+				max_m = cur_m;
+			//std::cout << max_m << std::endl;
+		}
+        this->n                   = max_n;
+        this->m                   = max_m;
 		this->N                   = tree.get<int>("parameters.Entry.N");
 		this->dim_input_model     = Eigen::VectorXd(N);
 		double cur_val;
-		std::stringstream ss_n(tree.get<std::string>("parameters.Entry.state_machine_control_dim_pattern"));
+		std::stringstream ss_dim_pattern(tree.get<std::string>("parameters.Entry.state_machine_control_dim_pattern"));
 		for (int i = 0; i<N; i++){
-			ss_n >> cur_val;
+			ss_dim_pattern >> cur_val;
 			this->dim_input_model(i) = cur_val;
 
 		}
@@ -287,6 +303,9 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi
 	Eigen::VectorXd decisionVariables;
 	int cur_dim;
 	if(pd.type.compare("statemachine")==0){
+		//DEBUG
+		//std::cout << "dim_input_model = "<< dim_input_model << std::endl;
+
 		cur_dim = dim_input_model(pd.cur_index_pred_win);
 		decisionVariables = Eigen::VectorXd(cur_dim);
 	}
@@ -453,11 +472,19 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetai
 
 
 void qpoasesSolver::plotInfoQP(){
-	std::cout << "n = " << this->n << std::endl;
-	std::cout << "m = " << this->m << std::endl;
-	std::cout << "q = " << this->q << std::endl;
-	std::cout << "N = " << this->N << std::endl;
-	std::cout << "N_constr = " << this->N_constr << std::endl;
+	if(this->type .compare("statemachine")==0){
+		std::cout << "max n = " << this->n << std::endl;
+		std::cout << "max m = " << this->m << std::endl;
+		std::cout << "N = " << this->N << std::endl;
+
+	}else{
+		std::cout << "n = " << this->n << std::endl;
+		std::cout << "m = " << this->m << std::endl;
+		std::cout << "q = " << this->q << std::endl;
+		std::cout << "N = " << this->N << std::endl;
+		std::cout << "N_constr = " << this->N_constr << std::endl;
+	}
+
 }
 
 

@@ -54,11 +54,23 @@ public:
 	std::vector<Eigen::VectorXd> actions;
 	P_DynComp                    comps;
 	bool                         already_discretized=false;
+
+
     // integrating dynamics with runge-kutta 4
 	double Step(Eigen::VectorXd action, Eigen::VectorXd & new_state, Eigen::VectorXd & mes_acc)
 	{
 		double reward = 0;
 
+		// in this way i manage the case with stateamchine
+		// usually this function is empty
+
+		//DEBUG
+		//std::cout << "action =" << action<<std::endl;
+
+		action = this->ReshapeAction(action);
+
+		//DEBUG
+		//std::cout << "action =" << action<<std::endl;
 
 		if(!already_discretized){
 			Eigen::VectorXd k1(dim_state),k2(dim_state),k3(dim_state),k4(dim_state);
@@ -158,6 +170,8 @@ public:
 
     // virtual function
 	// with this function we collect the acceleration to simulate measure of acceleration
+	 //in general do nothing
+	virtual	Eigen::VectorXd ReshapeAction(Eigen::VectorXd action) = 0;
 	virtual P_DynComp       GetDynamicalComponents(Eigen::VectorXd cur_state) = 0;
 	virtual Eigen::VectorXd Dynamics(Eigen::VectorXd state,Eigen::VectorXd action, Eigen::VectorXd & mes_acc) = 0;
 	// with this function i do not update the mes_action

@@ -9,7 +9,7 @@ int main(){
 	std::string filename_env = "env_parameters.xml";
 	std::string filename     = "parameters.xml";
 	// env selector
-    std::string  switch_env("xyLip");
+    std::string  switch_env("xyLip_simply_foot");
     // solver selector
     std::string  switch_solver("qpoases");
     // problem selector
@@ -27,6 +27,8 @@ int main(){
     	env.reset(new twoRRobot(filename_env,visualization,log));
     }else if(switch_env.compare("xyLip") == 0){
     	env.reset(new TwoDxyLip(filename_env,visualization,log));
+    }else if(switch_env.compare("xyLip_simply_foot") == 0){
+    	env.reset(new TwoDxyLipSimplyFoot(filename_env,visualization,log));
     }
     // plot information about the current environment
 	env->plotInfoEnv();

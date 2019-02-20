@@ -5,7 +5,7 @@ function StateMachineObjective_QPOASES(obj,input,namefunc,path_to_folder,vars,ou
     all_rep   = cell(2,1);
     all_rep_H = cell(1,obj.N);
     all_rep_g = cell(1,obj.N);
-    obj.state_machine.reset();
+    obj.ResetStateMachinePattern();
     if(strcmp(obj.problemClass,"regulator"))
         for i=1:obj.N 
             S_bar_obj   = input.S_bar_obj{i};
