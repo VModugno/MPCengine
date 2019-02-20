@@ -333,7 +333,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
              if(strcmp(obj.type,"statemachine"))
                 index = obj.state_machine.state_pattern(1);
                 tau   = u_star(1:obj.m(index));
-                % DEBUG
+                % DEBUG visualizing the trace of the predicted solution
                 index_control = 0;
                 for i = 1:length(obj.state_machine.state_pattern)
                     current_system          = obj.state_machine.state_pattern(i);

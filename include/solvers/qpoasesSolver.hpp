@@ -43,7 +43,7 @@ class qpoasesSolver  : public AbsSolver {
 		// Parameters for the current iteration
 		//double simulationTime       = 100;
 		//int mpcIter=100,controlIter = 100;
-		bool direct_solution        = false;   // with this flag i activate the solution recalculation each time and I use qp instead of sqp
+		bool direct_solution;        //= true;   // with this flag i activate the solution recalculation each time and I use qp instead of sqp
 
 		// Quadratic problem
 		qpOASES::SQProblem sqp;

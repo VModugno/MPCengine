@@ -21,7 +21,7 @@ model_name       = "twod_xy_lip_no_foot_model_automatic_footstep";
 
 %% experiment time structure (for the environment different from the internal time)
 ft         = 10;       % final time 20 50 
-delta_t    = 0.05;      % 0.1 0.01 (to the env class)
+delta_t    = 0.2;      % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
 
 %% MPC parameters

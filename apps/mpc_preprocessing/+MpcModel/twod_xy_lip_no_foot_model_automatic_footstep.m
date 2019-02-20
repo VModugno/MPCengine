@@ -15,7 +15,7 @@
 % name of the enviroment which the current model represents
 env_name ="XYLip_simplified_feet";
 % control step used inside the controller in general different from time step for integration 
-internal_dt = 0.05; 
+internal_dt = 0.2; 
 % Parameters
 infinity                          = 10e6;
 prm.h                             = 0.26;%0.8;
@@ -72,7 +72,7 @@ C_cont_obj       = {blkdiag(C_x_objective,C_x_objective),blkdiag(C_x_objective,C
 % for now i put everything inside C_cont even if 
 C_cont_constr    = {blkdiag(C_x_constraints,C_x_constraints);blkdiag(C_x_constraints,C_x_constraints)};
 %% predictive windows (it is useful for mutable constraints)
-N                = 12;
+N                = 4;
 %% here i define if the model is fixed or ltv or statemachine custom (with custom we can admit any kind of construction)
 type             = "statemachine";
 %% here we introduce a state machine pattern (one for each model)

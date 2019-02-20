@@ -35,7 +35,7 @@ int main(){
 	// constructing solver
 	P_solv qp;
 	if(switch_solver.compare("qpoases") == 0){
-		qp.reset(new qpoasesSolver(filename));
+		qp.reset(new qpoasesSolver(filename,true));
 	}else if(switch_solver.compare("") == 0) {
 
 	}
