@@ -163,7 +163,16 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 	qpOASES::real_t ubA[nConstraints_batch];
 	// solution
 	qpOASES::real_t xOpt[nVariables_batch];
-	Eigen::VectorXd decisionVariables(this->m);
+
+	Eigen::VectorXd decisionVariables;
+	int cur_dim;
+	if(pd.type.compare("statemachine")==0){
+		cur_dim = dim_input_model(pd.cur_index_pred_win);
+		decisionVariables = Eigen::VectorXd(cur_dim);
+	}
+	else{
+		decisionVariables = Eigen::VectorXd(this->m);
+	}
     // compute matrix batch problem
 	computeMatrix(H,g,A,ubA,x0,x0_e,pd);
 	// solve optimization problem
@@ -182,8 +191,15 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 		sqp.getPrimalSolution(xOpt);
 	}
 
-	for(int i=0;i<this->m;++i){
-		decisionVariables(i) = xOpt[i];
+	if(pd.type.compare("statemachine")==0){
+		for(int i=0;i<cur_dim;++i){
+			decisionVariables(i) = xOpt[i];
+		}
+	}else{
+		for(int i=0;i<this->m;++i){
+			decisionVariables(i) = xOpt[i];
+		}
+
 	}
 
     //DEBUG
@@ -207,14 +223,14 @@ Eigen::VectorXd qpoasesSolver::initSolver(double * x0_in,double * x0_ext,Problem
 	qpOASES::real_t xOpt[nVariables_batch];
 
 	Eigen::VectorXd decisionVariables;
+	int cur_dim;
 	if(pd.type.compare("statemachine")==0){
-		decisionVariables = Eigen::VectorXd(dim_input_model(pd.cur_index_pred_win));
+		cur_dim = dim_input_model(pd.cur_index_pred_win);
+		decisionVariables = Eigen::VectorXd(cur_dim);
 	}
 	else{
 		decisionVariables = Eigen::VectorXd(this->m);
 	}
-
-
 
     // compute components
 	computeMatrix(H,g,A,ubA,x0_in,x0_ext,pd);
@@ -235,7 +251,7 @@ Eigen::VectorXd qpoasesSolver::initSolver(double * x0_in,double * x0_ext,Problem
 	}
 
 	if(pd.type.compare("statemachine")==0){
-		for(int i=0;i<this->dim_input_model(pd.cur_index_pred_win);++i){
+		for(int i=0;i<cur_dim;++i){
 			decisionVariables(i) = xOpt[i];
 		}
 	}else{
@@ -267,7 +283,16 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi
 	qpOASES::real_t ubA[nConstraints_batch];
 
 	qpOASES::real_t xOpt[nVariables_batch];
-	Eigen::VectorXd decisionVariables(this->m);
+
+	Eigen::VectorXd decisionVariables;
+	int cur_dim;
+	if(pd.type.compare("statemachine")==0){
+		cur_dim = dim_input_model(pd.cur_index_pred_win);
+		decisionVariables = Eigen::VectorXd(cur_dim);
+	}
+	else{
+		decisionVariables = Eigen::VectorXd(this->m);
+	}
 
 	// DEBUGGING TIME
 	std::chrono::high_resolution_clock::time_point start;
@@ -323,8 +348,15 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi
 		std::cout <<"compute qp time = " <<duration.count()<<" s" << std::endl;
 	}
 	// collecting first action
-	for(int i=0;i<m;++i){
-		decisionVariables(i) = xOpt[i];
+	if(pd.type.compare("statemachine")==0){
+		for(int i=0;i<cur_dim;++i){
+			decisionVariables(i) = xOpt[i];
+		}
+	}else{
+		for(int i=0;i<this->m;++i){
+			decisionVariables(i) = xOpt[i];
+		}
+
 	}
 
 	return decisionVariables;
@@ -345,7 +377,15 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetai
 	qpOASES::real_t ubA[nConstraints];
 
 	qpOASES::real_t xOpt[nVariables];
-	Eigen::VectorXd decisionVariables(this->m);
+	Eigen::VectorXd decisionVariables;
+	int cur_dim;
+	if(pd.type.compare("statemachine")==0){
+		cur_dim = dim_input_model(pd.cur_index_pred_win);
+		decisionVariables = Eigen::VectorXd(cur_dim);
+	}
+	else{
+		decisionVariables = Eigen::VectorXd(this->m);
+	}
 
 	// DEBUGGING TIME
 	std::chrono::high_resolution_clock::time_point start;
@@ -395,8 +435,16 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetai
 		duration = std::chrono::duration_cast< std::chrono::duration<double> >(stop - start);
 		std::cout <<"compute qp time = " <<duration.count()<< " s" << std::endl;
 	}
-	for(int i=0;i<m;++i){
-		decisionVariables(i) = xOpt[i];
+
+	if(pd.type.compare("statemachine")==0){
+		for(int i=0;i<cur_dim;++i){
+			decisionVariables(i) = xOpt[i];
+		}
+	}else{
+		for(int i=0;i<this->m;++i){
+			decisionVariables(i) = xOpt[i];
+		}
+
 	}
 
 	return decisionVariables;

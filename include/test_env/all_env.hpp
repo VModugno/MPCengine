@@ -11,6 +11,7 @@
 #include "cart_pole.hpp"
 #include "twoRRobot.hpp"
 #include "2Dxy_lip.hpp"
+#include "2Dxy_lip_simplified_foot.hpp"
 
 
 #endif /* TEST_ENV_ALL_ENV_HPP_ */

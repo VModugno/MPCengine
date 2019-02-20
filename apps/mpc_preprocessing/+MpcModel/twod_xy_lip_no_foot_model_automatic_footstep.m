@@ -41,7 +41,7 @@ B_lip = [internal_dt-sh/omega; 1-ch; internal_dt];
 % (x_f^{k+1} - x_f^{k})/dt = u_2 for the beggining of the single support
 % (x_f^{k+1} - x_f^{k})/dt = 0   otherwise
 % footstep propagation model already discretized I + dt*A
-A_f   =  1;
+A_f   =  1; 
 B_f   =  1;
 % reference propagation model 
 A_ref =  1;
