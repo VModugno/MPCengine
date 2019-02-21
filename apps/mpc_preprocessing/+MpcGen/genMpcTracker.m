@@ -18,9 +18,11 @@ classdef genMpcTracker < MpcGen.coreGenerator
     
     
     methods
-        function obj = genMpcTracker(A_cont,B_cont,C_cont,B_In,B_Out,delta,N,state_gain,control_cost,...
+        function obj = genMpcTracker(A_cont,B_cont,C_cont,B_In,B_Out,delta,ctrl_delta,N,state_gain,control_cost,...
                                      type,solver,generate_functions,discretized,mutable_constr,function_list)
-                    
+           
+                                 
+            %% TODO updating this part                     
             % call super class constructor
             obj = obj@MpcGen.coreGenerator(type,solver,generate_functions,size(A_cont,1),size(B_cont,2),size(C_cont,1),N,function_list);
             
@@ -35,6 +37,9 @@ classdef genMpcTracker < MpcGen.coreGenerator
             obj.q            = size(C_cont,1); % output dim
             obj.N            = N;
             obj.delta        = delta;
+            %%
+            
+            
             % symbolic parameters
             % when we do not have external varialbes to optimize  we assign a dimension of one just to allow
             % matlab to provide the right functions signature

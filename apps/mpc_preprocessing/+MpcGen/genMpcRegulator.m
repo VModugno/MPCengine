@@ -17,11 +17,11 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
 
     methods
-        function obj = genMpcRegulator(A_cont,B_cont,C_cont_obj,C_cont_constr,B_In,B_Out,delta,N,state_gain,control_cost,...
+        function obj = genMpcRegulator(A_cont,B_cont,C_cont_obj,C_cont_constr,B_In,B_Out,delta,ctrl_delta,N,state_gain,control_cost,...
                                        type,solver,generate_functions,discretized,mutable_constr,state_machine,function_list)
            
             % call super class constructor
-            obj = obj@MpcGen.coreGenerator(type,solver,generate_functions,A_cont,B_cont,C_cont_obj,C_cont_constr,N,delta,state_machine,function_list);
+            obj = obj@MpcGen.coreGenerator(type,solver,generate_functions,A_cont,B_cont,C_cont_obj,C_cont_constr,N,delta,ctrl_delta,state_machine,function_list);
             
             % problem structure
             obj.type         = type; 
@@ -345,9 +345,15 @@ classdef genMpcRegulator < MpcGen.coreGenerator
              else
                  tau = u_star(1:obj.m);
              end
-                 
+             
+             
+             
+             
              % after each iteration we need to update the mutable (when they are present)
              % constraints and the state machine constraints
+             
+             %obj.UpdateAllPattern()  
+             
              if(strcmp(obj.type,"statemachine"))
                  A        = obj.A;
                  B        = obj.B;

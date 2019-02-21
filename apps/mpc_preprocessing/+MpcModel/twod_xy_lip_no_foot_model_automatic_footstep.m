@@ -77,7 +77,7 @@ N                = 12;
 type             = "statemachine";
 %% here we introduce a state machine pattern (one for each model)
 
-% state_pattern               = [2*ones(N/2-1,1);1;2*ones(N/2-1,1);1];
+% state_pattern               
 state_pattern               = [2*ones(N/2-1,1);1;2*ones(N/2-1,1);1];
 state_machine.state_pattern = state_pattern;
 % i need this to reset the pattern

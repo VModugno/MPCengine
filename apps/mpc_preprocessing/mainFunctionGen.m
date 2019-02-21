@@ -4,10 +4,10 @@ clc
 
 
 %% activate or deactivate function generation
-generate_func    = true;
+generate_func    = false;
 %%
 %% simulate the mpc 
-start_simulation = false;
+start_simulation = true;
 %%
 %% activate or deactivate visualization
 visualization    = true;
@@ -45,7 +45,7 @@ if(strcmp(control_mode,"regulator"))
     
     %% MPC ----------------------------------------------------------------    
     % regulator 
-    controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont_obj,C_cont_constr,B_In,B_Out,internal_dt,N,state_gain,control_cost,...
+    controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont_obj,C_cont_constr,B_In,B_Out,internal_dt,delta_t,N,state_gain,control_cost,...
                                         type,solver,generate_func,discretized,mutable_constr,state_machine,function_list); 
 elseif(strcmp(control_mode,"tracker"))
     %% system -------------------------------------------------------------

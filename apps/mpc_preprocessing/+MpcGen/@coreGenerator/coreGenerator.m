@@ -29,14 +29,16 @@ classdef coreGenerator <  handle
         q_obj              % output space dim (new version of output space) for constraints
         nVariables_batch   % total numer of variables in the prediction windows
         nConstraints_batch % totale number of constraints in the prediction windows
-        delta       % sampling time of the controller (in general different from the sampling time of the enviroment) in the model is called internal dt
-        N           % widht of prediction window
-        N_constr    % number of constraints
+        delta              % sampling time of mpc (in general different from the sampling time of the environment) in the model is called internal dt
+        control_delta      % sampling time of the simulation (or for real appliction of the control loop)
+        N                  % widht of prediction window
+        N_constr           % number of constraints
+        iteration_counter  % this counter is used for managing the case when the prediction frequency is lower than the control frequency
         
         B_In        % input  bound (B_In.max and B_In.min) if B_In.min empty the framework will automatically assume   -B_In.max <u< B_In.max    
         B_Out       % output bound(B_Out.max and B_Out.min) if B_Out.min empty the framework will automatically assume   -B_Out.max <u< B_Out.max
         
-        %  for code generation
+        %  for code generation (symbolic variables)
         sym_H           %             
         sym_F_tra       %
         sym_G           %
@@ -86,19 +88,21 @@ classdef coreGenerator <  handle
    
     methods
        
-        function obj = coreGenerator(type,solver,generate_functions,A_cont,B_cont,C_cont_obj,C_cont_constr,N,delta,state_machine,function_list)
+        function obj = coreGenerator(type,solver,generate_functions,A_cont,B_cont,C_cont_obj,C_cont_constr,N,delta,ctrl_delta,state_machine,function_list)
             if(~strcmp(type,'statemachine'))
-                obj.n     = size(A_cont,1);
-                obj.m     = size(B_cont,2);
-                obj.q     = size(C_cont,1); 
-                obj.N     = N;
-                obj.delta = delta;
+                obj.n             = size(A_cont,1);
+                obj.m             = size(B_cont,2);
+                obj.q             = size(C_cont,1); 
+                obj.N             = N;
+                obj.delta         = delta;
+                obj.control_delta = ctrl_delta;
                 obj.index            = sym('ind',[1,1],'real');
                 obj.x_0              = sym('x_0',[n,1],'real');
                 obj.u_prev           = sym('u_prev',[m,1],'real');
                 obj.ref_0            = sym('ref_0',[N*q,1],'real');
                 obj.type             = type;
                 obj.solver           = solver;
+                obj.iteration_counter= 1;
                 obj.propagationModel = function_list.propagationModel;    % (str) name of the function that we will use 
                 obj.costFunc         = function_list.costFunc;            % (str) name of the function that we will use 
                 obj.constrW          = function_list.constrW;             % (str) name of the function that we will use 
@@ -110,6 +114,7 @@ classdef coreGenerator <  handle
                         mkdir(convertStringsToChars(obj.basepath));
                     end
                 end
+                
             else
                 % if we are dealing with state machine
                 for i= 1:state_machine.n_of_models
@@ -120,6 +125,8 @@ classdef coreGenerator <  handle
                 end
                 obj.N                = N;
                 obj.delta            = delta;
+                obj.control_delta    = ctrl_delta;
+                obj.iteration_counter= 1;
                 obj.index            = sym('ind',[1,1],'real');
                 obj.x_0              = sym('x_0',[obj.n(1),1],'real');
                 %obj.u_prev           = sym('u_prev',[m,1],'real');
@@ -408,6 +415,26 @@ classdef coreGenerator <  handle
             obj.m_c.footstep_pattern = obj.m_c.reset_footstep;
             obj.m_c.const_pattern    = obj.m_c.reset_pattern;
        end
+       
+       % this function is used for simulating things inside matlab and
+       % there exist a corresponding mechanism on the cpp code
+       function UpdateAllPattern(obj)      
+           % here we compute the fraction
+           relative_duration = round(obj.delta/obj.control_delta);
+           % when iteration counter is a multiple of relative_duration we
+           % perform the update of the pattern
+           if(mod(obj.iteration_counter,relative_duration)==0)
+               if(~isempty(obj.m_c.footstep_pattern))
+                    obj.UpdateStateMachinePattern();
+               end
+               if(~isempty(obj.state_machine.state_pattern))
+                    obj.UpdateConstrPattern();
+               end
+           end
+           % update of the the internal iteration counter
+           obj.iteration_counter = obj.iteration_counter + 1;
+       end
+       
        
     end
     
