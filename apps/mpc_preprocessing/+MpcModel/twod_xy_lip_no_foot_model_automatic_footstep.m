@@ -15,7 +15,7 @@
 % name of the enviroment which the current model represents
 env_name ="XYLip_simplified_feet";
 % control step used inside the controller in general different from time step for integration 
-internal_dt = 0.2; 
+internal_dt = 0.05; 
 % Parameters
 infinity                          = 10e6;
 prm.h                             = 0.26;%0.8;
@@ -72,7 +72,7 @@ C_cont_obj       = {blkdiag(C_x_objective,C_x_objective),blkdiag(C_x_objective,C
 % for now i put everything inside C_cont even if 
 C_cont_constr    = {blkdiag(C_x_constraints,C_x_constraints);blkdiag(C_x_constraints,C_x_constraints)};
 %% predictive windows (it is useful for mutable constraints)
-N                = 4;
+N                = 12;
 %% here i define if the model is fixed or ltv or statemachine custom (with custom we can admit any kind of construction)
 type             = "statemachine";
 %% here we introduce a state machine pattern (one for each model)
@@ -90,7 +90,7 @@ discretized   = true;
 feedback_lin  = false;
 %% Initial state
 init_state = [  0;    0; 0; 0  ;  0.1;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
-                0;    0; 0; 0.1;  0];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
+                0.05;    0; 0.1; 0.1;  0];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
              
           
 %% here we consider the case with mutable bounds induced by  

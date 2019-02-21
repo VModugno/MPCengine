@@ -113,10 +113,10 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
             %hold off
             
             subplot(3,1,2)
-            plot(obj.all_states([4],:));
+            plot(obj.all_states([1,3,4],:)');
             
             subplot(3,1,3)
-            plot(obj.all_states([obj.num_state/2 + 4],:)');
+            plot(obj.all_states(obj.num_state/2 + [1,3,4],:)');
             
 %             p1 = patch(state(4,end)+obj.visualization.footRect(1,:), state(obj.num_state/2+4,end)+obj.visualization.footRect(2,:), 'r');
 %             p2 = patch(state(6,end)+obj.visualization.footRect(1,:), state(obj.num_state/2+6,end)+obj.visualization.footRect(2,:), 'r');

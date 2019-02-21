@@ -27,13 +27,13 @@ function W = regulator_W_statemachine_pattern_walking(obj)
         % in this way we do not apply the zmp constraints to the first
         % element because we exploit the fact that footstep_pattern is
         % incremented at each iteration (so one appears only a the beginning)
-        if obj.m_c.footstep_pattern(k) == 1 %|| obj.m_c.footstep_pattern(k) == 2
-            W_output_max(output_counter+(1:q),1) =  infinity*ones(q,1);
-            W_output_min(output_counter+(1:q),1) = -infinity*ones(q,1);
-        else
+%         if obj.m_c.footstep_pattern(k) == 1 %|| obj.m_c.footstep_pattern(k) == 2
+%             W_output_max(output_counter+(1:q),1) =  infinity*ones(q,1);
+%             W_output_min(output_counter+(1:q),1) = -infinity*ones(q,1);
+%         else
             W_output_max(output_counter+(1:q),1) = obj.m_c.boundsOutput.max{k_state}(:,left_or_right);
             W_output_min(output_counter+(1:q),1) = obj.m_c.boundsOutput.min{k_state}(:,left_or_right);
-        end
+        %end
         output_counter = output_counter + q;
     end
     
