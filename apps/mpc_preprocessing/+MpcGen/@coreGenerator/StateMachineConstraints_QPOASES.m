@@ -7,33 +7,64 @@ function StateMachineConstraints_QPOASES(obj,input,namefunc,path_to_folder,vars,
     if(strcmp(obj.problemClass,"regulator"))
         obj.ResetStateConstrPattern();
         obj.ResetStateMachinePattern();
-        for i=1:obj.N 
-           S_bar_constr = input.S_bar_constr{i};
-           T_bar_constr = input.T_bar_constr{i}; 
-           %% building A
-           if(strcmp(obj.m_c.g,"pattern")) 
-                A_           = obj.MutableConstraints_G(obj,S_bar_constr)';
-           else
-                A_           = eval(obj.constrFuncG_Call)'; 
-           end
-           all_rep_A{i} = vpa(A_(:));
-           %% building ub
-           if(strcmp(obj.m_c.w,"pattern")) 
-                W = obj.MutableConstraints_W(obj);
-           else
-                W = eval(obj.constrFuncW_Call);
-           end
+        
+        non_standard_iter = 1;
+        if(~isempty(obj.non_standard_iteration))
+            non_standard_iter = obj.non_standard_iteration.number;
+        end
+        
+        % we do +1 on the interation bound of the extnernal for because we need to processe all the non standard
+        % iter and than we go for the standard one
+        for j=1:non_standard_iter + 1
+            for i=1:obj.N 
+               S_bar_constr = input.S_bar_constr{i};
+               T_bar_constr = input.T_bar_constr{i}; 
+               %% building A
+               if(strcmp(obj.m_c.g,"pattern")) 
+                    A_           = obj.MutableConstraints_G(obj,S_bar_constr)';
+               else
+                    A_           = eval(obj.constrFuncG_Call)'; 
+               end
+               if(j<non_standard_iter + 1)
+                   if(obj.non_standard_iteration_flag)
+                       all_rep_A{i,j} = vpa(A_(:));
+                       obj.non_standard_iteration_flag = false;
+                   else
+                       all_rep_A{i,j} = [];
+                   end
+               else
+                   all_rep_A{i,j} = vpa(A_(:));
+               end
+               %% building ub
+               if(strcmp(obj.m_c.w,"pattern")) 
+                    W = obj.MutableConstraints_W(obj);
+               else
+                    W = eval(obj.constrFuncW_Call);
+               end
 
-           if(strcmp(obj.m_c.s,"pattern")) 
-                S = obj.MutableConstraints_S(obj,T_bar_constr);
-           else
-                S = eval(obj.constrFuncS_Call);
-           end
-           all_rep_ub{i} = vpa(W + S*obj.x_0);
+               if(strcmp(obj.m_c.s,"pattern")) 
+                    S = obj.MutableConstraints_S(obj,T_bar_constr);
+               else
+                    S = eval(obj.constrFuncS_Call);
+               end
+               % here i wrote all the non standard matrices
+               % only when they appear
+               if(j<non_standard_iter + 1)
+                   if(obj.non_standard_iteration_flag)
+                       all_rep_ub{i,j} = vpa(W + S*obj.x_0);
+                       obj.non_standard_iteration_flag = false;
+                   else
+                       all_rep_ub{i,j} = [];
+                   end
+               % here i wrote the last one standard 
+               else
+                   all_rep_ub{i,j} = vpa(W + S*obj.x_0);
+               end
 
-           obj.UpdateStateMachinePattern();
-           obj.UpdateConstrPattern();
-        end   
+               obj.UpdateStateMachinePattern();
+               obj.UpdateConstrPattern();
+            end  
+        end
     elseif(strcmp(obj.problemClass,"tracker"))
 %         if(strcmp(output,"A"))
 %             for i=1:obj.N 

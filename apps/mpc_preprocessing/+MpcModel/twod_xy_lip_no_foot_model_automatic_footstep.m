@@ -90,8 +90,8 @@ discretized   = true;
 feedback_lin  = false;
 %% Initial state
 init_state = [  0;    0; 0; 0  ;  0.1;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
-                0.05;    0; 0.1; 0.1;  0];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
-             
+                0;    0; 0; 0.1;  0];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
+                %0.05      %0.1
           
 %% here we consider the case with mutable bounds induced by  
  % Bounds from state machine and mutable constraints
@@ -159,4 +159,12 @@ function_list.propagationModel = "std";
 function_list.costFunc         = "std";      
 function_list.constrW          = "walking";      
 function_list.constrG          = "std";    
-function_list.constrS          = "std";  
+function_list.constrS          = "std";
+
+%% i control if i want to consider different optimization problem matrices the first the second the third entire prediction window etc
+%% this variables is necessary to inform the code generation module that we have such a things as a non standard prediction window to take care of
+prediction_window.number       = 1;
+indices                        = find((footstep_pattern == 2));
+prediction_window.sample       = indices(1);
+non_standard_prediction_win    = prediction_window; % it means tha we have a non standard prediction window the first prediction horizon
+

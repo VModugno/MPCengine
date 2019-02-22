@@ -22,36 +22,43 @@ classdef coreGenerator <  handle
         state_machine            % structure to manage state machine problem
         problemClass             % tracker or regulator
         % structure of the problem
-        n                  % state space dim
-        m                  % control space dim 
-        q                  % output space dim 
-        q_constr           % output space dim (new version of output space) for objective function
-        q_obj              % output space dim (new version of output space) for constraints
-        nVariables_batch   % total numer of variables in the prediction windows
-        nConstraints_batch % totale number of constraints in the prediction windows
-        delta              % sampling time of mpc (in general different from the sampling time of the environment) in the model is called internal dt
-        control_delta      % sampling time of the simulation (or for real appliction of the control loop)
-        N                  % widht of prediction window
-        N_constr           % number of constraints
-        iteration_counter  % this counter is used for managing the case when the prediction frequency is lower than the control frequency
+        n                       % state space dim
+        m                       % control space dim 
+        q                       % output space dim 
+        q_constr                % output space dim (new version of output space) for objective function
+        q_obj                   % output space dim (new version of output space) for constraints
+        nVariables_batch        % total numer of variables in the prediction windows
+        nConstraints_batch      % totale number of constraints in the prediction windows
+        delta                   % sampling time of mpc (in general different from the sampling time of the environment) in the model is called internal dt
+        control_delta           % sampling time of the simulation (or for real appliction of the control loop)
+        N                       % widht of prediction window
+        N_constr                % number of constraints
+        iteration_counter       % this counter is used for managing the case when the prediction frequency is lower than the control frequency (it increase everythime)
+        actual_iteration_counter% this counter increase every time i move over the sample of the prediction windows (if internal frequency and control frequency are the same it coincides with the former counter)
+        current_pred_win        % this iterator tell me in which iteration window the mpc is still operating                     
+                              
+                                
         
         B_In        % input  bound (B_In.max and B_In.min) if B_In.min empty the framework will automatically assume   -B_In.max <u< B_In.max    
         B_Out       % output bound(B_Out.max and B_Out.min) if B_Out.min empty the framework will automatically assume   -B_Out.max <u< B_Out.max
         
-        %  for code generation (symbolic variables)
-        sym_H           %             
-        sym_F_tra       %
-        sym_G           %
-        sym_W           %
-        sym_S           %
-        index           % inner variables for mutable constraints (in order to select the different W structure)
-        x_0             % inner_variables
-        u_prev          % inner_variables (it is used only for tracking and represents the previous control)
-        ref_0           % inner_variables
-        inner_x_ext     % variable used to get the trajectories from the oracle (for LTV propagation) 
-        outer_x         % parameters to optimize that do not belong to the mpc variables
-        extern_var      % "true" or "false"
-        extern_dim      % dimension of external variable vector to optimize
+        %for code generation (symbolic variables)
+        sym_H                  %             
+        sym_F_tra              %
+        sym_G                  %
+        sym_W                  %
+        sym_S                  %
+        index                  % inner variables for matrices that change every sample inside a prediction window (in order to select the different structure) it corresponds to actual_iteration_counter
+        index_pred_window      % inner variables that let us define select different matrices for different prediction windows
+        x_0                    % inner_variables
+        u_prev                 % inner_variables (it is used only for tracking and represents the previous control)
+        ref_0                  % inner_variables
+        inner_x_ext            % variable used to get the trajectories from the oracle (for LTV propagation) 
+        outer_x                % parameters to optimize that do not belong to the mpc variables
+        extern_var             % "true" or "false"
+        extern_dim             % dimension of external variable vector to optimize
+        non_standard_iteration       % array of number that tell the code generator which is a non standard generation
+        non_standard_iteration_flag  % with this variable im going to signal the qpoases fucntion generator that im going trough a special non standard value in the iteration
         % for control
         H
         F_tra
@@ -88,7 +95,8 @@ classdef coreGenerator <  handle
    
     methods
        
-        function obj = coreGenerator(type,solver,generate_functions,A_cont,B_cont,C_cont_obj,C_cont_constr,N,delta,ctrl_delta,state_machine,function_list)
+        function obj = coreGenerator(type,solver,generate_functions,A_cont,B_cont,C_cont_obj,C_cont_constr,N,delta,ctrl_delta,...
+                                     state_machine,non_standard_iteration,function_list)
             if(~strcmp(type,'statemachine'))
                 obj.n             = size(A_cont,1);
                 obj.m             = size(B_cont,2);
@@ -97,12 +105,17 @@ classdef coreGenerator <  handle
                 obj.delta         = delta;
                 obj.control_delta = ctrl_delta;
                 obj.index            = sym('ind',[1,1],'real');
+                obj.index_pred_window= sym('ind_pred_win',[1,1],'real');
                 obj.x_0              = sym('x_0',[n,1],'real');
                 obj.u_prev           = sym('u_prev',[m,1],'real');
-                obj.ref_0            = sym('ref_0',[N*q,1],'real');
+                obj.ref_0            = sym('ref_0',[N*q,1],'real');  
                 obj.type             = type;
                 obj.solver           = solver;
-                obj.iteration_counter= 1;
+                obj.iteration_counter        = 1;
+                obj.actual_iteration_counter = 1;
+                obj.current_pred_win         = 1;
+                obj.non_standard_iteration      = non_standard_iteration;
+                obj.non_standard_iteration_flag = false;
                 obj.propagationModel = function_list.propagationModel;    % (str) name of the function that we will use 
                 obj.costFunc         = function_list.costFunc;            % (str) name of the function that we will use 
                 obj.constrW          = function_list.constrW;             % (str) name of the function that we will use 
@@ -126,18 +139,23 @@ classdef coreGenerator <  handle
                 obj.N                = N;
                 obj.delta            = delta;
                 obj.control_delta    = ctrl_delta;
-                obj.iteration_counter= 1;
-                obj.index            = sym('ind',[1,1],'real');
-                obj.x_0              = sym('x_0',[obj.n(1),1],'real');
+                obj.iteration_counter        = 1;
+                obj.actual_iteration_counter = 1;
+                obj.current_pred_win         = 1;
+                obj.index                    = sym('ind',[1,1],'real');
+                obj.index_pred_window        = sym('ind_pred_win',[1,1],'real');
+                obj.x_0                      = sym('x_0',[obj.n(1),1],'real');
                 %obj.u_prev           = sym('u_prev',[m,1],'real');
                 %obj.ref_0            = sym('ref_0',[N*q,1],'real');
-                obj.type             = type;
-                obj.solver           = solver;
-                obj.propagationModel = function_list.propagationModel;    % (str) name of the function that we will use 
-                obj.costFunc         = function_list.costFunc;            % (str) name of the function that we will use 
-                obj.constrW          = function_list.constrW;             % (str) name of the function that we will use 
-                obj.constrG          = function_list.constrG;             % (str) name of the function that we will use 
-                obj.constrS          = function_list.constrS;             % (str) name of the function that we will use 
+                obj.type                     = type;
+                obj.solver                   = solver;
+                obj.non_standard_iteration      = non_standard_iteration;
+                obj.non_standard_iteration_flag = false;
+                obj.propagationModel         = function_list.propagationModel;    % (str) name of the function that we will use 
+                obj.costFunc                 = function_list.costFunc;            % (str) name of the function that we will use 
+                obj.constrW                  = function_list.constrW;             % (str) name of the function that we will use 
+                obj.constrG                  = function_list.constrG;             % (str) name of the function that we will use 
+                obj.constrS                  = function_list.constrS;             % (str) name of the function that we will use 
                 obj.GetBasePath();
                 if(generate_functions)
                     if ~exist(obj.basepath,'dir')
@@ -419,7 +437,8 @@ classdef coreGenerator <  handle
        % this function is used for simulating things inside matlab and
        % there exist a corresponding mechanism on the cpp code
        function UpdateAllPattern(obj)      
-           % here we compute the fraction
+           % here we compute the fraction of time samples that i need to
+           % wait in order to control the  
            relative_duration = round(obj.delta/obj.control_delta);
            % when iteration counter is a multiple of relative_duration we
            % perform the update of the pattern
@@ -432,9 +451,29 @@ classdef coreGenerator <  handle
                end
            end
            % update of the the internal iteration counter
-           obj.iteration_counter = obj.iteration_counter + 1;
+           %obj.iteration_counter = obj.iteration_counter + 1;
        end
        
+       function UpdateIterationCounters(obj)
+           relative_duration = round(obj.delta/obj.control_delta);
+           % this counter increases each step with no distinction
+           obj.iteration_counter = obj.iteration_counter + 1;
+           if(mod(obj.iteration_counter,relative_duration)==0)
+               % update of the the internal iteration counter
+               % this counter increases only when i actually move one
+               % sample over the prediction window (it happens less frequently when the mpc frequency is lower than the control frequency)
+               obj.actual_iteration_counter = obj.actual_iteration_counter + 1;
+               % here i update the internal iteration window each time i
+               % have a number of sample equal to an entire iteration
+               % window
+               if(mod(obj.actual_iteration_counter,obj.N)==0)
+                    % i restart the actual iterator
+                    obj.actual_iteration_counter = 1;
+                    % i advance by one the pred window
+                    obj.current_pred_win = obj.current_pred_win + 1;
+               end
+           end
+       end
        
     end
     

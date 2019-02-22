@@ -10,6 +10,14 @@ classdef genMpcRegulator < MpcGen.coreGenerator
       Q
       R
       u_star_debug 
+      
+      
+      
+      % for simulation on matlab we can define condition for non
+      %standard iteration directly inside the matrices function. for code
+      %generation we need to explicitly state that we have to deal with non
+      %standard generation when we construct the cpp code. fo
+        
        
         
     end
@@ -18,10 +26,11 @@ classdef genMpcRegulator < MpcGen.coreGenerator
 
     methods
         function obj = genMpcRegulator(A_cont,B_cont,C_cont_obj,C_cont_constr,B_In,B_Out,delta,ctrl_delta,N,state_gain,control_cost,...
-                                       type,solver,generate_functions,discretized,mutable_constr,state_machine,function_list)
+                                       type,solver,generate_functions,discretized,mutable_constr,state_machine,non_standard_iteration,function_list)
            
             % call super class constructor
-            obj = obj@MpcGen.coreGenerator(type,solver,generate_functions,A_cont,B_cont,C_cont_obj,C_cont_constr,N,delta,ctrl_delta,state_machine,function_list);
+            obj = obj@MpcGen.coreGenerator(type,solver,generate_functions,A_cont,B_cont,C_cont_obj,C_cont_constr,N,delta,ctrl_delta,...
+                                           state_machine,non_standard_iteration,function_list);
             
             % problem structure
             obj.type         = type; 
@@ -29,7 +38,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.problemClass = 'regulator';
             
             obj.state_machine = state_machine;
-               
+           
             
             % when we do not have external varialbes to optimize we assign a dimension of one just to allow
             % matlab to provide the right functions signature
@@ -346,12 +355,9 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                  tau = u_star(1:obj.m);
              end
              
-             
-             
-             
              % after each iteration we need to update the mutable (when they are present)
              % constraints and the state machine constraints
-             
+             obj.UpdateIterationCounters();
              %obj.UpdateAllPattern()  
              
              if(strcmp(obj.type,"statemachine"))
