@@ -47,10 +47,10 @@ include_directories(./include)
 #)
 
 set(MPCEngine_current_func_HDR
-  ${CMAKE_SOURCE_DIR}/include/current_func/compute_A.h
-  ${CMAKE_SOURCE_DIR}/include/current_func/compute_H.h
-  ${CMAKE_SOURCE_DIR}/include/current_func/compute_g.h
-  ${CMAKE_SOURCE_DIR}/include/current_func/compute_ub.h
+  #${CMAKE_SOURCE_DIR}/include/current_func/compute_A.h
+  #${CMAKE_SOURCE_DIR}/include/current_func/compute_H.h
+  #${CMAKE_SOURCE_DIR}/include/current_func/compute_g.h
+  #${CMAKE_SOURCE_DIR}/include/current_func/compute_ub.h
 )
 
 install(FILES ${MPCEngine_current_func_HDR} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/MPCEngine/current_func/)
@@ -87,9 +87,9 @@ install(FILES ${MPCEngine_Trajectories_HDR} DESTINATION ${CMAKE_INSTALL_PREFIX}/
 set(MPCEngine_TestEnv_HDR
   ${CMAKE_SOURCE_DIR}/include/test_env/abstract_env.hpp
   ${CMAKE_SOURCE_DIR}/include/test_env/all_env.hpp
-  ${CMAKE_SOURCE_DIR}/include/test_env/cart_pole.hpp
-  ${CMAKE_SOURCE_DIR}/include/test_env/twoRRobot.hpp
-  ${CMAKE_SOURCE_DIR}/include/test_env/2Dxy_lip.hpp
+  #${CMAKE_SOURCE_DIR}/include/test_env/cart_pole.hpp
+  #${CMAKE_SOURCE_DIR}/include/test_env/twoRRobot.hpp
+  #${CMAKE_SOURCE_DIR}/include/test_env/2Dxy_lip.hpp
 )
 
 install(FILES ${MPCEngine_TestEnv_HDR} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/MPCEngine/test_env/)
@@ -99,10 +99,10 @@ install(FILES ${CMAKE_SOURCE_DIR}/include/mpc_engine.h
 )
 
 set(MPCEngine_SRC
-  ${CMAKE_SOURCE_DIR}/src/current_func/compute_A.cpp
-  ${CMAKE_SOURCE_DIR}/src/current_func/compute_H.cpp
-  ${CMAKE_SOURCE_DIR}/src/current_func/compute_g.cpp
-  ${CMAKE_SOURCE_DIR}/src/current_func/compute_ub.cpp
+  #${CMAKE_SOURCE_DIR}/src/current_func/compute_A.cpp
+  #${CMAKE_SOURCE_DIR}/src/current_func/compute_H.cpp
+  #${CMAKE_SOURCE_DIR}/src/current_func/compute_g.cpp
+  #${CMAKE_SOURCE_DIR}/src/current_func/compute_ub.cpp
   ${CMAKE_SOURCE_DIR}/src/solvers/qpoasesSolver.cpp
   ${CMAKE_SOURCE_DIR}/src/api/MPCregulator.cpp
   ${CMAKE_SOURCE_DIR}/src/api/MPCtracker.cpp
@@ -111,11 +111,11 @@ set(MPCEngine_SRC
 set(MPCEngine_HDR
   ${CMAKE_SOURCE_DIR}/include/solvers/AbsSolver.hpp
   ${CMAKE_SOURCE_DIR}/include/solvers/all_solvers.hpp
-  ${CMAKE_SOURCE_DIR}/include/current_func/compute_A.h
-  ${CMAKE_SOURCE_DIR}/include/current_func/compute_H.h
-  ${CMAKE_SOURCE_DIR}/include/current_func/compute_g.h
-  ${CMAKE_SOURCE_DIR}/include/current_func/compute_ub.h
-  ${CMAKE_SOURCE_DIR}/include/solvers/qpOASESFunction.h
+  #${CMAKE_SOURCE_DIR}/include/current_func/compute_A.h
+  #${CMAKE_SOURCE_DIR}/include/current_func/compute_H.h
+  #${CMAKE_SOURCE_DIR}/include/current_func/compute_g.h
+  #${CMAKE_SOURCE_DIR}/include/current_func/compute_ub.h
+  #${CMAKE_SOURCE_DIR}/include/solvers/qpOASESFunction.h
   ${CMAKE_SOURCE_DIR}/include/solvers/qpoasesSolver.hpp
   ${CMAKE_SOURCE_DIR}/include/api/MPCproblem.hpp
   ${CMAKE_SOURCE_DIR}/include/api/MPCregulator.hpp
@@ -128,9 +128,9 @@ set(MPCEngine_HDR
   ${CMAKE_SOURCE_DIR}/include/trajectories/trajectories.hpp
   ${CMAKE_SOURCE_DIR}/include/test_env/abstract_env.hpp
   ${CMAKE_SOURCE_DIR}/include/test_env/all_env.hpp
-  ${CMAKE_SOURCE_DIR}/include/test_env/cart_pole.hpp
-  ${CMAKE_SOURCE_DIR}/include/test_env/twoRRobot.hpp
-  ${CMAKE_SOURCE_DIR}/include/test_env/2Dxy_lip.hpp
+  #${CMAKE_SOURCE_DIR}/include/test_env/cart_pole.hpp
+  #${CMAKE_SOURCE_DIR}/include/test_env/twoRRobot.hpp
+  #${CMAKE_SOURCE_DIR}/include/test_env/2Dxy_lip.hpp
 )
 
 add_library(MPCEngine SHARED ${MPCEngine_SRC} ${MPCEngine_HDR})
