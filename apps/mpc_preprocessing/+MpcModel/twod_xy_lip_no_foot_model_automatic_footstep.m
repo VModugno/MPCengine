@@ -166,5 +166,5 @@ function_list.constrS          = "std";
 prediction_window.number       = 1;
 indices                        = find((footstep_pattern == 2));
 prediction_window.sample       = indices(1);
-non_standard_prediction_win    = prediction_window; % it means tha we have a non standard prediction window the first prediction horizon
-
+non_standard_prediction_win{1} = prediction_window; % it means tha we have a non standard prediction window the first prediction horizon
+%non_standard_prediction_win{1} = [];

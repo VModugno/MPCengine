@@ -23,6 +23,7 @@ public:
 	int              ex_var_dim;           // dimension of the external variables vector (0 if there is no external variable vector)
 	Eigen::VectorXd  action;               // here i define the action vectors
 	int              inner_step;           // this counter specify at which point of the prediction window we are
+	int              current_pred_win;     // this interator tells us in which prediction window we are (TODO example here to explain)
 
 	// GET function
 	int getStateDim()     {return solver->getStateDim();};
@@ -33,10 +34,11 @@ public:
     	this->external_variables = cur_ext_var;
     };
     // this function update inner step and reset it to zero when the new prediction window is reached
-    void innerStepUpdate(){
+    void innerCounterUpdate(){
     	inner_step++;
     	if(inner_step > (this->getPredictionDim() - 1)){
-    		inner_step=0;
+    		inner_step       = 0;
+    		current_pred_win = current_pred_win + 1;
     	}
 
     }

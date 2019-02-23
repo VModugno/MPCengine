@@ -184,6 +184,10 @@ classdef coreGenerator <  handle
        
        
        function GenFunctions(obj) 
+           % we need to reset the non standard iteration flag because it
+           % could be used during the simulation and we need to reset it before
+           % starting the func generation module
+           obj.non_standard_iteration_flag = false;
            if(strcmp(obj.solver,"QPoases"))
                obj.QPOASESgenFunc()
            elseif(strcmp(obj.solver,"somethingElse"))

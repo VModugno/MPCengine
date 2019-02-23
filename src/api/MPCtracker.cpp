@@ -37,6 +37,12 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & tra
 	pt::ptree tree;
 	// Parse the XML into the property tree.
 	pt::read_xml(full_path, tree);
+
+	// initialize internal sample step
+	this->inner_step         = 0;
+	// initialize current window iterator
+	this->current_pred_win   = 1;
+
 	this->pd.type               = tree.get<std::string>("parameters.Entry.type");       // fixed or LTV
 	this->pd.external_variables = tree.get<std::string>("parameters.Entry.external_x"); // true or false
 	this->ex_var_dim            = tree.get<int>("parameters.Entry.external_dim"); // true or false
@@ -53,7 +59,7 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & tra
     //std::cout<<"solver->getStateDim() = "<<solver->getStateDim() << ",solver->getControlDim() = "<< solver->getControlDim() << ",solver->getPredictionDim()*solver->getOutputDim()= "<<solver->getPredictionDim()*solver->getOutputDim()<<std::endl;
     this->delta_action = Eigen::VectorXd::Zero(solver->getControlDim());
     //[cur_state,cur_action,ref,index]
-    this->inner_x      = Eigen::VectorXd::Zero(solver->getStateDim() + solver->getPredictionDim()*solver->getOutputDim() + 1);
+    this->inner_x      = Eigen::VectorXd::Zero(solver->getStateDim() + solver->getPredictionDim()*solver->getOutputDim() + 2);
     this->ref          = Eigen::VectorXd::Zero(solver->getPredictionDim()*solver->getOutputDim());
     // initialize time step
     this->dt                 =traj.GetDt();
@@ -86,9 +92,9 @@ Eigen::VectorXd MPCtracker::Init(Eigen::VectorXd state_0_in){
 	// DONT CHANGE! the right order is set inside the code generator class in matlab with the inner_x variables
 	if(pd.type.compare("ltv")==0){
 		Eigen::VectorXd trace = oracle->ComputePlan(state_0_in);
-		this->inner_x << this->action,trace,ref,inner_step;
+		this->inner_x << this->action,trace,ref,inner_step,current_pred_win;
 	}else if(pd.type.compare("fixed")==0){
-		this->inner_x << this->action,state_0_in,ref,inner_step;
+		this->inner_x << this->action,state_0_in,ref,inner_step,current_pred_win;
 	}
 
 
@@ -107,7 +113,7 @@ Eigen::VectorXd MPCtracker::Init(Eigen::VectorXd state_0_in){
 	this->current_step = this->current_step + 1;
 	// update time step
     this->current_time_step = this->current_time_step + this->dt;
-    innerStepUpdate();
+    innerCounterUpdate();
 
     return this->action;
 }
@@ -118,9 +124,9 @@ Eigen::VectorXd MPCtracker::ComputeControl(Eigen::VectorXd state_i_in){
 	// DONT CHANGE! the right order is set inside the code generator class in matlab with the inner_x variables
 	if(pd.type.compare("ltv")==0){
 			Eigen::VectorXd trace = oracle->ComputePlan(state_i_in);
-			this->inner_x << this->action,trace,ref,inner_step;
+			this->inner_x << this->action,trace,ref,inner_step,current_pred_win;
 	}else if(pd.type.compare("fixed")==0){
-		this->inner_x << this->action,state_i_in,ref,inner_step;
+		this->inner_x << this->action,state_i_in,ref,inner_step,current_pred_win;
 	}
 	//this->inner_x << this->action,state_i_in,ref,inner_step;
 
@@ -131,7 +137,7 @@ Eigen::VectorXd MPCtracker::ComputeControl(Eigen::VectorXd state_i_in){
     this->current_step = this->current_step + 1;
     // update time step
     this->current_time_step = this->current_time_step + this->dt;
-    innerStepUpdate();
+    innerCounterUpdate();
 
 	return this->action;
 }

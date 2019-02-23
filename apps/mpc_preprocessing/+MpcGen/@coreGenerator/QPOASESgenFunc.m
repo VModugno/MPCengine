@@ -15,7 +15,7 @@ function QPOASESgenFunc(obj)
    else
        % if the system is not LTV obj.inner_x_ext is gonna be
        % zero
-        inner_x = [obj.x_0;obj.inner_x_ext;obj.index,obj.index_pred_window];
+        inner_x = [obj.x_0;obj.inner_x_ext;obj.index;obj.index_pred_window];
    end
    %% hessian cost function 
    if(~isempty(obj.state_machine))

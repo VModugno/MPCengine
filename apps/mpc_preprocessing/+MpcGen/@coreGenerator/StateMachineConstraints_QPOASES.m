@@ -2,15 +2,17 @@
 %% TODO in general make a distinciton between functions and mutable does not make a lot fo sense
 function StateMachineConstraints_QPOASES(obj,input,namefunc,path_to_folder,vars,output)
                                      
-    all_rep_A  = cell(obj.N,1);
-    all_rep_ub = cell(obj.N,1);
+    all_rep_A  = cell(obj.N,length(obj.non_standard_iteration)+1);
+    all_rep_ub = cell(obj.N,length(obj.non_standard_iteration)+1);
     if(strcmp(obj.problemClass,"regulator"))
         obj.ResetStateConstrPattern();
         obj.ResetStateMachinePattern();
         
         non_standard_iter = 1;
+        % here we make the hypothesis that the non standard sequence are
+        % consecutive if there exist more than one
         if(~isempty(obj.non_standard_iteration))
-            non_standard_iter = obj.non_standard_iteration.number;
+            non_standard_iter = length(obj.non_standard_iteration);
         end
         
         % we do +1 on the interation bound of the extnernal for because we need to processe all the non standard

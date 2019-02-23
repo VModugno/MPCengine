@@ -28,13 +28,21 @@ function W = regulator_W_statemachine_pattern_walking(obj)
         % element because we exploit the fact that footstep_pattern is
         % incremented at each iteration (so one appears only a the beginning)
         first_step_end_index = find((obj.m_c.footstep_pattern == 2));
-        if (obj.current_pred_win == 1 && k < first_step_end_index(1)) %&& obj.actual_iteration_counter < first_step_end_index(1))
+        
+        % here i check if there is still a first step working
+        if(isempty(first_step_end_index))
+            first_step_end_index = 0;
+        else
+            first_step_end_index = first_step_end_index(1);
+        end
+%             
+        if (obj.current_pred_win == 1 && k < first_step_end_index) %&& obj.actual_iteration_counter < first_step_end_index(1))
             W_output_max(output_counter+(1:q),1) =  infinity*ones(q,1);
             W_output_min(output_counter+(1:q),1) = -infinity*ones(q,1);
             obj.non_standard_iteration_flag      = true;
         else
             W_output_max(output_counter+(1:q),1) = obj.m_c.boundsOutput.max{k_state}(:,left_or_right);
-            W_output_min(output_counter+(1:q),1) = obj.m_c.boundsOutput.min{k_state}(:,left_or_right);
+            W_output_min(output_counter+(1:q),1) = obj.m_c.boundsOutput.min{k_state}(:,left_or_right);%
         end
         output_counter = output_counter + q;
     end
