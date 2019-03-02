@@ -14,30 +14,12 @@
  */
 
 #include "api/MPCtracker.hpp"
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
-#include <boost/filesystem.hpp>
 
-
-namespace pt = boost::property_tree;
-namespace fs = boost::filesystem;
 
 MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & traj,P_oracle oracle)
 {
-	std::stringstream ss;
-	// i get the current working directory
-	fs::path pathfs = fs::current_path();
-	// convert to a string
-	std::string path = pathfs.string();
-	// concat string
-	ss << path << "/configuration_file/" << filename;
-	// get the final path
-	std::string full_path = ss.str();
-	// Create empty property tree object
-	pt::ptree tree;
-	// Parse the XML into the property tree.
-	pt::read_xml(full_path, tree);
 
+	pt::ptree tree = ReadParameterXml(filename);
 	// initialize internal sample step
 	this->inner_step         = 0;
 	// initialize current window iterator

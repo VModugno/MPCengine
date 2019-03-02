@@ -10,6 +10,13 @@
 
 #include "solvers/AbsSolver.hpp"
 #include "OraclePlanner.hpp"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/filesystem.hpp>
+
+
+namespace pt = boost::property_tree;
+namespace fs = boost::filesystem;
 
 
 class MPCproblem {
@@ -45,6 +52,37 @@ public:
     		current_pred_win = current_pred_win + 1;
     	}
 
+    }
+
+    pt::ptree ReadParameterXml(std::string filename){
+    	std::stringstream ss;
+		// i get the current working directory
+		fs::path pathfs = fs::current_path();
+		// convert to a string
+		std::string path = pathfs.string();
+		// concat string
+		ss << path << "/configuration_file/" << filename;
+		// get the final path
+		std::string full_path = ss.str();
+
+		std::vector<std::string> path_f;
+		path_f.push_back("/usr/local/include/MPCEngine/configuration_file/"+filename);
+		path_f.push_back(full_path);
+		// Create empty property tree object
+		pt::ptree tree;
+		for (int i=0; i<path_f.size(); i++)
+		{
+			try{
+				// Parse the XML into the property tree.
+				pt::read_xml(path_f[i], tree);
+				std::cout << "[Success] Configuration file path found!" << std::endl;
+				break;
+			}
+			catch(std::exception &e) {
+				std::cout << "[Warning] Try " << i << ". Configuration file path not found! " << path_f[i] << "\n" << e.what() << std::endl;
+			}
+		}
+		return tree;
     }
 
     // virtual function

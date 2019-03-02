@@ -36,20 +36,9 @@ public:
 	    prmRR pp;
 
 	    twoRRobot(const std::string filename,bool act_vis,bool log = false){
-	    	// i create a string stream for concatenating strings
-			std::stringstream ss;
-			// i get the current working directory
-			fs::path pathfs = fs::current_path();
-			// convert to a string
-			std::string path = pathfs.string();
-			// concat string
-			ss << path <<  "/configuration_file/" << filename;
-			// get the final path
-			std::string full_path = ss.str();
-			// Create empty property tree object
-			pt::ptree tree;
-			// Parse the XML into the property tree.
-			pt::read_xml(full_path, tree);
+
+
+	    	pt::ptree tree             = ReadParameterXml(filename);
 	    	this->dim_state            = 4;
 	    	this->DOF                  = 2;
 	    	this->state_bounds         = Eigen::MatrixXd(4,2);

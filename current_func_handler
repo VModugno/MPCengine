@@ -1,0 +1,14 @@
+#!/bin/bash
+clear
+read -p "Please enter the folder name of your generated functions  : " name
+
+cp apps/mpc_preprocessing/generated_function/$name/compute_A.h include/current_func/
+cp apps/mpc_preprocessing/generated_function/$name/compute_ub.h include/current_func/
+cp apps/mpc_preprocessing/generated_function/$name/compute_g.h include/current_func/
+cp apps/mpc_preprocessing/generated_function/$name/compute_H.h include/current_func/
+cp apps/mpc_preprocessing/generated_function/$name/compute_A.cpp src/current_func/
+cp apps/mpc_preprocessing/generated_function/$name/compute_ub.cpp src/current_func/
+cp apps/mpc_preprocessing/generated_function/$name/compute_g.cpp src/current_func/
+cp apps/mpc_preprocessing/generated_function/$name/compute_H.cpp src/current_func/
+cp apps/mpc_preprocessing/generated_function/$name/env_parameters.xml configuration_file/
+cp apps/mpc_preprocessing/generated_function/$name/parameters.xml configuration_file/

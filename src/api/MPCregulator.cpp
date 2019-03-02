@@ -16,20 +16,8 @@ namespace fs = boost::filesystem;
 
 MPCregulator::MPCregulator(const std::string filename,P_solv solv,P_oracle oracle)
 {
-	std::stringstream ss;
-	// i get the current working directory
-	fs::path pathfs = fs::current_path();
-	// convert to a string
-	std::string path = pathfs.string();
-	// concat string
-	ss << path << "/configuration_file/" << filename;
-	// get the final path
-	std::string full_path = ss.str();
-	// Create empty property tree object
-	pt::ptree tree;
-	// Parse the XML into the property tree.
-	pt::read_xml(full_path, tree);
-	this->ex_var_dim            = tree.get<int>("parameters.Entry.external_dim"); // true or false
+	pt::ptree tree     = ReadParameterXml(filename);
+	this->ex_var_dim   = tree.get<int>("parameters.Entry.external_dim"); // true or false
 	// copy shared pointer
 	this->solver       = solv;
     // initialize action
