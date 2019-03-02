@@ -33,6 +33,17 @@ public:
 	int getControlDim(){return this->m;};
 	int getOutputDim(){return this->q;};
 	int getPredictionDim(){return this->N;};
+	Eigen::VectorXd getPredictedOptSol(){return this->x_Opt;};
+	Eigen::VectorXd getDimInputModel(){
+		if(type.compare("statemachine")==0){
+			return this->dim_input_model;
+		}
+		else{
+			std::cout << "[WARNING]= dim_input_model is not used for this type( "<<this->type <<" )of mpc problem"<<std::endl;
+			return Eigen::VectorXd::Zero(N);
+		}
+	};
+
     // virtual function
 	// initialize the solver if necessary
 	virtual void            initDim(pt::ptree & tree) = 0;
@@ -50,7 +61,8 @@ protected:
 	int N_constr;                    // number of constraints
 	bool time_perfomance = false;    // activate or deactivate performance computation
 	Eigen::VectorXd dim_input_model; // this vector contains the dimension of the current model given the current time sample in the control window
-
+	Eigen::VectorXd x_Opt;           // this the vector with the current complete predicted solution;
+	std::string type;                // type of mpc problem
 };
 
 typedef std::unique_ptr<AbsSolver> P_unique_solv;

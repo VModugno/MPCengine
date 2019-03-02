@@ -131,7 +131,8 @@ qpoasesSolver::qpoasesSolver(const std::string filename,bool direct_solution){
 	// in order to manage the case of statemachine mpc i need to deal with the case
 	// where the dimensions of the problem are arrays
 	this->initDim(tree);
-
+    // here i initialize the internal variable that contains the current optimal predicted solution
+	this-> x_Opt   = Eigen::VectorXd(nVariables_batch);
     this->direct_solution     = direct_solution;
     if(direct_solution){
     	this->qp   = qpOASES::QProblem(nVariables_batch,nConstraints_batch);
@@ -207,6 +208,10 @@ Eigen::VectorXd qpoasesSolver::initSolver(Eigen::VectorXd  x0_in,Eigen::VectorXd
 		sqp.getPrimalSolution(xOpt);
 	}
 
+	// copy current solutions into internal variable
+	for(int i=0;i<nVariables_batch;++i)
+		this->x_Opt(i) = xOpt[i];
+
 	if(pd.type.compare("statemachine")==0){
 		for(int i=0;i<cur_dim;++i){
 			decisionVariables(i) = xOpt[i];
@@ -265,6 +270,11 @@ Eigen::VectorXd qpoasesSolver::initSolver(double * x0_in,double * x0_ext,Problem
 		// get results
 		sqp.getPrimalSolution(xOpt);
 	}
+
+
+	// copy current solutions into internal variable
+    for(int i=0;i<nVariables_batch;++i)
+    	this->x_Opt(i) = xOpt[i];
 
 	if(pd.type.compare("statemachine")==0){
 		for(int i=0;i<cur_dim;++i){
@@ -366,6 +376,11 @@ Eigen::VectorXd qpoasesSolver::solveQP(Eigen::VectorXd xi_in,Eigen::VectorXd  xi
 		duration = std::chrono::duration_cast<std::chrono::duration<double> >(stop - start);
 		std::cout <<"compute qp time = " <<duration.count()<<" s" << std::endl;
 	}
+
+	// copy current solutions into internal variable
+	for(int i=0;i<nVariables_batch;++i)
+		this->x_Opt(i) = xOpt[i];
+
 	// collecting first action
 	if(pd.type.compare("statemachine")==0){
 		for(int i=0;i<cur_dim;++i){
@@ -454,6 +469,10 @@ Eigen::VectorXd qpoasesSolver::solveQP(double *xi_in,double *xi_ext,ProblemDetai
 		duration = std::chrono::duration_cast< std::chrono::duration<double> >(stop - start);
 		std::cout <<"compute qp time = " <<duration.count()<< " s" << std::endl;
 	}
+
+	// copy current solutions into internal variable
+	for(int i=0;i<nVariables_batch;++i)
+		this->x_Opt(i) = xOpt[i];
 
 	if(pd.type.compare("statemachine")==0){
 		for(int i=0;i<cur_dim;++i){

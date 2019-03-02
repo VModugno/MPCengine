@@ -20,6 +20,7 @@ struct prmXYLip_simply_foot {
 	double foot_to_foot_y;
 	double vref_x;
 	double vref_y;
+	double ss_duration; // single support duration
 } ;
 
 namespace pt = boost::property_tree;
@@ -34,7 +35,7 @@ public:
 	    Eigen::MatrixXd C; // measure matrix
 	    int dim_contr;     // control dimension
 		int dim_measu;     // measure dimension
-	    prmXYLip pp;
+		prmXYLip_simply_foot pp;
 
 	    TwoDxyLipSimplyFoot(const std::string filename,bool act_vis,bool log = false){
 	    	// i create a string stream for concatenating strings
@@ -85,6 +86,8 @@ public:
 			this->pp.h                 = tree.get<double>("parameters.Entry.h");
 			this->pp.footSize_x        = tree.get<double>("parameters.Entry.footSize_x");
 			this->pp.footSize_y        = tree.get<double>("parameters.Entry.footSize_y");
+			this->pp.ss_duration       = tree.get<double>("parameters.Entry.single_support_duration");
+
 			//this->pp.vref_x            = tree.get<double>("parameters.Entry.vref_x");
 		    //this->pp.vref_y            = tree.get<double>("parameters.Entry.vref_y");
 			this->active_visualization = act_vis;
@@ -103,7 +106,7 @@ public:
 
 	    };
 
-	    TwoDxyLipSimplyFoot(Eigen::VectorXd init_state,double dt,double ft,prmXYLip param,bool act_vis){
+	    TwoDxyLipSimplyFoot(Eigen::VectorXd init_state,double dt,double ft,prmXYLip_simply_foot param,bool act_vis){
 	    	    this->dim_state            = 10;
 	    	    this->DOF                  = 5;
 	    	    // to update bounds

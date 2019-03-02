@@ -162,16 +162,6 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
-%            name_node = pNode.createElement('foot_to_foot_x');
-%            name_text = pNode.createTextNode(num2str(obj.prm.foot_to_foot_x));
-%            name_node.appendChild(name_text);
-%            entry_node.appendChild(name_node);
-%            
-%            name_node = pNode.createElement('foot_to_foot_y');
-%            name_text = pNode.createTextNode(num2str(obj.prm.foot_to_foot_y));
-%            name_node.appendChild(name_text);
-%            entry_node.appendChild(name_node);
-           
            name_node = pNode.createElement('vref_x');
            name_text = pNode.createTextNode(num2str( obj.prm.vref_x));
            name_node.appendChild(name_text);
@@ -181,6 +171,13 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
            name_text = pNode.createTextNode(num2str( obj.prm.vref_y));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('single_support_duration');
+           name_text = pNode.createTextNode(num2str( obj.prm.single_support_duration));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           
            
         end
     end

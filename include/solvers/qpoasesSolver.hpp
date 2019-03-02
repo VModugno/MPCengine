@@ -34,7 +34,6 @@ class qpoasesSolver  : public AbsSolver {
 	    // solver parameters
 	    int nVariables_batch;                // total number of variables over the prediction windows
 	    int nConstraints_batch;              // total number of constraints over the prediction windows
-	    std::string type;
 	    qpOASES::int_t nWSR;
 		qpOASES::int_t original_nWSR;   // i need this variables in order to restore the value of nwrs (that is overwritten by the method)
 		//double mpcTimeStep          = 100;

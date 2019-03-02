@@ -23,13 +23,17 @@ public:
 	int              ex_var_dim;           // dimension of the external variables vector (0 if there is no external variable vector)
 	Eigen::VectorXd  action;               // here i define the action vectors
 	int              inner_step;           // this counter specify at which point of the prediction window we are
-	int              current_pred_win;     // this interator tells us in which prediction window we are (TODO example here to explain)
+	int              current_pred_win;     // this iterator tells us in which prediction window we are (TODO example here to explain)
 
 	// GET function
-	int getStateDim()     {return solver->getStateDim();};
-	int getControlDim()   {return solver->getControlDim();};
-	int getOutputDim()    {return solver->getOutputDim();};
-	int getPredictionDim(){return solver->getPredictionDim();};
+	int getStateDim()                    {return solver->getStateDim();};
+	int getControlDim()                  {return solver->getControlDim();};
+	int getOutputDim()                   {return solver->getOutputDim();};
+	int getPredictionDim()               {return solver->getPredictionDim();};
+	Eigen::VectorXd getPredictedOptSol() {return solver->getPredictedOptSol();};
+	Eigen::VectorXd getDimInputModel()   {return solver->getDimInputModel();};
+	int getInnerStep()      {return inner_step;};
+	int getCurrentPredWin() {return current_pred_win;};
     void SetExtVariables(Eigen::VectorXd cur_ext_var){
     	this->external_variables = cur_ext_var;
     };

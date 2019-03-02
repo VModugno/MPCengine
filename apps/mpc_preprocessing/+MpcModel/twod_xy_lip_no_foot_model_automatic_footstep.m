@@ -15,20 +15,17 @@
 % name of the enviroment which the current model represents
 env_name ="XYLip_simplified_feet";
 % control step used inside the controller in general different from time step for integration 
-internal_dt = 0.05; 
+internal_dt = 0.01; 
 % Parameters
 infinity                          = 10e6;
-prm.h                             = 0.26;%0.8;
-prm.footSize_x                    = 0.05;
-prm.footSize_y                    = 0.03;
-prm.foot_to_foot_x                = 0.0;        % desired foot to foot distance along x
-prm.foot_to_foot_y                = -0.2;%-0.2  % desired foot to foot distance along x
-prm.vref_x                        = 0.1;        % desired com velocity
-prm.vref_y                        = 0;
-max_f_to_f                        = 0.05;       % bounds  
-prm.footstep_constraints_x        = 0.1;
-prm.inner_footstep_constraints_y  = 0.20;
-prm.outer_footstep_constraints_y  = 0.25; 
+prm.h                             = 0.4845;%0.8; 0.26
+prm.footSize_x                    = 0.151;  % 0.05
+prm.footSize_y                    = 0.058;   % 0.03
+prm.vref_x                        = 0.1;         % desired com velocity
+prm.vref_y                        = 0; 
+prm.footstep_constraints_x        = 0.1;    % step length control over x
+prm.inner_footstep_constraints_y  = 0.20;   % step length control over y (minimal distance between feet)
+prm.outer_footstep_constraints_y  = 0.25;   % step length control over y (maximal distance between feet)
 % LIP model
 omega = sqrt(9.8/prm.h);
 
@@ -89,8 +86,8 @@ discretized   = true;
 % with this i require to do the feedback linearization (by default is false)
 feedback_lin  = false;
 %% Initial state
-init_state = [  0;    0; 0; 0  ;  0.1;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
-                0;    0; 0; 0.1;  0];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
+init_state = [  0;    0; 0; 0  ;  prm.vref_x;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
+                0;    0; 0; 0.1;  prm.vref_y];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
                 %0.05      %0.1
           
 %% here we consider the case with mutable bounds induced by  
@@ -149,6 +146,8 @@ mutable_constr.reset_pattern     = foot_pattern;
 mutable_constr.boundsOutput      = boundsOutput;
 mutable_constr.boundsInput       = boundsInput;
 
+% here we count the number of ones in the footstep pattern (custom solution)
+prm.single_support_duration      = N/2*internal_dt;
 
 mutable_constr.g    = false;
 mutable_constr.w    = true;
