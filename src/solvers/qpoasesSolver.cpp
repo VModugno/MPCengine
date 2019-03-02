@@ -1,11 +1,9 @@
 #include "solvers/qpoasesSolver.hpp"
-#include <boost/filesystem.hpp>
 #include <sstream>
 #include <stdlib.h>
 #include <chrono>
 
 
-namespace fs = boost::filesystem;
 
 /*qpoasesSolver::qpoasesSolver(int n,int m,int p,int N, int N_constr,std::string type,std::string solver,bool direct_solution){
 	// Set up parameters
@@ -107,26 +105,7 @@ void qpoasesSolver::initDim(pt::ptree & tree){
 
 qpoasesSolver::qpoasesSolver(const std::string filename,bool direct_solution){
 
-
-	// i create a string stream for concatenating strings
-	std::stringstream ss;
-    // i get the current working directory
-	fs::path pathfs = fs::current_path();
-	// convert to a string
-	std::string path = pathfs.string();
-	// concat string
-	ss << path << "/configuration_file/" << filename;
-	// get the final path
-	std::string full_path = ss.str();
-
-	//DEBUG
-	std::cout << full_path << std::endl;
-
-
-	// Create empty property tree object
-	pt::ptree tree;
-	// Parse the XML into the property tree.
-	pt::read_xml(full_path, tree);
+	pt::ptree tree = ReadParameterXml(filename);
 
 	// in order to manage the case of statemachine mpc i need to deal with the case
 	// where the dimensions of the problem are arrays
