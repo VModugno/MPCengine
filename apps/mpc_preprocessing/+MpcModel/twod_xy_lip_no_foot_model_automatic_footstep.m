@@ -18,9 +18,12 @@ env_name ="XYLip_simplified_feet";
 internal_dt = 0.01; 
 % Parameters
 infinity                          = 10e6;
-prm.h                             = 0.4845;%0.8; 0.26
-prm.footSize_x                    = 0.151;  % 0.05
-prm.footSize_y                    = 0.058;   % 0.03
+% prm.h                             = 0.26;  %0.4845; 0.26
+% prm.footSize_x                    = 0.05;  %0.151, 0.05
+% prm.footSize_y                    = 0.03;  %0.058 0.03
+prm.h                             = 0.4845;  %0.4845; 0.26
+prm.footSize_x                    = 0.151;  %0.151, 0.05
+prm.footSize_y                    = 0.058;  %0.058 0.03
 prm.vref_x                        = 0.1;         % desired com velocity
 prm.vref_y                        = 0; 
 prm.footstep_constraints_x        = 0.1;    % step length control over x
@@ -69,7 +72,11 @@ C_cont_obj       = {blkdiag(C_x_objective,C_x_objective),blkdiag(C_x_objective,C
 % for now i put everything inside C_cont even if 
 C_cont_constr    = {blkdiag(C_x_constraints,C_x_constraints);blkdiag(C_x_constraints,C_x_constraints)};
 %% predictive windows (it is useful for mutable constraints)
-N                = 12;
+N                = 60;
+%% duration of support phase 
+% here we count the number of ones in the footstep pattern (custom solution)
+prm.single_support_duration      = (N/2)*internal_dt;
+
 %% here i define if the model is fixed or ltv or statemachine custom (with custom we can admit any kind of construction)
 type             = "statemachine";
 %% here we introduce a state machine pattern (one for each model)
@@ -145,9 +152,6 @@ mutable_constr.const_pattern     = foot_pattern;
 mutable_constr.reset_pattern     = foot_pattern;
 mutable_constr.boundsOutput      = boundsOutput;
 mutable_constr.boundsInput       = boundsInput;
-
-% here we count the number of ones in the footstep pattern (custom solution)
-prm.single_support_duration      = N/2*internal_dt;
 
 mutable_constr.g    = false;
 mutable_constr.w    = true;

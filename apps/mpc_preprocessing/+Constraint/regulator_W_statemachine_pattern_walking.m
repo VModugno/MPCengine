@@ -39,6 +39,8 @@ function W = regulator_W_statemachine_pattern_walking(obj)
         if (obj.current_pred_win == 1 && k < first_step_end_index) %&& obj.actual_iteration_counter < first_step_end_index(1))
             W_output_max(output_counter+(1:q),1) =  infinity*ones(q,1);
             W_output_min(output_counter+(1:q),1) = -infinity*ones(q,1);
+            %% every time i want to signal the core generator that we are operating a non standard iteration i need to 
+            %% to specify that obj.non_standard_iteration_flag = true
             obj.non_standard_iteration_flag      = true;
         else
             W_output_max(output_counter+(1:q),1) = obj.m_c.boundsOutput.max{k_state}(:,left_or_right);

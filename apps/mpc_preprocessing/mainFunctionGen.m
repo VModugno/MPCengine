@@ -4,10 +4,10 @@ clc
 
 
 %% activate or deactivate function generation
-generate_func    = true;
+generate_func    = false;
 %%
 %% simulate the mpc 
-start_simulation = false;
+start_simulation = true;
 %%
 %% activate or deactivate visualization
 visualization    = true;
@@ -21,7 +21,7 @@ model_name       = "twod_xy_lip_no_foot_model_automatic_footstep";
 
 %% experiment time structure (for the environment different from the internal time)
 ft         = 10;       % final time 20 50 
-delta_t    = 0.05;      % 0.1 0.01 (to the env class)
+delta_t    = 0.01;      % 0.1 0.01 (to the env class)
 t          = 0:delta_t:ft;
 
 %% MPC parameters
@@ -85,9 +85,9 @@ if(start_simulation)
     cur_x           = init_state;
     all_states(:,1) = cur_x;
     for i=1:length(t)-1
-        if(visualization)   
-            env.UpdateRender(cur_x);  
-        end
+%         if(visualization)   
+%             env.UpdateRender(cur_x);  
+%         end
         %% mpc controller  
         if(strcmp(control_mode,"regulator"))
             tau = controller.ComputeControl(cur_x);  
@@ -121,6 +121,11 @@ if(start_simulation)
         all_states(:,i+1) = cur_x;
         new_tau = env.ReshapeAction(tau);
         all_action(:,i)   = new_tau;
+        
+        cur_time = "t = " + num2str(t(i));
+        disp(cur_time)
+        disp(i)
+        
     end
 end
 

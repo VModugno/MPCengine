@@ -48,24 +48,24 @@ end
 state_average_error  = sum(sum((state_cpp - all_states_gt).^2,2))/length(all_states_gt)
 action_average_error = sum(sum((action_cpp- all_action_gt).^2,2))/length(all_action_gt)
 
-%% visualization -----------------------------------------------------------------------TOFIX
+%% visualization TOFIX -----------------------------------------------------------------------TOFIX A LOT ACTUALLY
 if(visualization)
     state = state_cpp;
     % plot using the enviroment 
-    delta_t                           = 0.05;
-    prm.h                             = 0.26;%0.8;
-    prm.footSize_x                    = 0.05;
-    prm.footSize_y                    = 0.03;
-    %prm.foot_to_foot_x                = 0.0;        % desired foot to foot distance along x
-    %prm.foot_to_foot_y                = -0.2;%-0.2  % desired foot to foot distance along x
+    delta_t                           = 0.01;
+%     prm.h                             = 0.26;%0.26;%0.8;
+%     prm.footSize_x                    = 0.05;
+%     prm.footSize_y                    = 0.03;
+    prm.h                             = 0.4845;  %0.4845; 0.26
+    prm.footSize_x                    = 0.151;  %0.151, 0.05
+    prm.footSize_y                    = 0.058;  %0.058 0.03
     prm.vref_x                        = 0.1;        % desired com velocity
     prm.vref_y                        = 0;
-    %prm.footstep_constraints_x        = 0.1;
     prm.inner_footstep_constraints_y  = 0.20;
     prm.outer_footstep_constraints_y  = 0.25; 
     %init_state = [0; 0; pi/10; 0];
-    init_state = [  0;    0; 0; 0  ;  0.1;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
-                    0.05; 0;    0.1; 0.1;   0];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
+    init_state = [  0;    0; 0; 0  ;   prm.vref_x;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
+                    0;    0; 0; 0.1;   prm.vref_y];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
     reward     = @(x,u)(norm(x)); % dummy reward
     env        = Env.XYLip_simplified_feet(init_state,delta_t,reward,prm);
     
