@@ -177,6 +177,7 @@ classdef coreGenerator <  handle
            dt     = datestr(now,'mmmm dd, yyyy HH:MM:SS.FFF AM');
            % folder name
            folder = strcat(obj.solver,'_',obj.type,'_',dt);
+           folder = strrep(folder, ' ', '_');
            % find location of the current folder
            pth = which('mainFunctionGen.m');
            % take only the path till the container folder of current file

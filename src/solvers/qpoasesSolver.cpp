@@ -118,7 +118,7 @@ qpoasesSolver::qpoasesSolver(const std::string filename,bool direct_solution){
     }else{
     	this->sqp  = qpOASES::SQProblem(nVariables_batch,nConstraints_batch);
     }
-    original_nWSR  = 300;
+    original_nWSR  = 1000;
     this->nWSR     = original_nWSR;
     // set qpoases option
 	//options.setToReliable();

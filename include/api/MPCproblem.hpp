@@ -46,6 +46,8 @@ public:
 	bool getTriggerUpdate()  {return trigger_update;};
 	int  getInnerStep()      {return inner_step;};
 	int  getCurrentPredWin() {return current_pred_win;};
+	double getMpcSampleTime(){return mpc_sample_time;};
+	double getExtControlSampleTime(){return ext_control_sample_time;};
     void SetExtVariables(Eigen::VectorXd cur_ext_var){
     	this->external_variables = cur_ext_var;
     };
@@ -56,7 +58,7 @@ public:
     		this->trigger_update = false;
     	}
         // i update the internal counter only if it is the right time to do that
-    	// his condition does not happens always when the controller is faster than the mpc
+    	// this condition does not happens always when the controller is faster than the mpc
     	if(fmod(this->current_step,relative_duration)==0){
     		trigger_update = true;
 			inner_step++;
