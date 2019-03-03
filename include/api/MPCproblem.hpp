@@ -57,6 +57,7 @@ public:
     	if(this->trigger_update){
     		this->trigger_update = false;
     	}
+    	//this->trigger_update = true;
         // i update the internal counter only if it is the right time to do that
     	// this condition does not happens always when the controller is faster than the mpc
     	if(fmod(this->current_step,relative_duration)==0){
