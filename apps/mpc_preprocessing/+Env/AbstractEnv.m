@@ -7,6 +7,7 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
         state                    % current state (always tall vector)
         state_name
         dt
+        trigger_update           % for some environment we need to check if it is time to update the model (it is necessary especially when the mpc is slower than the controller)
         reward
         visualization
         active_visualization
@@ -97,6 +98,10 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
             obj.all_states = []; 
             % initialize with the new init state
             obj.all_states = state;
+        end
+        
+        function ReadTriggerUp(obj,cur_trigger_up)
+            obj.trigger_update = cur_trigger_up;
         end
         
     end

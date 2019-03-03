@@ -36,7 +36,7 @@ classdef coreGenerator <  handle
         iteration_counter       % this counter is used for managing the case when the prediction frequency is lower than the control frequency (it increase everythime)
         actual_iteration_counter% this counter increase every time i move over the sample of the prediction windows (if internal frequency and control frequency are the same it coincides with the former counter)
         current_pred_win        % this iterator tell me in which iteration window the mpc is still operating                     
-                              
+        trigger_update          % this flag it's true when the control time corresponds to the internal time of the mpc (it is usefull when the controller is faster that the mpc)                      
                                 
         
         B_In        % input  bound (B_In.max and B_In.min) if B_In.min empty the framework will automatically assume   -B_In.max <u< B_In.max    
@@ -114,6 +114,7 @@ classdef coreGenerator <  handle
                 obj.iteration_counter        = 1;
                 obj.actual_iteration_counter = 1;
                 obj.current_pred_win         = 1;
+                obj.trigger_update           = false;
                 obj.non_standard_iteration      = non_standard_iteration;
                 obj.non_standard_iteration_flag = false;
                 obj.propagationModel = function_list.propagationModel;    % (str) name of the function that we will use 
@@ -142,6 +143,7 @@ classdef coreGenerator <  handle
                 obj.iteration_counter        = 1;
                 obj.actual_iteration_counter = 1;
                 obj.current_pred_win         = 1;
+                 obj.trigger_update          = false;
                 obj.index                    = sym('ind',[1,1],'real');
                 obj.index_pred_window        = sym('ind_pred_win',[1,1],'real');
                 obj.x_0                      = sym('x_0',[obj.n(1),1],'real');
@@ -459,10 +461,23 @@ classdef coreGenerator <  handle
        end
        
        function UpdateIterationCounters(obj)
+           
+           % when the trigger update is true we need immediatly to shut it 
+           % down to false because it has to stay true only for one
+           % iteration
+           if(obj.trigger_update)
+               obj.trigger_update          = false;
+           end
+           
            relative_duration = round(obj.delta/obj.control_delta);
            % this counter increases each step with no distinction
            obj.iteration_counter = obj.iteration_counter + 1;
            if(mod(obj.iteration_counter,relative_duration)==0)
+               
+               % here i need to update the update_trigger to tell the world
+               % that we are moving by one the mpc
+               obj.trigger_update          = true;
+               
                % update of the the internal iteration counter
                % this counter increases only when i actually move one
                % sample over the prediction window (it happens less frequently when the mpc frequency is lower than the control frequency)

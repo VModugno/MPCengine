@@ -358,7 +358,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
              % after each iteration we need to update the mutable (when they are present)
              % constraints and the state machine constraints
              obj.UpdateIterationCounters();
-             %obj.UpdateAllPattern()  
+             obj.UpdateAllPattern();  
              
              if(strcmp(obj.type,"statemachine"))
                  A        = obj.A;
@@ -367,7 +367,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                  C_obj    = obj.C_obj;
                  Q        = obj.Q;
                  R        = obj.R;
-                 obj.UpdateStateMachinePattern();
+                 %obj.UpdateStateMachinePattern();
                  [S_bar_obj,S_bar_constr,T_bar_obj,T_bar_constr,Q_bar,R_bar] = eval(obj.propModelCall);
                  [obj.H,obj.F_tra]                                           = eval(obj.costFuncCall);
                   if(~strcmp(obj.m_c.g,"pattern"))
@@ -377,13 +377,13 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                     obj.S                                                    = eval(obj.constrFuncS_Call);
                   end
                   if(~strcmp(obj.m_c.w,"pattern"))
-                    obj.cur_W                                                = obj.MutableConstraints_W(obj);
+                    obj.cur_W                                                = eval(obj.constrFuncW_Call);%obj.MutableConstraints_W(obj);
                   end   
              end
              if (obj.m_c_flag)
                  % i assume that the pattern are the same for every
                  %  matrix constraint
-                 obj.UpdateConstrPattern();
+                 %  obj.UpdateConstrPattern();
                  if(strcmp(obj.m_c.g,"pattern"))
                     obj.cur_G   = obj.MutableConstraints_G(obj,S_bar);
                  end

@@ -22,6 +22,7 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
             obj.state                = init_state;
             obj.state_name           = ["x_com" "x_com_dot" "x_zmp" "x_foot" "vref_x" "y_com" "y_com_dot" "y_zmp" "y_foot" "vref_y"];
             obj.dt                   = dt;
+            obj.trigger_update       = false;
             obj.reward               = reward;
             obj.active_visualization = false;
             obj.prm                  = prm;
@@ -62,8 +63,20 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
                 new_action(2) = 0;
                 new_action(3) = action(2);
                 new_action(4) = 0;
-                
                 action = new_action';
+            else
+                % here i need to check that even if the input dimension is
+                % 4 i need to update the model only when it is time to move
+                % to land the swinging foot. it depends on the fact that we 
+                % can have a controller that is faster that the mpc so the
+                % actual update
+                if(~obj.trigger_update)
+                    new_action(1) = action(1);
+                    new_action(2) = 0;
+                    new_action(3) = action(3);
+                    new_action(4) = 0;
+                    action = new_action';    
+                end       
             end
         end
         
