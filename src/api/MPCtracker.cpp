@@ -13,6 +13,8 @@
  *      Author: vale
  */
 
+//TODO add internal counter update in tracker
+
 #include "api/MPCtracker.hpp"
 
 
@@ -24,7 +26,17 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & tra
 	this->inner_step         = 0;
 	// initialize current window iterator
 	this->current_pred_win   = 1;
-
+	// initialize time step
+	//this->dt                 =traj.GetDt(); this line is substituted by the mpc_sample_time
+	// initialize internal sample step
+	this->current_step       = 0;
+	// initilize internal time step
+	this->current_time_step  = 0;
+	// initialize sample control time
+	this->ext_control_sample_time = tree.get<double>("parameters.Entry.ext_dt");
+	this->mpc_sample_time         = tree.get<double>("parameters.Entry.internal_dt");
+	this->relative_duration       = mpc_sample_time/ext_control_sample_time;
+	this->trigger_update          = false;
 	this->pd.type               = tree.get<std::string>("parameters.Entry.type");       // fixed or LTV
 	this->pd.external_variables = tree.get<std::string>("parameters.Entry.external_x"); // true or false
 	this->ex_var_dim            = tree.get<int>("parameters.Entry.external_dim"); // true or false
@@ -43,12 +55,6 @@ MPCtracker::MPCtracker(const std::string filename,P_solv solv,trajectories & tra
     //[cur_state,cur_action,ref,index]
     this->inner_x      = Eigen::VectorXd::Zero(solver->getStateDim() + solver->getPredictionDim()*solver->getOutputDim() + 2);
     this->ref          = Eigen::VectorXd::Zero(solver->getPredictionDim()*solver->getOutputDim());
-    // initialize time step
-    this->dt                 =traj.GetDt();
-    // initialize internal sample step
-    this->current_step       = 0;
-    // initilize internal time step
-    this->current_time_step  = 0;
     // i initialize the external  variables if the current problem has set them
     if(this->pd.external_variables.compare("true") == 0){
     	this->external_variables = Eigen::VectorXd::Zero(this->ex_var_dim);
@@ -94,7 +100,7 @@ Eigen::VectorXd MPCtracker::Init(Eigen::VectorXd state_0_in){
     // update step
 	this->current_step = this->current_step + 1;
 	// update time step
-    this->current_time_step = this->current_time_step + this->dt;
+    this->current_time_step = this->current_time_step + this->mpc_sample_time;
     innerCounterUpdate();
 
     return this->action;
@@ -118,7 +124,7 @@ Eigen::VectorXd MPCtracker::ComputeControl(Eigen::VectorXd state_i_in){
     // update step
     this->current_step = this->current_step + 1;
     // update time step
-    this->current_time_step = this->current_time_step + this->dt;
+    this->current_time_step = this->current_time_step + this->mpc_sample_time;
     innerCounterUpdate();
 
 	return this->action;

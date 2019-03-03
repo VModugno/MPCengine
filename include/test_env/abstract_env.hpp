@@ -55,6 +55,7 @@ public:
 	std::vector<Eigen::VectorXd> actions;
 	P_DynComp                    comps;
 	bool                         already_discretized=false;
+	bool                         trigger_update;
 
 
 	pt::ptree ReadParameterXml(std::string filename){
@@ -86,6 +87,10 @@ public:
 			}
 		}
 		return tree;
+	}
+
+	void SetTriggerUpdate(bool cur_trigger_update){
+		this->trigger_update = cur_trigger_update;
 	}
 
     // integrating dynamics with runge-kutta 4

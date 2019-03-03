@@ -46,7 +46,7 @@ public:
 			        count++;
 			    }
 			this->state                = this->init_state;
-			this->dt                   = tree.get<double>("parameters.Entry.delta");
+			this->dt                   = tree.get<double>("parameters.Entry.ext_dt");
 			this->ft                   = tree.get<double>("parameters.Entry.ft");
 			this->pp.mCart             = tree.get<double>("parameters.Entry.mCart");
 			this->pp.mPend             = tree.get<double>("parameters.Entry.mPend");

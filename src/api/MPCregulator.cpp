@@ -26,14 +26,21 @@ MPCregulator::MPCregulator(const std::string filename,P_solv solv,P_oracle oracl
     this->inner_x      = Eigen::VectorXd::Zero(solver->getStateDim() + 2);
     // initialize internal sample step
     this->inner_step         = 0;
+    // initiliaze all sample counter
+    this->current_step       = 0;
     // initialize current window iterator
     this->current_pred_win   = 1;
+    // initialize sample control time
+    this->ext_control_sample_time = tree.get<double>("parameters.Entry.ext_dt");
+	this->mpc_sample_time         = tree.get<double>("parameters.Entry.internal_dt");
+	this->relative_duration       = mpc_sample_time/ext_control_sample_time;
+	this->trigger_update          = false;
     // initialize problem details
-    this->pd.type               = tree.get<std::string>("parameters.Entry.type");       // fixed or LTV
-	this->pd.external_variables = tree.get<std::string>("parameters.Entry.external_x"); // true or false
+    this->pd.type                 = tree.get<std::string>("parameters.Entry.type");       // fixed or LTV
+	this->pd.external_variables   = tree.get<std::string>("parameters.Entry.external_x"); // true or false
     // i initialize the external  variables if the current problem has set them
     if(this->pd.external_variables.compare("true") == 0){
-		this->external_variables = Eigen::VectorXd::Zero(this->ex_var_dim);
+		this->external_variables  = Eigen::VectorXd::Zero(this->ex_var_dim);
 	}else{
 	// even if external variables are not used we need to initialize the external_variables to zero with dim 2
 	// (the explanation of dim 2 is in the matlab files)

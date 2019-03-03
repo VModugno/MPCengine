@@ -29,9 +29,13 @@ public:
 	Eigen::VectorXd  external_variables;   // here i store the external variables for the current experiment
 	int              ex_var_dim;           // dimension of the external variables vector (0 if there is no external variable vector)
 	Eigen::VectorXd  action;               // here i define the action vectors
+	double           mpc_sample_time;          //
+	double           ext_control_sample_time;  //
+	double           relative_duration;
 	int              inner_step;           // this counter specify at which point of the prediction window we are
 	int              current_pred_win;     // this iterator tells us in which prediction window we are (TODO example here to explain)
-
+	bool             trigger_update;       // this is true when the controller sample coincide with the mpc sample (always true when mpc and controller are synched))
+	int              current_step;         // this is a counter that count the real steps (if mpc is syncroinzed with controller current_step = inner_step )
 	// GET function
 	int getStateDim()                    {return solver->getStateDim();};
 	int getControlDim()                  {return solver->getControlDim();};
@@ -39,17 +43,27 @@ public:
 	int getPredictionDim()               {return solver->getPredictionDim();};
 	Eigen::VectorXd getPredictedOptSol() {return solver->getPredictedOptSol();};
 	Eigen::VectorXd getDimInputModel()   {return solver->getDimInputModel();};
-	int getInnerStep()      {return inner_step;};
-	int getCurrentPredWin() {return current_pred_win;};
+	bool getTriggerUpdate()  {return trigger_update;};
+	int  getInnerStep()      {return inner_step;};
+	int  getCurrentPredWin() {return current_pred_win;};
     void SetExtVariables(Eigen::VectorXd cur_ext_var){
     	this->external_variables = cur_ext_var;
     };
-    // this function update inner step and reset it to zero when the new prediction window is reached
+    // this function update inner step and reset it to zero when the new prediction window is reached (TODO to explain better)
     void innerCounterUpdate(){
-    	inner_step++;
-    	if(inner_step > (this->getPredictionDim() - 1)){
-    		inner_step       = 0;
-    		current_pred_win = current_pred_win + 1;
+
+    	if(this->trigger_update){
+    		this->trigger_update = false;
+    	}
+        // i update the internal counter only if it is the right time to do that
+    	// his condition does not happens always when the controller is faster than the mpc
+    	if(fmod(this->current_step,relative_duration)==0){
+    		trigger_update = true;
+			inner_step++;
+			if(inner_step > (this->getPredictionDim() - 1)){
+				inner_step       = 0;
+				current_pred_win = current_pred_win + 1;
+			}
     	}
 
     }

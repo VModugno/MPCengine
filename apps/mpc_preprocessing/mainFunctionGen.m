@@ -4,10 +4,10 @@ clc
 
 
 %% activate or deactivate function generation
-generate_func    = false;
+generate_func    = true;
 %%
 %% simulate the mpc 
-start_simulation = true;
+start_simulation = false;
 %%
 %% activate or deactivate visualization
 visualization    = true;
@@ -20,9 +20,9 @@ debugging        = false;
 model_name       = "twod_xy_lip_no_foot_model_automatic_footstep"; 
 
 %% experiment time structure (for the environment different from the internal time)
-ft         = 10;       % final time 20 50 
-delta_t    = 0.05;     % 0.1 0.01 (to the env class)
-t          = 0:delta_t:ft;
+ft          = 10;       % final time 20 50 
+ext_dt      = 0.01;     % 0.1 0.01 (to the env class)
+t           = 0:ext_dt:ft;
 
 %% MPC parameters
 % cpp solver to use 
@@ -37,7 +37,7 @@ if(strcmp(control_mode,"regulator"))
     run(str);
     %% environment for regulator ------------------------------------------
     reward     = @(x,u)(norm(x));
-    env_call   = "Env."+ env_name + "(init_state,delta_t,reward,prm)";
+    env_call   = "Env."+ env_name + "(init_state,ext_dt,reward,prm)";
     env        = eval(env_call);
     
     %% DEBUG
@@ -45,7 +45,7 @@ if(strcmp(control_mode,"regulator"))
     
     %% MPC ----------------------------------------------------------------    
     % regulator 
-    controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont_obj,C_cont_constr,B_In,B_Out,internal_dt,delta_t,N,state_gain,control_cost,...
+    controller = MpcGen.genMpcRegulator(A_cont,B_cont,C_cont_obj,C_cont_constr,B_In,B_Out,internal_dt,ext_dt,N,state_gain,control_cost,...
                                         type,solver,generate_func,discretized,mutable_constr,state_machine,non_standard_prediction_win,function_list); 
 elseif(strcmp(control_mode,"tracker"))
     %% system -------------------------------------------------------------

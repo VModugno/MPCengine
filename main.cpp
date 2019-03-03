@@ -83,7 +83,7 @@ int main(){
 		// updating environment
 		//DEBUG
 	    std::cout <<"action = "<<action << std::endl;
-
+        env->SetTriggerUpdate(mpc->getTriggerUpdate());
 		env->Step(action,new_state,mes_acc);
 		//DEBUG
 		std::cout <<"new_state = "<<new_state << std::endl;

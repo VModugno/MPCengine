@@ -62,7 +62,7 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
            entry_node = pNode.createElement('Entry');
            pNode.getDocumentElement.appendChild(entry_node);
           
-           name_node = pNode.createElement('delta');
+           name_node = pNode.createElement('ext_dt');
            name_text = pNode.createTextNode(num2str(obj.dt));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);

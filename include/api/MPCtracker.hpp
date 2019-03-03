@@ -28,8 +28,8 @@ public:
 	trajectories    traj;
 	Eigen::VectorXd delta_action;
 	Eigen::VectorXd ref;               // vector to store the current ref
-	double          dt;                // time step;
-	int             current_step;
+	// TODO duplicate with internal_dt in mpcproblem; did it! to check
+	//double          dt;                // time step;
 	double          current_time_step;
 
 	MPCtracker(const std::string filename,P_solv solv,trajectories & traj,P_oracle oracle = NULL);

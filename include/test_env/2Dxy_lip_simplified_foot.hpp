@@ -70,7 +70,7 @@ public:
 
 
 			this->state                = this->init_state;
-			this->dt                   = tree.get<double>("parameters.Entry.delta");
+			this->dt                   = tree.get<double>("parameters.Entry.ext_dt");
 			this->ft                   = tree.get<double>("parameters.Entry.ft");
 			this->pp.h                 = tree.get<double>("parameters.Entry.h");
 			this->pp.footSize_x        = tree.get<double>("parameters.Entry.footSize_x");
@@ -138,7 +138,15 @@ public:
 				new_action(2) = action(1);
 				new_action(3) = 0;
 			}else{
-				new_action = action;
+				if(!(this->trigger_update)){
+					new_action(0) = action(0);
+					new_action(1) = 0;
+					new_action(2) = action(2);
+					new_action(3) = 0;
+				}
+				else{
+					new_action = action;
+				}
 			}
 	    	return new_action;
 	    }

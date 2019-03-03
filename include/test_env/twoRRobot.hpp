@@ -61,7 +61,7 @@ public:
 			        count++;
 			    }
 			this->state                  = this->init_state;
-			this->dt                     = tree.get<double>("parameters.Entry.delta");
+			this->dt                     = tree.get<double>("parameters.Entry.ext_dt");
 			this->ft                     = tree.get<double>("parameters.Entry.ft");
 			this->pp.l1                  = tree.get<double>("parameters.Entry.l1");
 			this->pp.l2                  = tree.get<double>("parameters.Entry.l2");

@@ -338,6 +338,16 @@ classdef coreGenerator <  handle
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
+           name_node = pNode.createElement('ext_dt');
+           name_text = pNode.createTextNode(num2str(obj.control_delta));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('internal_dt');
+           name_text = pNode.createTextNode(num2str(obj.delta));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
            if(strcmp(obj.type,"statemachine"))
                % better to reset the state machine pattern
                obj.ResetStateMachinePattern();
