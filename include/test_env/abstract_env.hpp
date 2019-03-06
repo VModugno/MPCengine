@@ -93,6 +93,21 @@ public:
 		this->trigger_update = cur_trigger_update;
 	}
 
+	void SetState(Eigen::VectorXd & new_states){
+
+		int n            = states.size();
+		this->state      = new_states;
+		this->states[n-1]= new_states;
+
+	}
+
+	void SetState(double new_state, int index){
+
+		    int n              = states.size();
+			this->state(index) = new_state;
+			this->states[n-1]= this->state;
+	}
+
     // integrating dynamics with runge-kutta 4
 	double Step(Eigen::VectorXd action, Eigen::VectorXd & new_state, Eigen::VectorXd & mes_acc)
 	{

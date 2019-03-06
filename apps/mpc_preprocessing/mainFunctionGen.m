@@ -4,10 +4,10 @@ clc
 
 
 %% activate or deactivate function generation
-generate_func    = false;
+generate_func    = true;
 %%
 %% simulate the mpc 
-start_simulation = true;
+start_simulation = false;
 %%
 %% activate or deactivate visualization
 visualization    = true;
@@ -21,7 +21,7 @@ model_name       = "twod_xy_lip_no_foot_model_automatic_footstep";
 
 %% experiment time structure (for the environment different from the internal time)
 ft          = 10;       % final time 20 50 
-ext_dt      = 0.01;     % 0.1 0.01 (to the env class)
+ext_dt      = 0.05;     % 0.1 0.01 (to the env class)
 t           = 0:ext_dt:ft;
 
 %% MPC parameters
