@@ -34,7 +34,7 @@ function  [S_bar_obj,S_bar_constr,T_bar_obj,T_bar_constr,Q_bar,R_bar] = propagat
         R_bar(j_counter_out+(1:m),j_counter_out+(1:m))             = R{k_state};
         
         k_counter_obj    = k_counter_obj + q_obj;
-        k_counter_constr = k_counter_constr + q_obj;
+        k_counter_constr = k_counter_constr + q_constr;
         j_counter_out    = j_counter_out + obj.m(k_state);
         
     end

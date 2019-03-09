@@ -21,12 +21,12 @@ infinity                          = 10e6;
 % prm.h                             = 0.26;  %0.4845; 0.26
 % prm.footSize_x                    = 0.05;  %0.151, 0.05
 % prm.footSize_y                    = 0.03;  %0.058 0.03
-prm.h                             = 0.4845;  %0.4845; 0.26
+prm.h                             =  0.478329;  %0.4845; 0.26
 prm.footSize_x                    = 0.08;  %0.151, 0.05
 prm.footSize_y                    = 0.058;  %0.058 0.03
 prm.vref_x                        = 0.1;         % desired com velocity
 prm.vref_y                        = 0; 
-prm.footstep_constraints_x        = 0.1;    % step length control over x
+prm.footstep_constraints_x        = 0.2;    % step length control over x
 prm.inner_footstep_constraints_y  = 0.20;   % step length control over y (minimal distance between feet)
 prm.outer_footstep_constraints_y  = 0.25;   % step length control over y (maximal distance between feet)
 % LIP model
@@ -66,13 +66,14 @@ A_cont = {A1,A2};
 B_cont = {B1,B2};
 
 % System outputs (C_x = C_y)
-C_x_objective    = [0 1 0 0 -1];
+C_x_objective    = [0 1 0 0 -1; 0 1 0 0 0];
+%C_x_objective    = [0 1 0 0 -1];
 C_x_constraints  = [0 0 1 -1 0];
 C_cont_obj       = {blkdiag(C_x_objective,C_x_objective),blkdiag(C_x_objective,C_x_objective)};
 % for now i put everything inside C_cont even if 
 C_cont_constr    = {blkdiag(C_x_constraints,C_x_constraints);blkdiag(C_x_constraints,C_x_constraints)};
 %% predictive windows (it is useful for mutable constraints)
-N                = 12;
+N                = 20;
 %% duration of support phase 
 % here we count the number of ones in the footstep pattern (custom solution)
 prm.single_support_duration      = (N/2)*internal_dt;
@@ -134,7 +135,8 @@ B_In.max   = [];
 B_In.min   = [];           
           
 %% gains
-state_gain   = {[100,100],[100,100]};    % penalty error on the state
+state_gain   = {[100,0,100,100],[100,0,100,100]};    % penalty error on the state
+%state_gain   = {[100,100],[100,100]};
 control_cost = {[1,0,1,0],[1,1]}; 
 
 %% creating data structure for mutable constraints (one for each state)
