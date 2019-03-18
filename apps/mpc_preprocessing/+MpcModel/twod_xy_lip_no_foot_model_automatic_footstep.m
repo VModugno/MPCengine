@@ -105,8 +105,8 @@ init_state = [  0;    0; 0; 0  ;  prm.vref_x;  % sagittal axis (x coordinate) co
  % constraints associated with each foot
  
 
-maxOutputL = [prm.footSize_x; prm.footSize_y];
-maxOutputR = [prm.footSize_x; prm.footSize_y];
+maxOutputL = [prm.footSize_x/2; prm.footSize_y/2];
+maxOutputR = [prm.footSize_x/2; prm.footSize_y/2];
 boundsOutput.max{1} = [maxOutputL,maxOutputR];
 boundsOutput.max{2} = [maxOutputL,maxOutputR];
 boundsOutput.min{1} = [-maxOutputL,-maxOutputR];
