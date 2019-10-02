@@ -121,9 +121,9 @@ qpoasesSolver::qpoasesSolver(const std::string filename,bool direct_solution){
     original_nWSR  = 1000;
     this->nWSR     = original_nWSR;
     // set qpoases option
-	//options.setToReliable();
-	options.setToMPC();
-	options.printLevel           = qpOASES::PL_NONE;//qpOASES::PL_HIGH;
+	options.setToReliable();
+	//options.setToMPC();
+	options.printLevel           = qpOASES::PL_NONE;//qpOASES::PL_HIGH; qpOASES::PL_NONE
 	options.enableNZCTests       = qpOASES::BT_TRUE;
 	options.enableFlippingBounds = qpOASES::BT_TRUE;
 

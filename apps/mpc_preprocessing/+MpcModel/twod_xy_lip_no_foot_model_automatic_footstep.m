@@ -73,7 +73,7 @@ C_cont_obj       = {blkdiag(C_x_objective,C_x_objective),blkdiag(C_x_objective,C
 % for now i put everything inside C_cont even if 
 C_cont_constr    = {blkdiag(C_x_constraints,C_x_constraints);blkdiag(C_x_constraints,C_x_constraints)};
 %% predictive windows (it is useful for mutable constraints)
-N                = 20;
+N                = 22;
 %% duration of support phase 
 % here we count the number of ones in the footstep pattern (custom solution)
 prm.single_support_duration      = (N/2)*internal_dt;

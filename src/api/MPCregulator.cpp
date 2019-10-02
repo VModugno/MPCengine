@@ -26,7 +26,7 @@ MPCregulator::MPCregulator(const std::string filename,P_solv solv,P_oracle oracl
     this->inner_x      = Eigen::VectorXd::Zero(solver->getStateDim() + 2);
     // initialize internal sample step
     this->inner_step         = 0;
-    // initiliaze all sample counter
+    // initialize all sample counter
     this->current_step       = 0;
     // initialize current window iterator
     this->current_pred_win   = 1;
