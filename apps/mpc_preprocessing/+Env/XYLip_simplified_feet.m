@@ -4,7 +4,7 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
         A % dynamics matrix
         B % input dyamic matrix 
         C % measure matrix
-        
+        all_foot_position
     end
     
     methods
@@ -26,6 +26,7 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
             obj.reward               = reward;
             obj.active_visualization = false;
             obj.prm                  = prm;
+            obj.all_foot_position    = [];
             %obj.Load_parameters()
             if(~isempty(varargin))
                 if(strcmp(varargin{1},'ConfigFile'))
@@ -108,7 +109,8 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
 %            legend('pos', 'zmp', 'footL', 'footR')
             drawnow
             
-
+            movegui([300 100]);
+            
             hold off
             
             obj.active_visualization = true;
@@ -117,13 +119,35 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
         function UpdateRender(obj,state)
             
             obj.all_states = [obj.all_states,state];
-             
+            
+            % initialization
+            if(isempty(obj.all_foot_position))
+                obj.all_foot_position(1,:) = [state(4) state(9)];
+                %obj.all_foot_rotation(:,end) = obj.cur_theta;
+            end
+            
+            %update foot position
+            if(obj.all_foot_position(end,1) ~= state(4) || obj.all_foot_position(end,2) ~= state(9))
+                obj.all_foot_position(end+1,:) = [state(4) state(9)];
+                %obj.all_foot_rotation(:,end) = obj.cur_theta;
+            end
             subplot(3,1,1)
-            %hold on
             plot(obj.all_states([1,3],:)', obj.all_states(obj.num_state/2 + [1 3],:)')
-            %plot(obj.all_states(3,:)', obj.all_states(obj.num_state/2 + 3,:)')
-            %axis equal; axis([-0.5 0.5 -0.5 0.5]);
-            %hold off
+            %R=[cos(theta), -sin(obj.theta);sin(obj.theta), cos(obj.theta)];
+            
+            
+            for ii = 1:size(obj.all_foot_position(:,end),1)
+            
+                center_foot_x = obj.all_foot_position(ii,1);
+                center_foot_y = obj.all_foot_position(ii,2);
+
+                x = [center_foot_x-obj.prm.footSize_x/2 center_foot_x-obj.prm.footSize_x/2 center_foot_x+obj.prm.footSize_x/2 center_foot_x+obj.prm.footSize_x/2];
+                y = [center_foot_y-obj.prm.footSize_y/2 center_foot_y+obj.prm.footSize_y/2 center_foot_y+obj.prm.footSize_y/2 center_foot_y-obj.prm.footSize_y/2];
+
+                p1 = patch(x, y, 'r');
+                set(p1,'FaceAlpha',0.1,'EdgeColor','k','LineWidth',1,'LineStyle','-');
+            end
+           
             
             subplot(3,1,2)
             plot(obj.all_states([1,3,4],:)');
