@@ -48,6 +48,8 @@ function  [G]=regulator_G_statemachine_pattern_walkingRotation(obj,S_bar)
          c_c = c_c + obj.m(obj.state_machine.state_pattern(jj));
     end
     
+    % DEBUG
+    %S_bar_2_c = double(subs(S_bar,obj.inner_x_ext,[ 0 0 0 0 0 0]'));
     
 
     G    = [S_bar; -S_bar; G_component; -G_component];

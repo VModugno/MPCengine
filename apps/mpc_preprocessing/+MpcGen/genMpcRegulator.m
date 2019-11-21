@@ -259,7 +259,9 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                     if(strcmp(obj.type,"ltv") )
                         obj.m_c.S_bar_func       = matlabFunction(obj.m_c.S_bar,'vars', {obj.x_0,obj.inner_x_ext});
                     else
-                        obj.m_c.S_bar_constr     = matlabFunction(obj.m_c.S_bar,'vars', {obj.inner_x_ext});
+                        % this cannot be done because S_bar change at every
+                        % time step due to the state machine structture
+                        %obj.m_c.S_bar_constr     = matlabFunction(obj.m_c.S_bar,'vars', {obj.inner_x_ext});
                     end
                     obj.cur_G = obj.G;
                 elseif(strcmp(obj.type,"fixed"))
@@ -287,7 +289,9 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                     if strcmp(obj.type,"ltv")
                         obj.S = matlabFunction(obj.S,'vars', {obj.x_0,obj.inner_x_ext});
                     else
-                        obj.S = matlabFunction(obj.S,'vars', {obj.inner_x_ext});
+                        % in the case of state machine this is cannto be
+                        % done
+                        %obj.S = matlabFunction(obj.S,'vars', {obj.inner_x_ext});
                     end
                 end
             end
@@ -343,15 +347,42 @@ classdef genMpcRegulator < MpcGen.coreGenerator
              elseif(strcmp(obj.type,"statemachine"))
                  H          = obj.H;
                  F_tra      = obj.F_tra;
-                 if(strcmp(obj.m_c.g,"pattern"))
-                    obj.cur_G   = double(subs(obj.G,obj.inner_x_ext,xu_oracle_trajectory));
+                 if strcmp(obj.m_c.g,"pattern")
+                     % usually with pattern there is no need to update the
+                     % matrix but because there is inner_x_ext we need to
+                     % pass the updated inner_x_ext 
+                     if(length(obj.inner_x_ext)>=1)
+                        % given the updated structure of G i substitute the symbolic value with the angles 
+                        % S is been updated because of the state machine way of working
+                        obj.cur_G   = double(subs(obj.cur_G,obj.inner_x_ext,xu_oracle_trajectory));
+                     end
                  else
+                    if(length(obj.inner_x_ext)>=1)
+                        % given the updated structure of G i substitute the symbolic value with the angles 
+                        % S is been updated because of the state machine way of working
+                        obj.cur_G   = double(subs(obj.G,obj.inner_x_ext,xu_oracle_trajectory));
+                    end 
                     obj.cur_G   = obj.G;
                  end
-                 if(length(obj.inner_x_ext)>=1)
-                     obj.cur_S  = obj.S(xu_oracle_trajectory);
+                 % usually with pattern there is no need to update the
+                 % matrix but because there is inner_x_ext we need to
+                 % pass the updated inner_x_ext 
+                 if strcmp(obj.m_c.s,"pattern")
+                     if(length(obj.inner_x_ext)>=1)
+                         % given the updated structure of S i substitute the symbolic value with the angles 
+                         % S is been updated because of the state machine way
+                         % of working
+                         obj.cur_S  = double(subs(obj.cur_S,obj.inner_x_ext,xu_oracle_trajectory));
+                     end
                  else
-                     obj.cur_S  = obj.S;
+                     if(length(obj.inner_x_ext)>=1)
+                         % given the updated structure of S i substitute the symbolic value with the angles 
+                         % S is been updated because of the state machine way
+                         % of working
+                         obj.cur_S  = double(subs(obj.S,obj.inner_x_ext,xu_oracle_trajectory));
+                     else
+                         obj.cur_S  = obj.S;
+                     end
                  end
                  
                  %obj.cur_W  = obj.W; 
@@ -394,11 +425,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                     obj.G                                                    = eval(obj.constrFuncG_Call);
                   end
                   if(~strcmp(obj.m_c.s,"pattern"))
-                    if(length(obj.inner_x_ext)>=1)
-                        % do nothing
-                    else
-                        obj.S                                                    = eval(obj.constrFuncS_Call);
-                    end
+                    obj.S                                                    = eval(obj.constrFuncS_Call);
                   end
                   if(~strcmp(obj.m_c.w,"pattern"))
                     obj.cur_W                                                = eval(obj.constrFuncW_Call);%obj.MutableConstraints_W(obj);
@@ -409,10 +436,7 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                  %  matrix constraint
                  %  obj.UpdateConstrPattern();
                  if(strcmp(obj.m_c.g,"pattern"))
-                    if(length(obj.inner_x_ext)>=1)  
-                        S_bar_constr = obj.m_c.S_bar_constr(xu_oracle_trajectory);
-                    end 
-                    obj.cur_G        = obj.MutableConstraints_G(obj,S_bar_constr);
+                    obj.cur_G    = obj.MutableConstraints_G(obj,S_bar_constr);
                  end
                  if(strcmp(obj.m_c.s,"pattern"))
                      obj.cur_S   = obj.MutableConstraints_S(obj,T_bar);

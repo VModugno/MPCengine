@@ -10,7 +10,7 @@ generate_func    = false;
 start_simulation = true;
 %%
 %% activating generation for angle 
-active_rotation  = false;
+active_rotation  = true;
 %%
 %% activate or deactivate visualization
 visualization    = true;
@@ -20,7 +20,7 @@ logging          = true;
 %% debugging
 debugging        = false;
 %% MPC Model
-model_name       = "twod_xy_lip_no_foot_model_automatic_footstep"; 
+model_name       = "twod_xy_lip_no_foot_model_automatic_footstep_with_rotation"; 
 
 %% experiment time structure (for the environment different from the internal time)
 ft          = 10;       % final time 20 50 
