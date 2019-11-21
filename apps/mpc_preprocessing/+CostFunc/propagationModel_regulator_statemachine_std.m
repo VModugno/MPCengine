@@ -1,5 +1,3 @@
-
-
 function  [S_bar_obj,S_bar_constr,T_bar_obj,T_bar_constr,Q_bar,R_bar] = propagationModel_regulator_statemachine_std(obj,A,B,C_obj,C_constr,Q,R)
 
     n                = obj.n(1);

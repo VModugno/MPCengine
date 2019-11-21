@@ -48,6 +48,10 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.extern_var = "false";
             obj.extern_dim = 0;
             
+            % i set inner_x_ext empty but if it used i can measure the
+            % length of this vector to trigger "the LTV" like behaviour
+            obj.inner_x_ext = []; % empty vector
+            
             
             %% TODO add managment of bounds ONLY with state machine
             if(isempty(state_machine))
@@ -172,12 +176,11 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             Q = obj.Q;
             R = obj.R;
             
+            % here i trigger the ltv
             if(strcmp(obj.type,"ltv"))
                 [A,B]=obj.ComputeMatricesLTV(A,B);
-            else
-                obj.inner_x_ext = []; % empty vector
             end
-            %% Construct matrices (it automatically detects fixed or ltv)
+            %% Construct matrices (it automatically detects fixed or ltv) here for rotation i added a situation where i use inner_x_ext even if is not LTV
             obj.propModelCall             = "CostFunc.propagationModel_regulator_"+ type + "_" + obj.propagationModel + "(obj,A,B,C_obj,C_constr,Q,R)";
             [S_bar_obj,S_bar_constr,T_bar_obj,T_bar_constr,Q_bar,R_bar] = eval(obj.propModelCall);
 
@@ -185,7 +188,6 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             obj.costFuncCall      = "CostFunc.regulator_" + obj.costFunc + "(S_bar_obj,T_bar_obj,Q_bar,R_bar)";
             [obj.H,obj.F_tra] = eval(obj.costFuncCall);
             %% Constraints matrices
-            
             % g function
             % through obj.m_c.g we know if g is mutable or not 
             obj.constrFuncG_Call = "Constraint.regulator_G_"+ type + "_" +obj.m_c.g + "_" + obj.constrG + "(obj,S_bar_constr)";
@@ -194,9 +196,9 @@ classdef genMpcRegulator < MpcGen.coreGenerator
              % a function handle of the class (needded both for func gen and compute control)
              % and i need to store the variables that G is depending upon
             if(strcmp(obj.m_c.g,"pattern"))
-                str2funcCall             = "Constraint.regulator_G_" + type + "_" +obj.m_c.g + "_" + obj.constrG + "(obj,S_bar_constr)";
+                str2funcCall             = "Constraint.regulator_G_" + type + "_" +obj.m_c.g + "_" + obj.constrG;
                 obj.MutableConstraints_G = str2func(str2funcCall);
-                obj.m_c.S_bar            = S_bar;
+                obj.m_c.S_bar            = S_bar_constr;
             end
             % S function
             % through obj.m_c.s we know if g is mutable or not 
@@ -252,8 +254,14 @@ classdef genMpcRegulator < MpcGen.coreGenerator
             % them inside the 
             % G post-processing
             if(strcmp(obj.m_c.g,"pattern"))
-                if(strcmp(obj.type,"ltv"))
-                    obj.m_c.S_bar_func       = matlabFunction(obj.m_c.S_bar,'vars', {obj.x_0,obj.inner_x_ext});
+                %if(strcmp(obj.type,"ltv") )
+                if(length(obj.inner_x_ext)>=1)
+                    if(strcmp(obj.type,"ltv") )
+                        obj.m_c.S_bar_func       = matlabFunction(obj.m_c.S_bar,'vars', {obj.x_0,obj.inner_x_ext});
+                    else
+                        obj.m_c.S_bar_constr     = matlabFunction(obj.m_c.S_bar,'vars', {obj.inner_x_ext});
+                    end
+                    obj.cur_G = obj.G;
                 elseif(strcmp(obj.type,"fixed"))
                     % in the case of fixed pattern i need to initialize the
                     % current matrix value with the one computed before 
@@ -275,8 +283,12 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                 end 
 
             else
-                if strcmp(obj.type,"ltv")
-                    obj.S = matlabFunction(obj.S,'vars', {obj.x_0,obj.inner_x_ext});
+                if(length(obj.inner_x_ext)>=1)
+                    if strcmp(obj.type,"ltv")
+                        obj.S = matlabFunction(obj.S,'vars', {obj.x_0,obj.inner_x_ext});
+                    else
+                        obj.S = matlabFunction(obj.S,'vars', {obj.inner_x_ext});
+                    end
                 end
             end
             % W post-processing
@@ -316,9 +328,9 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                  H          = obj.H;
                  F_tra      = obj.F_tra;
                  if(strcmp(obj.m_c.g,"pattern"))
-                    S_bar      = obj.m_c.S_bar;
+                    S_bar   = obj.m_c.S_bar;
                  else
-                     obj.cur_G = obj.G;
+                    obj.cur_G  = obj.G;
                  end
                  if(strcmp(obj.m_c.s,"pattern"))
                     T_bar      = obj.m_c.T_bar;
@@ -331,10 +343,18 @@ classdef genMpcRegulator < MpcGen.coreGenerator
              elseif(strcmp(obj.type,"statemachine"))
                  H          = obj.H;
                  F_tra      = obj.F_tra;
-                 obj.cur_G  = obj.G;
-                 obj.cur_S  = obj.S;
-                 %obj.cur_W  = obj.W; 
+                 if(strcmp(obj.m_c.g,"pattern"))
+                    obj.cur_G   = double(subs(obj.G,obj.inner_x_ext,xu_oracle_trajectory));
+                 else
+                    obj.cur_G   = obj.G;
+                 end
+                 if(length(obj.inner_x_ext)>=1)
+                     obj.cur_S  = obj.S(xu_oracle_trajectory);
+                 else
+                     obj.cur_S  = obj.S;
+                 end
                  
+                 %obj.cur_W  = obj.W; 
              end
              tic
              u_star = quadprog(H, x_cur'*F_tra, obj.cur_G, obj.cur_W+obj.cur_S*x_cur);%,[],[],[],[],[],options);
@@ -374,7 +394,11 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                     obj.G                                                    = eval(obj.constrFuncG_Call);
                   end
                   if(~strcmp(obj.m_c.s,"pattern"))
-                    obj.S                                                    = eval(obj.constrFuncS_Call);
+                    if(length(obj.inner_x_ext)>=1)
+                        % do nothing
+                    else
+                        obj.S                                                    = eval(obj.constrFuncS_Call);
+                    end
                   end
                   if(~strcmp(obj.m_c.w,"pattern"))
                     obj.cur_W                                                = eval(obj.constrFuncW_Call);%obj.MutableConstraints_W(obj);
@@ -385,7 +409,10 @@ classdef genMpcRegulator < MpcGen.coreGenerator
                  %  matrix constraint
                  %  obj.UpdateConstrPattern();
                  if(strcmp(obj.m_c.g,"pattern"))
-                    obj.cur_G   = obj.MutableConstraints_G(obj,S_bar);
+                    if(length(obj.inner_x_ext)>=1)  
+                        S_bar_constr = obj.m_c.S_bar_constr(xu_oracle_trajectory);
+                    end 
+                    obj.cur_G        = obj.MutableConstraints_G(obj,S_bar_constr);
                  end
                  if(strcmp(obj.m_c.s,"pattern"))
                      obj.cur_S   = obj.MutableConstraints_S(obj,T_bar);

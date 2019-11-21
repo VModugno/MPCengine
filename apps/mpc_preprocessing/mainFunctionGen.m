@@ -9,6 +9,9 @@ generate_func    = false;
 %% simulate the mpc 
 start_simulation = true;
 %%
+%% activating generation for angle 
+active_rotation  = false;
+%%
 %% activate or deactivate visualization
 visualization    = true;
 %%
@@ -90,7 +93,14 @@ if(start_simulation)
 %         end
         %% mpc controller  
         if(strcmp(control_mode,"regulator"))
-            tau = controller.ComputeControl(cur_x);  
+            if(active_rotation)
+                % integrate omega (it has to be a column vector)
+                angles_sequence = zeros(N,1);
+                tau = controller.ComputeControl(cur_x,angles_sequence); 
+            else
+                tau = controller.ComputeControl(cur_x);  
+            end
+            
             
             %% DEBUG
             if(debugging)

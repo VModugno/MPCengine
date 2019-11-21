@@ -173,16 +173,42 @@ classdef coreGenerator <  handle
        
        function GetBasePath(obj)
           
-           % get time stamp
-           dt     = datestr(now,'mmmm dd, yyyy HH:MM:SS.FFF AM');
-           % folder name
-           folder = strcat(obj.solver,'_',obj.type,'_',dt);
-           folder = strrep(folder, ' ', '_');
+           
            % find location of the current folder
            pth = which('mainFunctionGen.m');
            % take only the path till the container folder of current file
            pth = fileparts(pth);
-           obj.basepath = strcat(pth,'/generated_function/',folder);
+           if ismac
+                % get time stamp
+                dt     = datestr(now,'mmmm dd, yyyy HH:MM:SS.FFF AM');
+                % folder name
+                folder = strcat(obj.solver,'_',obj.type,'_',dt);
+                folder = strrep(folder, ' ', '_');
+                % Code to run on Mac platform
+                obj.basepath = strcat(pth,'/generated_function/',folder);
+           elseif isunix
+                % get time stamp
+                dt     = datestr(now,'mmmm dd, yyyy HH:MM:SS.FFF AM');
+                % folder name
+                folder = strcat(obj.solver,'_',obj.type,'_',dt);
+                folder = strrep(folder, ' ', '_');
+                % Code to run on Linux platform
+                obj.basepath = strcat(pth,'/generated_function/',folder);
+           elseif ispc
+                % get time stamp
+                dt     = datestr(now,'yyyymmddTHHMMSS');
+                % folder name
+                folder = strcat(obj.solver,'_',obj.type,'_',dt);
+                folder = strrep(folder, ' ', '_');
+                % Code to run on Windows platform
+                obj.basepath = strcat(pth,'\generated_function\',folder);
+                %obj.basepath = regexprep(obj.basepath,':','');
+                %obj.basepath = regexprep(obj.basepath,',','');
+           else
+                disp('Platform not supported, raising error')
+                
+           end
+           
        end
        
        
