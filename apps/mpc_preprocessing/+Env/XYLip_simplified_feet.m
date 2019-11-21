@@ -5,6 +5,8 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
         B % input dyamic matrix 
         C % measure matrix
         all_foot_position
+        all_foot_rotation
+        cur_angle
     end
     
     methods
@@ -27,6 +29,8 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
             obj.active_visualization = false;
             obj.prm                  = prm;
             obj.all_foot_position    = [];
+            obj.all_foot_rotation    = [];
+            obj.cur_angle            = [];
             %obj.Load_parameters()
             if(~isempty(varargin))
                 if(strcmp(varargin{1},'ConfigFile'))
@@ -118,6 +122,14 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
         
         function UpdateRender(obj,state)
             
+            % check if rotation are active. if it is so it means that
+            % obj.cur_theta is not empty
+            if(isempty(obj.cur_angle))
+                active_rotation = false;
+            else
+                active_rotation = true;
+            end
+            
             obj.all_states = [obj.all_states,state];
             
             % initialization
@@ -125,15 +137,21 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
                 obj.all_foot_position(1,:) = [state(4) state(9)];
                 %obj.all_foot_rotation(:,end) = obj.cur_theta;
             end
+            if(isempty(obj.all_foot_rotation))
+                obj.all_foot_rotation(1) = obj.cur_angle;
+            end
             
             %update foot position
             if(obj.all_foot_position(end,1) ~= state(4) || obj.all_foot_position(end,2) ~= state(9))
                 obj.all_foot_position(end+1,:) = [state(4) state(9)];
-                %obj.all_foot_rotation(:,end) = obj.cur_theta;
+            end
+            % update all foot rotation
+            if(obj.all_foot_position(end,1) ~= obj.cur_angle)
+                obj.all_foot_rotation(end+1,:) = obj.cur_angle;
             end
             subplot(3,1,1)
             plot(obj.all_states([1,3],:)', obj.all_states(obj.num_state/2 + [1 3],:)')
-            %R=[cos(theta), -sin(obj.theta);sin(obj.theta), cos(obj.theta)];
+            
             
             
             for ii = 1:size(obj.all_foot_position(:,end),1)
@@ -143,8 +161,16 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
 
                 x = [center_foot_x-obj.prm.footSize_x/2 center_foot_x-obj.prm.footSize_x/2 center_foot_x+obj.prm.footSize_x/2 center_foot_x+obj.prm.footSize_x/2];
                 y = [center_foot_y-obj.prm.footSize_y/2 center_foot_y+obj.prm.footSize_y/2 center_foot_y+obj.prm.footSize_y/2 center_foot_y-obj.prm.footSize_y/2];
-
-                p1 = patch(x, y, 'r');
+                
+                curr_coordinate = [x;y];
+                
+                if(active_rotation)
+                    theta = obj.all_foot_rotation(ii);
+                    cur_R =[cos(theta), -sin(theta);sin(theta), cos(theta)];
+                    curr_coordinate = cur_R*curr_coordinate;
+                end
+                
+                p1 = patch(curr_coordinate(1,:), curr_coordinate(2,:), 'r');
                 set(p1,'FaceAlpha',0.1,'EdgeColor','k','LineWidth',1,'LineStyle','-');
             end
            
