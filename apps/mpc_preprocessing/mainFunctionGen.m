@@ -9,8 +9,14 @@ generate_func    = false;
 %% simulate the mpc 
 start_simulation = true;
 %%
-%% activating generation for angle 
-active_rotation  = true;
+%% activating rotation   
+active_rotation      = true;
+theta_0              = 0;   % starting angle
+angular_velocity     = 0.1; % rad/s
+duration_of_rotation = 2;   % s
+% do not change these parameters!!!
+angle_index_selector = 0;   % for keeping track of the position on the angle sequence (i will exploit the N parameters)
+trigger_update_index = 1;   % for udapting the sequence only at the frequence of the controller (internal_dt)
 %%
 %% activate or deactivate visualization
 visualization    = true;
@@ -77,6 +83,33 @@ elseif(strcmp(control_mode,"tracker"))
         total_ref = [total_ref;last_ref]; %#ok<AGROW>
     end
 end
+%% angle sequences generation
+% i pregenerate in advance all the angles just for testing purposes
+% IMPORTANT! THE ANGLES SEQUENCE HAS TO BE SYNCRONIZED WITH
+% footstep_pattern
+if(active_rotation)
+    step_of_rotation = round(duration_of_rotation/internal_dt);
+    step_counter   = 1;
+    cur_theta      = theta_0;
+    last_cur_theta = theta_0;
+    for ijk = 1:step_of_rotation
+        
+        cur_theta = cur_theta +  angular_velocity*internal_dt;
+        
+        if(step_counter<N/2)
+            full_angles_sequence(ijk,1)=last_cur_theta;
+            step_counter = step_counter + 1;
+        else
+            last_cur_theta = cur_theta;
+            full_angles_sequence(ijk,1) = last_cur_theta;
+            step_counter = 1;
+        end
+    end
+    % i need it in order to keep the last angle fixed
+    last_angle = full_angles_sequence(end,1);
+    % initialize first sequence 
+    angles_sequence = full_angles_sequence(angle_index_selector+1:angle_index_selector + N,1);
+end
 
 if(visualization) 
     env.Render();
@@ -94,8 +127,24 @@ if(start_simulation)
         %% mpc controller  
         if(strcmp(control_mode,"regulator"))
             if(active_rotation)
+                waiting_steps = internal_dt/ext_dt;
                 % integrate omega (it has to be a column vector)
-                angles_sequence = zeros(N,1);
+                % update only at each internal timestep
+                if(trigger_update_index >= waiting_steps)
+                    % here i update this index to pick the next element in full_angles_sequence
+                    % that is not yet contained in angles_sequence
+                    angle_index_selector = angle_index_selector + 1;
+                    angles_sequence = angles_sequence(2:end,1);
+                    if(angle_index_selector + N < length(full_angles_sequence))
+                        angles_sequence(end+1,1) = full_angles_sequence(angle_index_selector + N);
+                    else
+                        angles_sequence(end+1,1) = last_angle;
+                    end
+                    % restart trigger update
+                    trigger_update_index = 0;
+                end
+                % update index to syncronize the update
+                trigger_update_index = trigger_update_index + 1;
                 tau = controller.ComputeControl(cur_x,angles_sequence); 
             else
                 tau = controller.ComputeControl(cur_x);  
@@ -125,6 +174,11 @@ if(start_simulation)
          
         % check if the trigger update is true
         env.ReadTriggerUp(controller.trigger_update);
+        % for visualization purpose i pass this angle to the environment 
+        % only works with an eviroment that accepts rotation
+        if(active_rotation)
+            env.cur_angle = angles_sequence(1);
+        end
         % update env
         [new_state]= env.Step(tau);
         % update variables 
