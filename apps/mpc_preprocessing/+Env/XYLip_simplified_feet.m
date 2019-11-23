@@ -164,11 +164,12 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
                 if(active_rotation)
                     theta = obj.all_foot_rotation(ii);
                     cur_R =[cos(theta), -sin(theta);sin(theta), cos(theta)];
+                    % foot dimension coordinate
+                    f_d_c = cur_R*[obj.prm.footSize_x/2;obj.prm.footSize_y/2];
+                else
+                     f_d_c = [obj.prm.footSize_x/2;obj.prm.footSize_y/2];
                 end
                 
-                % foot dimension coordinate
-                f_d_c = cur_R*[obj.prm.footSize_x/2;obj.prm.footSize_y/2];
-
                 %x = [center_foot_x-obj.prm.footSize_x/2 center_foot_x-obj.prm.footSize_x/2 center_foot_x+obj.prm.footSize_x/2 center_foot_x+obj.prm.footSize_x/2];
                 %y = [center_foot_y-obj.prm.footSize_y/2 center_foot_y+obj.prm.footSize_y/2 center_foot_y+obj.prm.footSize_y/2 center_foot_y-obj.prm.footSize_y/2];
                 
@@ -176,8 +177,6 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
                 y = [center_foot_y-f_d_c(2) center_foot_y+f_d_c(2) center_foot_y+f_d_c(2) center_foot_y-f_d_c(2)];
                 
                 curr_coordinate = [x;y];
-                
-                
                 
                 p1 = patch(curr_coordinate(1,:), curr_coordinate(2,:), 'r');
                 set(p1,'FaceAlpha',0.1,'EdgeColor','k','LineWidth',1,'LineStyle','-');
