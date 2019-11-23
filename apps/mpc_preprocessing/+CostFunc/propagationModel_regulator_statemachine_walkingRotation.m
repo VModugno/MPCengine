@@ -46,12 +46,12 @@ function  [S_bar_obj,S_bar_constr,T_bar_obj,T_bar_constr,Q_bar,R_bar] = propagat
             S_bar_obj(k_counter_obj + (1:q_obj),j_counter+(1:m))          = C_k_obj*A^(k-j)*B_j;
             % the rotation impact only the matrices involved in the
             % construction of the constraints 
-            S_bar_constr(k_counter_constr + (1:q_constr),j_counter+(1:m)) = all_R{k-j + 1}*C_k_constr*A^(k-j)*B_j;
+            S_bar_constr(k_counter_constr + (1:q_constr),j_counter+(1:m)) = all_R{k}*C_k_constr*A^(k-j)*B_j;
             j_counter = j_counter + m;
         end
 
         T_bar_obj(k_counter_obj + (1:q_obj),1:n)                   = C_k_obj*A^k;
-        T_bar_constr(k_counter_constr + (1:q_constr),1:n)          = all_R{1}*C_k_constr*A^k;
+        T_bar_constr(k_counter_constr + (1:q_constr),1:n)          = all_R{k}*C_k_constr*A^k;
 
         Q_bar(k_counter_obj + (1:q_obj),k_counter_obj + (1:q_obj)) = Q{k_state};
         R_bar(j_counter_out+(1:m),j_counter_out+(1:m))             = R{k_state};

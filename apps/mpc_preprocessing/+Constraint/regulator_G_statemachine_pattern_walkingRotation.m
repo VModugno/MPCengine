@@ -39,7 +39,7 @@ function  [G]=regulator_G_statemachine_pattern_walkingRotation(obj,S_bar)
     for jj = 1:length(obj.state_machine.state_pattern)
         
         %here i assume that the state model where i have to attach the
-        %rotation is equal to one, NON GENERAL!
+        %rotation is equal to one, NOT GENERAL!
         if(obj.state_machine.state_pattern(jj) == 1)
             G_component((c_c + 1):(c_c + 4),(c_c + 1):(c_c + 4)) = all_R_for_input_constraints{inner_counter};
             inner_counter = inner_counter + 1;

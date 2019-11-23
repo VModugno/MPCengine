@@ -73,7 +73,7 @@ C_cont_obj       = {blkdiag(C_x_objective,C_x_objective),blkdiag(C_x_objective,C
 % for now i put everything inside C_cont even if 
 C_cont_constr    = {blkdiag(C_x_constraints,C_x_constraints);blkdiag(C_x_constraints,C_x_constraints)};
 %% predictive windows (it is useful for mutable constraints)
-N                = 20;
+N                = 10;
 %% duration of support phase 
 % here we count the number of ones in the footstep pattern (custom solution)
 prm.single_support_duration      = (N/2)*internal_dt;
@@ -93,9 +93,15 @@ state_machine.n_of_models   = 2;
 discretized   = true;
 % with this i require to do the feedback linearization (by default is false)
 feedback_lin  = false;
+%% rotation    variables
+active_rotation      = true;
+theta_0              = 90*(pi/180);   % starting angle
+angular_velocity     = 0; % rad/s
+duration_of_rotation = 2;   % s
+
 %% Initial state
-init_state = [  0;    0; 0; 0  ;  prm.vref_x;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
-                0;    0; 0; 0.1;  prm.vref_y];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
+init_state = [  0.1;    0; 0.1; 0.0;  prm.vref_x;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
+                0.1;    0; 0.1; 0.1;  prm.vref_y];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
                 %0.05      %0.1
           
 %% here we consider the case with mutable bounds induced by  

@@ -137,18 +137,20 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
                 obj.all_foot_position(1,:) = [state(4) state(9)];
                 %obj.all_foot_rotation(:,end) = obj.cur_theta;
             end
-            if(isempty(obj.all_foot_rotation))
+            if(isempty(obj.all_foot_rotation) && active_rotation )
                 obj.all_foot_rotation(1) = obj.cur_angle;
             end
             
-            %update foot position
+            %update foot position and angle
             if(obj.all_foot_position(end,1) ~= state(4) || obj.all_foot_position(end,2) ~= state(9))
                 obj.all_foot_position(end+1,:) = [state(4) state(9)];
+                % we embedd the angle update inside this because something
+                % the angle stay fixed
+                if(active_rotation)
+                    obj.all_foot_rotation(end+1,:) = obj.cur_angle;
+                end
             end
-            % update all foot rotation
-            if(obj.all_foot_position(end,1) ~= obj.cur_angle)
-                obj.all_foot_rotation(end+1,:) = obj.cur_angle;
-            end
+         
             subplot(3,1,1)
             plot(obj.all_states([1,3],:)', obj.all_states(obj.num_state/2 + [1 3],:)')
             
@@ -158,22 +160,29 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
             
                 center_foot_x = obj.all_foot_position(ii,1);
                 center_foot_y = obj.all_foot_position(ii,2);
-
-                x = [center_foot_x-obj.prm.footSize_x/2 center_foot_x-obj.prm.footSize_x/2 center_foot_x+obj.prm.footSize_x/2 center_foot_x+obj.prm.footSize_x/2];
-                y = [center_foot_y-obj.prm.footSize_y/2 center_foot_y+obj.prm.footSize_y/2 center_foot_y+obj.prm.footSize_y/2 center_foot_y-obj.prm.footSize_y/2];
-                
-                curr_coordinate = [x;y];
                 
                 if(active_rotation)
                     theta = obj.all_foot_rotation(ii);
                     cur_R =[cos(theta), -sin(theta);sin(theta), cos(theta)];
-                    curr_coordinate = cur_R*curr_coordinate;
                 end
+                
+                % foot dimension coordinate
+                f_d_c = cur_R*[obj.prm.footSize_x/2;obj.prm.footSize_y/2];
+
+                %x = [center_foot_x-obj.prm.footSize_x/2 center_foot_x-obj.prm.footSize_x/2 center_foot_x+obj.prm.footSize_x/2 center_foot_x+obj.prm.footSize_x/2];
+                %y = [center_foot_y-obj.prm.footSize_y/2 center_foot_y+obj.prm.footSize_y/2 center_foot_y+obj.prm.footSize_y/2 center_foot_y-obj.prm.footSize_y/2];
+                
+                x = [center_foot_x-f_d_c(1) center_foot_x-f_d_c(1) center_foot_x+f_d_c(1) center_foot_x+f_d_c(1)];
+                y = [center_foot_y-f_d_c(2) center_foot_y+f_d_c(2) center_foot_y+f_d_c(2) center_foot_y-f_d_c(2)];
+                
+                curr_coordinate = [x;y];
+                
+                
                 
                 p1 = patch(curr_coordinate(1,:), curr_coordinate(2,:), 'r');
                 set(p1,'FaceAlpha',0.1,'EdgeColor','k','LineWidth',1,'LineStyle','-');
             end
-           
+            axis equal
             
             subplot(3,1,2)
             plot(obj.all_states([1,3,4],:)');

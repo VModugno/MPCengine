@@ -8,12 +8,7 @@ generate_func    = false;
 %%
 %% simulate the mpc 
 start_simulation = true;
-%%
-%% activating rotation   
-active_rotation      = true;
-theta_0              = 0;   % starting angle
-angular_velocity     = 0.1; % rad/s
-duration_of_rotation = 2;   % s
+%% rotation variables
 % do not change these parameters!!!
 angle_index_selector = 0;   % for keeping track of the position on the angle sequence (i will exploit the N parameters)
 trigger_update_index = 1;   % for udapting the sequence only at the frequence of the controller (internal_dt)
@@ -147,6 +142,7 @@ if(start_simulation)
                 trigger_update_index = trigger_update_index + 1;
                 tau = controller.ComputeControl(cur_x,angles_sequence); 
             else
+                % controller without rotation
                 tau = controller.ComputeControl(cur_x);  
             end
             
