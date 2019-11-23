@@ -24,8 +24,8 @@ infinity                          = 10e6;
 prm.h                             = 0.478329;  %0.4845; 0.26
 prm.footSize_x                    = 0.08;  %0.151, 0.05
 prm.footSize_y                    = 0.058;  %0.058 0.03
-prm.vref_x                        = 0;         % desired com velocity
-prm.vref_y                        = 0.1; 
+prm.vref_x                        = 0.1;         % desired com velocity
+prm.vref_y                        = 0; 
 prm.footstep_constraints_x        = 0.2;    % step length control over x
 prm.inner_footstep_constraints_y  = 0.20;   % step length control over y (minimal distance between feet)
 prm.outer_footstep_constraints_y  = 0.25;   % step length control over y (maximal distance between feet)
@@ -102,8 +102,8 @@ prm.fixed_direction      = false; % if thr direction is fixed i use the first an
 prm.duration_of_rotation = 2;   % s
 
 %% Initial state
-init_state = [  0;    0; 0; 0.1;  prm.vref_x;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
-                0;    0; 0; 0.0;  prm.vref_y];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
+init_state = [  0;      0; 0; 0.0;  prm.vref_x;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
+                0;      0; 0; 0.1;  prm.vref_y];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
                 %0.05      %0.1
           
 %% here we consider the case with mutable bounds induced by  
@@ -136,7 +136,6 @@ boundsInput.min{2} = [minInput_allFeet,minInput_allFeet];
                      
                  
 % here max_output is empty because here we are going to use mutable bounds
-          
 B_Out.max  = [];
 B_Out.min  = [];
 B_In.max   = [];       

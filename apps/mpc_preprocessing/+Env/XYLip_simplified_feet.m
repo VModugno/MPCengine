@@ -251,8 +251,30 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            
+           name_node = pNode.createElement('theta_0');
+           name_text = pNode.createTextNode(num2str( obj.prm.theta_0));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
            
+           name_node = pNode.createElement('angular_velocity');
+           name_text = pNode.createTextNode(num2str( obj.prm.angular_velocity));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
            
+           name_node = pNode.createElement('traslation_velocity');
+           name_text = pNode.createTextNode(num2str( obj.prm.traslation_velocity));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('fixed_direction');
+           name_text = pNode.createTextNode(num2str( obj.prm.fixed_direction));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('duration_of_rotation');
+           name_text = pNode.createTextNode(num2str( obj.prm.duration_of_rotation));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node); 
         end
     end
         

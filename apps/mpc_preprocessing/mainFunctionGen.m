@@ -18,11 +18,13 @@ visualization    = true;
 %%
 %% logging data for comparison with results obtained with c++ (it works only if start_simulation = true)
 logging          = true;
+%%
 %% debugging
 debugging        = false;
+%%
 %% MPC Model
-model_name       = "twod_xy_lip_no_foot_model_automatic_footstep_with_rotation"; 
-
+model_name       = "twod_xy_lip_no_foot_model_automatic_footstep_with_rotation";
+%%
 %% experiment time structure (for the environment different from the internal time)
 ft          = 10;       % final time 20 50 
 ext_dt      = 0.01;     % 0.1 0.01 (to the env class)
