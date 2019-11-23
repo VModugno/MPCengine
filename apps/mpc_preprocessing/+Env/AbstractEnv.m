@@ -15,7 +15,9 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
         measured_acc             % updated inside the step function
         use_euler    = false     % when the system dynamics is already discretized we can directly go for euler method
         all_states               % here i can store all the states when it is necessary (not mandatory)
-        %feedback_lin = false     % with this flag for each environment i require a feedback linearization or not
+        x_des                    % with this variabe i change the desired value contained in the state 
+                                 % (this should be the only way to define different a regulation point different from zero)
+        %feedback_lin = false    % with this flag for each environment i require a feedback linearization or not
     end
     
     methods
@@ -35,7 +37,7 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
                     k4                    = obj.Dynamics(obj.state+obj.dt*k3,action);
 
                     new_state = obj.state + obj.dt/6*(k1 + 2*k2 + 2*k3 + k4);
-
+                    
                     % All states wrapped to 2pi
                     
                 end
@@ -43,6 +45,12 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
                  new_state = obj.Dynamics(obj.state,action);
             end
             new_state = obj.Wrapping(new_state);
+            % i use this function (that is abstract) to update the value
+            % of the state that contains the desired value. it is only
+            % triggered if the x_des is not empty
+            if(isempty(obj.x_des))
+                new_state = obj.UpdateDesiredInput(new_state);
+            end
             obj.state = new_state; % Old state = new state
             new_state = obj.state;
             reward    = obj.reward(new_state,action);
@@ -104,6 +112,10 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
             obj.trigger_update = cur_trigger_up;
         end
         
+        function SetDes(obj,cur_x_des)
+            obj.x_des = cur_x_des;
+        end
+        
     end
     
     
@@ -116,6 +128,9 @@ classdef (Abstract) AbstractEnv < matlab.mixin.Copyable
         state = Wrapping(obj,state)
         Load_parameters(obj,varargin)
         LocalGenEnvParametersFile(obj,pNode,entry_node)
+        UpdateDesiredInput(obj)
+            
+        
         
     end    
     

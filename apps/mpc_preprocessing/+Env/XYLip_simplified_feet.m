@@ -92,6 +92,12 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
             new_state = obj.A*state + obj.B*action;
         end
         
+        function new_input_state = UpdateDesiredInput(obj,state)
+            state(5)        = obj.x_des(1);
+            state(10)       = obj.x_des(2);
+            new_input_state = state;
+        end
+        
         function Render(obj)
             %% Set up the twoxy lip plot
             obj.visualization.panel = figure;
@@ -122,14 +128,6 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
         
         function UpdateRender(obj,state)
             
-            % check if rotation are active. if it is so it means that
-            % obj.cur_theta is not empty
-            if(isempty(obj.cur_angle))
-                active_rotation = false;
-            else
-                active_rotation = true;
-            end
-            
             obj.all_states = [obj.all_states,state];
             
             % initialization
@@ -137,7 +135,7 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
                 obj.all_foot_position(1,:) = [state(4) state(9)];
                 %obj.all_foot_rotation(:,end) = obj.cur_theta;
             end
-            if(isempty(obj.all_foot_rotation) && active_rotation )
+            if(isempty(obj.all_foot_rotation) && obj.prm.active_rotation)
                 obj.all_foot_rotation(1) = obj.cur_angle;
             end
             
@@ -146,7 +144,7 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
                 obj.all_foot_position(end+1,:) = [state(4) state(9)];
                 % we embedd the angle update inside this because something
                 % the angle stay fixed
-                if(active_rotation)
+                if(obj.prm.active_rotation)
                     obj.all_foot_rotation(end+1,:) = obj.cur_angle;
                 end
             end
@@ -161,7 +159,7 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
                 center_foot_x = obj.all_foot_position(ii,1);
                 center_foot_y = obj.all_foot_position(ii,2);
                 
-                if(active_rotation)
+                if(obj.prm.active_rotation)
                     theta = obj.all_foot_rotation(ii);
                     cur_R =[cos(theta), -sin(theta);sin(theta), cos(theta)];
                     % foot dimension coordinate
@@ -245,6 +243,11 @@ classdef XYLip_simplified_feet < Env.AbstractEnv
            
            name_node = pNode.createElement('single_support_duration');
            name_text = pNode.createTextNode(num2str( obj.prm.single_support_duration));
+           name_node.appendChild(name_text);
+           entry_node.appendChild(name_node);
+           
+           name_node = pNode.createElement('active_rotation');
+           name_text = pNode.createTextNode(num2str( obj.prm.active_rotation));
            name_node.appendChild(name_text);
            entry_node.appendChild(name_node);
            

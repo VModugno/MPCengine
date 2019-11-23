@@ -82,14 +82,14 @@ end
 % i pregenerate in advance all the angles just for testing purposes
 % IMPORTANT! THE ANGLES SEQUENCE HAS TO BE SYNCRONIZED WITH
 % footstep_pattern
-if(active_rotation)
-    step_of_rotation = round(duration_of_rotation/internal_dt);
+if(prm.active_rotation)
+    step_of_rotation = round(prm.duration_of_rotation/internal_dt);
     step_counter   = 1;
-    cur_theta      = theta_0;
-    last_cur_theta = theta_0;
+    cur_theta      = prm.theta_0;
+    last_cur_theta = prm.theta_0;
     for ijk = 1:step_of_rotation
         
-        cur_theta = cur_theta +  angular_velocity*internal_dt;
+        cur_theta = cur_theta +  prm.angular_velocity*internal_dt;
         
         if(step_counter<N/2)
             full_angles_sequence(ijk,1)=last_cur_theta;
@@ -121,7 +121,8 @@ if(start_simulation)
 %         end
         %% mpc controller  
         if(strcmp(control_mode,"regulator"))
-            if(active_rotation)
+            %% this is a code to simulate a trajectory generator block
+            if(prm.active_rotation)
                 waiting_steps = internal_dt/ext_dt;
                 % integrate omega (it has to be a column vector)
                 % update only at each internal timestep
@@ -172,8 +173,18 @@ if(start_simulation)
         env.ReadTriggerUp(controller.trigger_update);
         % for visualization purpose i pass this angle to the environment 
         % only works with an eviroment that accepts rotation
-        if(active_rotation)
+        if(prm.active_rotation)
+            if(prm.fixed_direction)
+                x_des  = [cos(prm.theta_0)*prm.traslation_velocity  sin(prm.theta_0)*prm.traslation_velocity];
+            else
+                x_des  = [cos(angles_sequence(1))*prm.traslation_velocity  sin(angles_sequence(1))*prm.traslation_velocity];
+            end
             env.cur_angle = angles_sequence(1);
+            % setDes has to be called before env.step 
+            % here the update is at the integration frequency
+            env.SetDes(x_des);
+            % by passing x_des to env i will trigger the update of the
+            % desired variables in the system
         end
         % update env
         [new_state]= env.Step(tau);
@@ -181,7 +192,7 @@ if(start_simulation)
         cur_x             = new_state;
         % for logging (TODO we need to move this stuff inside step)
         all_states(:,i+1) = cur_x;
-        new_tau = env.ReshapeAction(tau);
+        new_tau           = env.ReshapeAction(tau);
         all_action(:,i)   = new_tau;
         
         cur_time = "t = " + num2str(t(i));

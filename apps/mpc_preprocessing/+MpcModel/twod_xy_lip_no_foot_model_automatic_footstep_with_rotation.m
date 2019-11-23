@@ -93,15 +93,17 @@ state_machine.n_of_models   = 2;
 discretized   = true;
 % with this i require to do the feedback linearization (by default is false)
 feedback_lin  = false;
-%% rotation    variables
-active_rotation      = true;
-theta_0              = 90*(pi/180);   % starting angle
-angular_velocity     = 0; % rad/s
-duration_of_rotation = 2;   % s
+%% rotation    variables (i save this variables only for debugging puporse (excluded active_rotation) because the trajectory will change in the cpp code)
+prm.active_rotation      = true;
+prm.theta_0              = 0*(pi/180);   % starting angle
+prm.angular_velocity     = 0.1; % rad/s
+prm.traslation_velocity  = 0.1; % m/s
+prm.fixed_direction      = false; % if thr direction is fixed i use the first angle and i never update it
+prm.duration_of_rotation = 2;   % s
 
 %% Initial state
-init_state = [  0.1;    0; 0.1; 0.0;  prm.vref_x;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
-                0.1;    0; 0.1; 0.1;  prm.vref_y];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
+init_state = [  0;    0; 0; 0.1;  prm.vref_x;  % sagittal axis (x coordinate) com position, com velocity, zmp position, initial footstep and vrefx
+                0;    0; 0; 0.0;  prm.vref_y];  % coronal  axis (y coordinate) foot position and velocity, zmp position, initial footstep and vrefy
                 %0.05      %0.1
           
 %% here we consider the case with mutable bounds induced by  

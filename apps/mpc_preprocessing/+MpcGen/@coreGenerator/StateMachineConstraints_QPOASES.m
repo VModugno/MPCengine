@@ -27,6 +27,9 @@ function StateMachineConstraints_QPOASES(obj,input,namefunc,path_to_folder,vars,
                else
                     A_           = eval(obj.constrFuncG_Call)'; 
                end
+               % after building the matrix A_ i check if there is a 
+               % non_standard_iteration that has been activated inside the
+               % function obj.MutableConstraints_G(obj,S_bar_constr)
                if(j<non_standard_iter + 1)
                    if(obj.non_standard_iteration_flag)
                        all_rep_A{i,j} = vpa(A_(:));
